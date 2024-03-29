@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +15,7 @@ int lock_file(int fd, int lock_type) {
 }
 
 // Поиск значения по ключу
-char *find_value_by_key(const char *filename, const char *index_id) {
+char *find_value_by_key(const char *filename, const char *index_key) {
     int fd = open(filename, O_RDONLY);
     if (fd == -1) return NULL;
 
@@ -36,7 +35,7 @@ char *find_value_by_key(const char *filename, const char *index_id) {
     while (fgets(line, sizeof(line), file)) {
         char *key = strtok(line, " ");
         char *value = strtok(NULL, "\\n");
-        if (strcmp(index_id, key) == 0) {
+        if (strcmp(index_key, key) == 0) {
             found_value = strdup(value);
             break;
         }
@@ -47,7 +46,7 @@ char *find_value_by_key(const char *filename, const char *index_id) {
 }
 
 // Запись пары ключ-значение
-void write_key_value_pair(const char *filename, const char *index_id, const char *user_id) {
+void write_key_value_pair(const char *filename, const char *index_key, const char *index_val) {
     int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0666);
     if (fd == -1) return;
 
@@ -56,13 +55,13 @@ void write_key_value_pair(const char *filename, const char *index_id, const char
         return;
     }
 
-    dprintf(fd, "%s %s\\n", index_id, user_id);
+    dprintf(fd, "%s %s\\n", index_key, index_val);
 
     close(fd); // Это также разблокирует файл
 }
 
 // Удаление пары ключ-значение
-void delete_key_value_pair(const char *filename, const char *index_id) {
+void delete_key_value_pair(const char *filename, const char *index_key) {
     int fd = open(filename, O_RDWR);
     if (fd == -1) return;
 
@@ -81,7 +80,6 @@ void delete_key_value_pair(const char *filename, const char *index_id) {
     char temp_filename[64];
     tmpnam(temp_filename);
 
-    //char temp_filename[] = "/tmp/tempfileXXXXXX";
     int temp_fd = mkstemp(temp_filename);
     if (temp_fd == -1) {
         fclose(file);
@@ -99,7 +97,7 @@ void delete_key_value_pair(const char *filename, const char *index_id) {
     char line[256];
     while (fgets(line, sizeof(line), file)) {
         char *key = strtok(line, " ");
-        if (strcmp(index_id, key) != 0) {
+        if (strcmp(index_key, key) != 0) {
             fputs(line, temp_file);
         }
     }
