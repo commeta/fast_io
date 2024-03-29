@@ -32,7 +32,6 @@
 
 
 
-
 // Вспомогательная функция для блокировки файла
 int lock_file(int fd, int lock_type) {
     struct flock fl;
@@ -220,6 +219,10 @@ void indexed_write_key_value_pair(const char *filename, const char *index_key, c
 
 // Удаление пары ключ-значение с чтением файла порциями
 void delete_key_value_pair(const char *filename, const char *index_key) {
+    char temp_filename[256];
+    snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
+
+
     int fd = open(filename, O_RDWR);
     if (fd == -1) return;
 
@@ -229,13 +232,10 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
     }
 
 
-    char temp_filename[256];
-    snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
-
-
-    int temp_fd = mkstemp(temp_filename);
+    int temp_fd = open(temp_filename, O_RDWR | O_CREAT | O_APPEND, 0644);
     if (temp_fd == -1) {
-        close(fd);
+        close(temp_fd);
+        //perror("Error opening file");
         return;
     }
 
@@ -278,10 +278,12 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
     
     fclose(file);
     fclose(temp_file);
+    close(fd); 
+    close(temp_fd);
+    unlink(filename);
 
     // Заменяем оригинальный файл временным файлом
     rename(temp_filename, filename);
 
-    close(fd); // Это также разблокирует файл
+    return;
 }
-
