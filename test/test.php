@@ -31,3 +31,60 @@ print_r([
 	indexed_find_value_by_key(__DIR__ . '/fast_io3.dat', 'index_8')
 ]);
 
+
+
+
+
+$start= microtime(true);
+
+for($i=0; $i <=10000; $i++){
+	write_key_value_pair(__DIR__ . '/fast_io22.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i);
+}
+
+$time= microtime(true) - $start;
+echo "write_key_value_pair: ", $time, "\n";
+
+
+$start= microtime(true);
+
+for($i=0; $i <=10000; $i++){
+	find_value_by_key(__DIR__ . '/fast_io22.dat', 'index_' . $i);
+}
+
+$time= microtime(true) - $start;
+echo "find_value_by_key: ", $time, "\n";
+
+
+$start= microtime(true);
+
+for($i=0; $i <=10000; $i++){
+	delete_key_value_pair(__DIR__ . '/fast_io22.dat', 'index_' . $i);
+}
+
+$time= microtime(true) - $start;
+echo "delete_key_value_pair: ", $time, "\n";
+
+
+
+
+$start= microtime(true);
+
+for($i=0; $i <=10000; $i++){
+	indexed_write_key_value_pair(__DIR__ . '/fast_io33.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i);
+}
+
+$time= microtime(true) - $start;
+echo "indexed_write_key_value_pair: ", $time, "\n";
+
+
+$start= microtime(true);
+
+for($i=0; $i <=10000; $i++){
+	indexed_find_value_by_key(__DIR__ . '/fast_io33.dat', 'index_' . $i);
+}
+
+$time= microtime(true) - $start;
+echo "indexed_find_value_by_key: ", $time, "\n";
+
+
+
