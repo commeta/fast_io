@@ -79,18 +79,14 @@ void write_key_value_pair(const char *filename, const char *index_key, const cha
     close(fd); // Это также разблокирует файл
 }
 
-// Удаление пары ключ-значение
+
+
+// Удаление пары ключ-значение с чтением файла порциями
 void delete_key_value_pair(const char *filename, const char *index_key) {
     int fd = open(filename, O_RDWR);
     if (fd == -1) return;
 
     if (lock_file(fd, F_WRLCK) == -1) {
-        close(fd);
-        return;
-    }
-
-    FILE *file = fdopen(fd, "r+");
-    if (!file) {
         close(fd);
         return;
     }
@@ -101,29 +97,52 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
 
     int temp_fd = mkstemp(temp_filename);
     if (temp_fd == -1) {
-        fclose(file);
+        close(fd);
         return;
     }
 
+    FILE *file = fdopen(fd, "r");
     FILE *temp_file = fdopen(temp_fd, "w");
-    if (!temp_file) {
-        fclose(file);
+    
+    if (!file || !temp_file) {
+        if (file) fclose(file);
+        if (temp_file) fclose(temp_file);
+        close(fd);
         close(temp_fd);
         unlink(temp_filename);
         return;
     }
 
-    char line[256];
-    while (fgets(line, sizeof(line), file)) {
-        char *key = strtok(line, " ");
-        if (strcmp(index_key, key) != 0) {
-            fputs(line, temp_file);
+    char buffer[BUFFER_SIZE + 1];
+    size_t bytesRead;
+    while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
+        buffer[bytesRead] = '\0'; // Добавляем нуль-терминатор для безопасной работы со строками
+        
+        char *lineStart = buffer;
+        char *lineEnd;
+        while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
+            *lineEnd = '\0'; // Заменяем символ новой строки на нуль-терминатор
+            
+            // Проверяем, начинается ли строка с ключа
+            if (strncmp(lineStart, index_key, strlen(index_key)) != 0 || lineStart[strlen(index_key)] != ' ') {
+                // Если строка не начинается с ключа, копируем её во временный файл
+                fprintf(temp_file, "%s\n", lineStart);
+            }
+            
+            lineStart = lineEnd + 1; // Переходим к следующей строке
+        }
+        
+        // Обработка случая, когда последняя строка в буфере не завершена
+        if (lineStart != buffer + bytesRead) {
+            fseek(file, -(bytesRead - (lineStart - buffer)), SEEK_CUR); // Возвращаемся назад в исходном файле
         }
     }
-
+    
     fclose(file);
     fclose(temp_file);
 
-    // Переименовываем временный файл
+    // Заменяем оригинальный файл временным файлом
     rename(temp_filename, filename);
+
+    close(fd); // Это также разблокирует файл
 }
