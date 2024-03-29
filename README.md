@@ -77,6 +77,6 @@ make test
 
 После установки не забудьте добавить строку `extension=fast_io.so` в ваш `php.ini`, чтобы активировать расширение.
 
-Теперь вы можете вызывать `find_value_by_key`, `write_key_value_pair` и `deleteKeyValuePair` из PHP как обычные функции.
+Теперь вы можете вызывать `find_value_by_key`, `write_key_value_pair` и `delete_key_value_pair` из PHP как обычные функции.
 
 
