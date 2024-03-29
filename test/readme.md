@@ -2,7 +2,7 @@
 
 
 ```
-commeta@api:~/project/kernel/fast_io$ php fast_io.php 
+commeta@api:~/project/kernel/fast_io$ php test.php 
 /home/commeta/project/kernel/fast_io/fast_io2.dat
 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, Array
 (
