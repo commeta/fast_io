@@ -280,7 +280,6 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
     fclose(temp_file);
     close(fd); 
     close(temp_fd);
-    unlink(filename);
 
     // Заменяем оригинальный файл временным файлом
     rename(temp_filename, filename);
