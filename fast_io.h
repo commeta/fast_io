@@ -6,6 +6,9 @@
 
 #define BUFFER_SIZE 4096
 
+
+
+
 // Вспомогательная функция для блокировки файла
 int lock_file(int fd, int lock_type) {
     struct flock fl;
@@ -15,6 +18,7 @@ int lock_file(int fd, int lock_type) {
     fl.l_len = 0; // Блокировка всего файла
     return fcntl(fd, F_SETLKW, &fl);
 }
+
 
 
 // Функция поиска значения по ключу с чтением файла порциями
@@ -63,6 +67,64 @@ char *find_value_by_key(const char *filename, const char *index_key) {
 
 
 
+// Структура для хранения информации о записи в индексном файле
+typedef struct {
+    off_t offset; // Смещение данных в файле данных
+    size_t size;  // Размер блока данных
+} IndexRecord;
+
+char *indexed_find_value_by_key(const char *filename, const char *index_key) {
+    char index_filename[256];
+    snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
+
+    int index_fd = open(index_filename, O_RDONLY);
+    int data_fd = open(filename, O_RDONLY);
+    if (index_fd == -1 || data_fd == -1) {
+        if (index_fd != -1) close(index_fd);
+        if (data_fd != -1) close(data_fd);
+        return NULL;
+    }
+
+    // Блокировка обоих файлов
+    if (lock_file(index_fd, F_RDLCK) == -1 || lock_file(data_fd, F_RDLCK) == -1) {
+        close(index_fd);
+        close(data_fd);
+        return NULL;
+    }
+
+    char buffer[BUFFER_SIZE];
+    ssize_t bytesRead;
+    char *value = NULL;
+
+    while ((bytesRead = read(index_fd, buffer, BUFFER_SIZE)) > 0) {
+        for (size_t i = 0; i < bytesRead; i += sizeof(IndexRecord) + strlen(index_key)) {
+            if (strncmp(buffer + i, index_key, strlen(index_key)) == 0) {
+                // Найдено совпадение ключа, читаем информацию о смещении и размере
+                IndexRecord record;
+                memcpy(&record, buffer + i + strlen(index_key), sizeof(IndexRecord));
+
+                // Чтение данных из файла данных
+                value = malloc(record.size + 1);
+                if (value) {
+                    pread(data_fd, value, record.size, record.offset);
+                    value[record.size] = '\0'; // Добавляем нуль-терминатор
+                }
+                break;
+            }
+        }
+        if (value != NULL) break;
+    }
+
+    // Разблокировка и закрытие файлов
+    lock_file(index_fd, F_UNLCK);
+    lock_file(data_fd, F_UNLCK);
+    close(index_fd);
+    close(data_fd);
+
+    return value;
+}
+
+
 
 // Запись пары ключ-значение
 void write_key_value_pair(const char *filename, const char *index_key, const char *index_val) {
@@ -74,9 +136,60 @@ void write_key_value_pair(const char *filename, const char *index_key, const cha
         return;
     }
 
-    dprintf(fd, "%s %s\\n", index_key, index_val);
+    dprintf(fd, "%s %s\n", index_key, index_val);
 
     close(fd); // Это также разблокирует файл
+}
+
+
+
+void indexed_write_key_value_pair(const char *filename, const char *index_key, const char *index_val) {
+    char index_filename[256];
+    snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
+
+    int data_fd = open(filename, O_RDWR | O_CREAT | O_APPEND, 0644);
+    int index_fd = open(index_filename, O_RDWR | O_CREAT | O_APPEND, 0644);
+    if (data_fd == -1 || index_fd == -1) {
+        //perror("Error opening file");
+        if (data_fd != -1) close(data_fd);
+        if (index_fd != -1) close(index_fd);
+        return;
+    }
+
+    // Блокировка обоих файлов
+    if (lock_file(data_fd, F_WRLCK) == -1 || lock_file(index_fd, F_WRLCK) == -1) {
+        //perror("Error locking file");
+        close(data_fd);
+        close(index_fd);
+        return;
+    }
+
+    // Запись значения в файл данных
+    off_t offset = lseek(data_fd, 0, SEEK_END); // Получаем текущее смещение в файле данных
+    size_t size = strlen(index_val);
+    if (write(data_fd, index_val, size) != size) {
+        //perror("Error writing to data file");
+        close(data_fd);
+        close(index_fd);
+        return;
+    }
+
+    // Запись индекса в индексный файл
+    IndexRecord record = {offset, size};
+    if (write(index_fd, index_key, strlen(index_key)) != strlen(index_key) ||
+        write(index_fd, &record, sizeof(IndexRecord)) != sizeof(IndexRecord)
+    ) {
+        //perror("Error writing to index file");
+        close(data_fd);
+        close(index_fd);
+        return;
+    }
+
+    // Разблокировка и закрытие файлов
+    lock_file(data_fd, F_UNLCK);
+    lock_file(index_fd, F_UNLCK);
+    close(data_fd);
+    close(index_fd);
 }
 
 
@@ -91,9 +204,10 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
         return;
     }
 
-    // Создаем временный файл для копирования данных
-    char temp_filename[64];
-    tmpnam(temp_filename);
+
+    char temp_filename[256];
+    snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
+
 
     int temp_fd = mkstemp(temp_filename);
     if (temp_fd == -1) {
@@ -146,3 +260,4 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
 
     close(fd); // Это также разблокирует файл
 }
+
