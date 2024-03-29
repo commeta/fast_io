@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#define BUFFER_SIZE 4096
+
 // Вспомогательная функция для блокировки файла
 int lock_file(int fd, int lock_type) {
     struct flock fl;
@@ -14,7 +16,8 @@ int lock_file(int fd, int lock_type) {
     return fcntl(fd, F_SETLKW, &fl);
 }
 
-// Поиск значения по ключу
+
+// Функция поиска значения по ключу с чтением файла порциями
 char *find_value_by_key(const char *filename, const char *index_key) {
     int fd = open(filename, O_RDONLY);
     if (fd == -1) return NULL;
@@ -24,26 +27,42 @@ char *find_value_by_key(const char *filename, const char *index_key) {
         return NULL;
     }
 
-    FILE *file = fdopen(fd, "r");
-    if (!file) {
-        close(fd);
-        return NULL;
-    }
-
-    static char line[256];
+    char buffer[BUFFER_SIZE + 1]; // Дополнительный байт для нуль-терминатора
+    ssize_t bytesRead;
     char *found_value = NULL;
-    while (fgets(line, sizeof(line), file)) {
-        char *key = strtok(line, " ");
-        char *value = strtok(NULL, "\\n");
-        if (strcmp(index_key, key) == 0) {
-            found_value = strdup(value);
-            break;
+    char *lineStart = buffer;
+    int keyLength = strlen(index_key);
+
+    while ((bytesRead = read(fd, buffer, BUFFER_SIZE)) > 0) {
+        buffer[bytesRead] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
+
+        // Обработка данных в буфере
+        char *lineEnd;
+        while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
+            *lineEnd = '\0'; // Завершаем строку нуль-терминатором
+
+            // Проверяем, начинается ли строка с ключа
+            if (strncmp(lineStart, index_key, keyLength) == 0 && lineStart[keyLength] == ' ') {
+                found_value = strdup(lineStart + keyLength + 1); // Пропускаем ключ и пробел
+                break;
+            }
+
+            lineStart = lineEnd + 1; // Переходим к следующей строке
         }
+        if (found_value != NULL) break;
+
+        // Если не нашли в этом буфере, подготавливаемся к чтению следующего
+        size_t remaining = bytesRead - (lineStart - buffer);
+        memmove(buffer, lineStart, remaining); // Перемещаем оставшуюся часть в начало буфера
+        lineStart = buffer;
     }
 
-    fclose(file); // Это также разблокирует файл
+    close(fd); 
     return found_value;
 }
+
+
+
 
 // Запись пары ключ-значение
 void write_key_value_pair(const char *filename, const char *index_key, const char *index_val) {
