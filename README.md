@@ -150,4 +150,13 @@ make test
 
 Теперь вы можете вызывать `find_value_by_key`, `indexed_find_value_by_key`, `write_key_value_pair`, `indexed_write_key_value_pair`, `delete_key_value_pair` из PHP как обычные функции.
 
+Результат тестирования: Ryzen 12 Cores, 16GB RAM, SATA 3 SSD.
 
+```
+write_key_value_pair: 0.1557559967041 (0.00001558)
+find_value_by_key: 1.4037699699402 (0.00014038)
+delete_key_value_pair: 12.625564098358 (0.00126256)
+indexed_write_key_value_pair: 0.30500102043152 (0.00003050)
+indexed_find_value_by_key: 1.2769410610199 (0.00012769)
+```
+Функция запускалась в цикле 10000 раз, с линейным инкрементом индекса. Показано время в секундах по результатам теста: 10000 запусков (1 запуск).
