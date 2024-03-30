@@ -42,7 +42,9 @@ for($i=0; $i <=10000; $i++){
 }
 
 $time= microtime(true) - $start;
-echo "write_key_value_pair: ", $time, "\n";
+echo "write_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
+
+
 
 
 $start= microtime(true);
@@ -52,7 +54,7 @@ for($i=0; $i <=10000; $i++){
 }
 
 $time= microtime(true) - $start;
-echo "find_value_by_key: ", $time, "\n";
+echo "find_value_by_key: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
 $start= microtime(true);
@@ -62,7 +64,7 @@ for($i=0; $i <=10000; $i++){
 }
 
 $time= microtime(true) - $start;
-echo "delete_key_value_pair: ", $time, "\n";
+echo "delete_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
 
@@ -74,7 +76,7 @@ for($i=0; $i <=10000; $i++){
 }
 
 $time= microtime(true) - $start;
-echo "indexed_write_key_value_pair: ", $time, "\n";
+echo "indexed_write_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
 $start= microtime(true);
@@ -84,7 +86,7 @@ for($i=0; $i <=10000; $i++){
 }
 
 $time= microtime(true) - $start;
-echo "indexed_find_value_by_key: ", $time, "\n";
+echo "indexed_find_value_by_key: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
 
