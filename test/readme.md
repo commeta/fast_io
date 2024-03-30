@@ -17,12 +17,15 @@ Array
 (
     [0] => data_indexed_write_key_value_pair_8
 )
-write_key_value_pair: 0.1557559967041 (0.00001558)
-find_value_by_key: 1.4037699699402 (0.00014038)
-delete_key_value_pair: 12.625564098358 (0.00126256)
-indexed_write_key_value_pair: 0.30500102043152 (0.00003050)
-indexed_find_value_by_key: 1.2769410610199 (0.00012769)
-
-
+Array
+(
+    [0] => 
+)
+write_key_value_pair: 0.075778007507324 (0.00000758)
+find_value_by_key: 1.1205749511719 (0.00011206)
+delete_key_value_pair: 9.5440471172333 (0.00095440)
+indexed_write_key_value_pair: 0.18855595588684 (0.00001886)
+indexed_find_value_by_key: 1.0489568710327 (0.00010490)
+indexed_delete_key: 5.0654828548431 (0.00050655)
 
 ```
