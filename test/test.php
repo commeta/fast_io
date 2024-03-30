@@ -27,11 +27,16 @@ for($i=0; $i <=10; $i++){
 	print_r($i . ', ');
 }
 
+
 print_r([
 	indexed_find_value_by_key(__DIR__ . '/fast_io3.dat', 'index_8')
 ]);
 
+indexed_delete_key(__DIR__ . '/fast_io3.dat', 'index_8');
 
+print_r([
+	indexed_find_value_by_key(__DIR__ . '/fast_io3.dat', 'index_8')
+]);
 
 
 
@@ -89,4 +94,13 @@ $time= microtime(true) - $start;
 echo "indexed_find_value_by_key: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
+
+$start= microtime(true);
+
+for($i=0; $i <=10000; $i++){
+	indexed_delete_key(__DIR__ . '/fast_io33.dat', 'index_' . $i);
+}
+
+$time= microtime(true) - $start;
+echo "indexed_delete_key: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
