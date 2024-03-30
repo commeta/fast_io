@@ -119,7 +119,7 @@ char *indexed_find_value_by_key(const char *filename, const char *index_key) {
     ssize_t bytesRead;
     char *value = NULL;
 
-    while ((bytesRead = read(index_fd, buffer, BUFFER_SIZE)) > 0) {
+    while ((bytesRead = read(index_fd, buffer, BUFFER_SIZE)) > 0) { 
         for (size_t i = 0; i < bytesRead; i += sizeof(IndexRecord) + strlen(index_key)) {
             if (strncmp(buffer + i, index_key, strlen(index_key)) == 0) {
                 // Найдено совпадение ключа, читаем информацию о смещении и размере
@@ -285,4 +285,51 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
     rename(temp_filename, filename);
 
     return;
+}
+
+
+
+// Функция для затирания ключа index_key в индексном файле нулями
+void indexed_delete_key(const char *filename, const char *index_key) {
+    char index_filename[256];
+    snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
+
+    int index_fd = open(index_filename, O_RDWR);
+    if (index_fd == -1) {
+        //perror("Ошибка при открытии индексного файла");
+        return;
+    }
+
+    // Блокировка индексного файла на запись
+    if (lock_file(index_fd, F_WRLCK) == -1) {
+        //perror("Ошибка при блокировке индексного файла");
+        close(index_fd);
+        return;
+    }
+
+    char buffer[BUFFER_SIZE];
+    ssize_t bytesRead;
+    size_t index_key_len = strlen(index_key);
+    off_t current_pos = 0;
+    
+    while ((bytesRead = read(index_fd, buffer, BUFFER_SIZE)) > 0) {
+        for (size_t i = 0; i <= bytesRead - index_key_len; ++i) {
+            if (strncmp(buffer + i, index_key, index_key_len) == 0) {
+                // Найден ключ, затираем его нулями
+                memset(buffer + i, '0', index_key_len);
+                if (pwrite(index_fd, buffer + i, index_key_len, current_pos + i) == -1) {
+                    //perror("Ошибка при записи в индексный файл");
+                    close(index_fd);
+                    return;
+                }
+                goto unlock_and_close; // Завершаем после первого найденного совпадения
+            }
+        }
+        current_pos += bytesRead;
+    }
+
+unlock_and_close:
+    // Разблокировка и закрытие индексного файла
+    lock_file(index_fd, F_UNLCK);
+    close(index_fd);
 }
