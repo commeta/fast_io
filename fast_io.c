@@ -13,6 +13,7 @@ PHP_FUNCTION(indexed_find_value_by_key);
 PHP_FUNCTION(write_key_value_pair);
 PHP_FUNCTION(indexed_write_key_value_pair);
 PHP_FUNCTION(delete_key_value_pair);
+PHP_FUNCTION(indexed_delete_key);
 
 /* Запись аргументов функций */
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_value_by_key, 0, 2, IS_STRING, 1)
@@ -42,6 +43,11 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_delete_key_value_pair, 0, 2, IS_
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_indexed_delete_key, 0, 2, IS_VOID, 0)
+    ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
 /* Регистрация функций */
 const zend_function_entry fast_io_functions[] = {
     PHP_FE(find_value_by_key, arginfo_find_value_by_key)
@@ -49,6 +55,7 @@ const zend_function_entry fast_io_functions[] = {
     PHP_FE(write_key_value_pair, arginfo_write_key_value_pair)
     PHP_FE(indexed_write_key_value_pair, arginfo_indexed_write_key_value_pair)
     PHP_FE(delete_key_value_pair, arginfo_delete_key_value_pair)
+    PHP_FE(indexed_delete_key, arginfo_indexed_delete_key)
     PHP_FE_END
 };
 
@@ -156,6 +163,21 @@ PHP_FUNCTION(delete_key_value_pair) {
     }
 
     delete_key_value_pair(filename, index_key);
+    
+    RETURN_NULL();
+} 
+
+PHP_FUNCTION(indexed_delete_key) {
+    char *filename;
+    size_t filename_len;
+    char *index_key;
+    size_t index_key_len;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &filename, &filename_len, &index_key, &index_key_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    indexed_delete_key(filename, index_key);
     
     RETURN_NULL();
 } 
