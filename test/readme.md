@@ -17,11 +17,12 @@ Array
 (
     [0] => data_indexed_write_key_value_pair_8
 )
-write_key_value_pair: 0.13158893585205
-find_value_by_key: 1.2705569267273
-delete_key_value_pair: 12.675770998001
-indexed_write_key_value_pair: 0.33225703239441
-indexed_find_value_by_key: 1.3199388980865
+write_key_value_pair: 0.1557559967041 (0.00001558)
+find_value_by_key: 1.4037699699402 (0.00014038)
+delete_key_value_pair: 12.625564098358 (0.00126256)
+indexed_write_key_value_pair: 0.30500102043152 (0.00003050)
+indexed_find_value_by_key: 1.2769410610199 (0.00012769)
+
 
 
 ```
