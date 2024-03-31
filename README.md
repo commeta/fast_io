@@ -189,14 +189,14 @@ make test
 Результат тестирования: Ubuntu 24.04, Ryzen 12 Cores, 16GB RAM, SATA 3 SSD.
 
 ```
-write_key_value_pair: 0.073850870132446 (0.00000739)
-find_value_by_key: 1.0971190929413 (0.00010971)
-find_value_by_key repeat: 0.053118228912354 (0.00000531)
-delete_key_value_pair: 9.4632499217987 (0.00094632)
-indexed_write_key_value_pair: 0.18798398971558 (0.00001880)
-indexed_find_value_by_key: 1.0934419631958 (0.00010934)
-indexed_find_value_by_key repeat: 0.20405077934265 (0.00002041)
-indexed_delete_key: 4.9545240402222 (0.00049545)
+write_key_value_pair: 0.088172912597656 (0.00000882)
+find_value_by_key: 1.1746139526367 (0.00011746)
+find_value_by_key repeat: 0.061406850814819 (0.00000614)
+delete_key_value_pair: 10.811213970184 (0.00108112)
+indexed_write_key_value_pair: 0.22422909736633 (0.00002242)
+indexed_find_value_by_key: 0.87611103057861 (0.00008761)
+indexed_find_value_by_key repeat: 0.12141799926758 (0.00001214)
+indexed_delete_key: 4.6194241046906 (0.00046194)
 ```
 Функция запускалась в цикле 10000 раз, с линейным инкрементом индекса (без попадания в кэш) и repeat многократный поиск одного и того же индекса.
 Показано время в секундах по результатам теста: 10000 запусков (1 запуск).
