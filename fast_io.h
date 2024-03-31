@@ -43,7 +43,6 @@ int lock_file(int fd, int lock_type) {
 }
 
 
-
 // Функция поиска значения по ключу с чтением файла порциями
 char *find_value_by_key(const char *filename, const char *index_key) {
     int fd = open(filename, O_RDONLY);
@@ -90,12 +89,6 @@ char *find_value_by_key(const char *filename, const char *index_key) {
 
 
 
-// Структура для хранения информации о записи в индексном файле
-typedef struct {
-    off_t offset; // Смещение данных в файле данных
-    size_t size;  // Размер блока данных
-} IndexRecord;
-
 char *indexed_find_value_by_key(const char *filename, const char *index_key) {
     char index_filename[256];
     snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
@@ -115,27 +108,53 @@ char *indexed_find_value_by_key(const char *filename, const char *index_key) {
         return NULL;
     }
 
-    char buffer[BUFFER_SIZE];
+    char buffer[BUFFER_SIZE + 1]; // Дополнительный байт для нуль-терминатора
     ssize_t bytesRead;
+    char *found_value = NULL;
+    char *lineStart = buffer;
+    int keyLength = strlen(index_key);
     char *value = NULL;
 
-    while ((bytesRead = read(index_fd, buffer, BUFFER_SIZE)) > 0) { 
-        for (size_t i = 0; i < bytesRead; i += sizeof(IndexRecord) + strlen(index_key)) {
-            if (strncmp(buffer + i, index_key, strlen(index_key)) == 0) {
-                // Найдено совпадение ключа, читаем информацию о смещении и размере
-                IndexRecord record;
-                memcpy(&record, buffer + i + strlen(index_key), sizeof(IndexRecord));
+    while ((bytesRead = read(index_fd, buffer, BUFFER_SIZE)) > 0) {
+        buffer[bytesRead] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
 
-                // Чтение данных из файла данных
-                value = malloc(record.size + 1);
-                if (value) {
-                    pread(data_fd, value, record.size, record.offset);
-                    value[record.size] = '\0'; // Добавляем нуль-терминатор
-                }
+        // Обработка данных в буфере
+        char *lineEnd;
+        while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
+            *lineEnd = '\0'; // Завершаем строку нуль-терминатором
+
+            // Проверяем, начинается ли строка с ключа
+            if (strncmp(lineStart, index_key, keyLength) == 0 && lineStart[keyLength] == ' ') {
+                found_value = strdup(lineStart + keyLength + 1); // Пропускаем ключ и пробел
                 break;
             }
+
+            lineStart = lineEnd + 1; // Переходим к следующей строке
         }
-        if (value != NULL) break;
+        if (found_value != NULL) break;
+
+        // Если не нашли в этом буфере, подготавливаемся к чтению следующего
+        size_t remaining = bytesRead - (lineStart - buffer);
+        memmove(buffer, lineStart, remaining); // Перемещаем оставшуюся часть в начало буфера
+        lineStart = buffer;
+    }
+
+
+    if (found_value != NULL){
+        // Парсим ключ и IndexRecord
+        char *token = strtok(found_value, ":");
+        if (!token) return found_value; // Некорректная строка
+
+        off_t offset = atoll(token);
+        token = strtok(NULL, ":"); 
+        size_t size = atoll(token);
+        
+        value = malloc(size);
+
+        if (value) {
+            pread(data_fd, value, size, offset);
+            value[size] = '\0'; // Добавляем нуль-терминатор
+        }
     }
 
     // Разблокировка и закрытие файлов
@@ -198,15 +217,7 @@ void indexed_write_key_value_pair(const char *filename, const char *index_key, c
     }
 
     // Запись индекса в индексный файл
-    IndexRecord record = {offset, size};
-    if (write(index_fd, index_key, strlen(index_key)) != strlen(index_key) ||
-        write(index_fd, &record, sizeof(IndexRecord)) != sizeof(IndexRecord)
-    ) {
-        //perror("Error writing to index file");
-        close(data_fd);
-        close(index_fd);
-        return;
-    }
+    dprintf(index_fd, "%s %d:%d\n", index_key, offset, size);
 
     // Разблокировка и закрытие файлов
     lock_file(data_fd, F_UNLCK);
@@ -286,7 +297,6 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
 
     return;
 }
-
 
 
 // Функция для затирания ключа index_key в индексном файле нулями
