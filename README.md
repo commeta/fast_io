@@ -182,7 +182,7 @@ make test
 
 После установки не забудьте добавить строку `extension=fast_io.so` в ваш `php.ini`, чтобы активировать расширение.
 
-Теперь вы можете вызывать `find_value_by_key`, `indexed_find_value_by_key`, `write_key_value_pair`, `indexed_write_key_value_pair`, `delete_key_value_pair`, `indexed_delete_key` из PHP как обычные функции.
+Теперь вы можете вызывать `find_value_by_key`, `indexed_find_value_by_key`, `write_key_value_pair`, `indexed_write_key_value_pair`, `delete_key_value_pair`, `rebuild_data_file` из PHP как обычные функции.
 
 Результат тестирования: Ubuntu 24.04, Ryzen 12 Cores, 16GB RAM, SATA 3 SSD.
 
@@ -194,7 +194,7 @@ delete_key_value_pair: 10.749533891678 (0.00107495)
 indexed_write_key_value_pair: 0.190997838974 (0.00001910)
 indexed_find_value_by_key: 0.87064599990845 (0.00008706)
 indexed_find_value_by_key repeat: 0.11166596412659 (0.00001117)
-
 ```
+
 Функция запускалась в цикле 10000 раз, с линейным инкрементом индекса (без попадания в кэш) и repeat многократный поиск одного и того же индекса.
 Показано время в секундах по результатам теста: 10000 запусков (1 запуск).
