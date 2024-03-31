@@ -21,14 +21,14 @@ Array
 (
     [0] => 
 )
-write_key_value_pair: 0.088172912597656 (0.00000882)
-find_value_by_key: 1.1746139526367 (0.00011746)
-find_value_by_key repeat: 0.061406850814819 (0.00000614)
-delete_key_value_pair: 10.811213970184 (0.00108112)
-indexed_write_key_value_pair: 0.22422909736633 (0.00002242)
-indexed_find_value_by_key: 0.87611103057861 (0.00008761)
-indexed_find_value_by_key repeat: 0.12141799926758 (0.00001214)
-indexed_delete_key: 4.6194241046906 (0.00046194)
+write_key_value_pair: 0.11135983467102 (0.00001114)
+find_value_by_key: 1.2018070220947 (0.00012018)
+find_value_by_key repeat: 0.054724931716919 (0.00000547)
+delete_key_value_pair: 10.749533891678 (0.00107495)
+indexed_write_key_value_pair: 0.190997838974 (0.00001910)
+indexed_find_value_by_key: 0.87064599990845 (0.00008706)
+indexed_find_value_by_key repeat: 0.11166596412659 (0.00001117)
+
 
 ```
 
