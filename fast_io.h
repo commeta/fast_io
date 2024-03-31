@@ -327,15 +327,27 @@ void rebuild_data_file(const char *filename) {
         return;
     }
 
+    char temp_index_filename[256];
+    snprintf(temp_index_filename, sizeof(temp_filename), "%s.index.tmp", filename);
+
+    int temp_index_fd = open(temp_index_filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (temp_index_fd == -1) {
+        //perror("Ошибка создания временного файла");
+        close(index_fd);
+        return;
+    }
+
 
     // Блокировка  файлов
     if (
         lock_file(index_fd, F_RDLCK) == -1 || 
-        lock_file(temp_fd, F_WRLCK) == -1
+        lock_file(temp_fd, F_WRLCK) == -1 ||
+        lock_file(temp_index_fd, F_WRLCK) == -1
     ) {
         //perror("Error locking file");
         close(index_fd);
         close(temp_fd);
+        close(temp_index_fd);
         return;
     }
     
@@ -378,9 +390,13 @@ void rebuild_data_file(const char *filename) {
 
                     char data_buffer[size];
                     read(data_fd, data_buffer, size); // Читаем блок данных
-                    write(temp_fd, data_buffer, size); // Записываем блок данных во временный файл
 
+                    off_t new_offset = lseek(temp_fd, 0, SEEK_END); // Получаем текущее смещение в файле данных
+
+                    write(temp_fd, data_buffer, size); // Записываем блок данных во временный файл
                     close(data_fd);
+
+                    dprintf(temp_index_fd, "%s %ld:%zu\n", ptr, new_offset, size);
                 }
             }
 
@@ -390,7 +406,9 @@ void rebuild_data_file(const char *filename) {
 
     close(index_fd);
     close(temp_fd);
+    close(temp_index_fd);
 
     // Замена оригинального файла данных новой версией
     rename(temp_filename, filename);
+    rename(temp_index_filename, index_filename);
 }
