@@ -206,6 +206,7 @@ PHP_FUNCTION(rebuild_data_file) {
     }
 } 
 
+
 PHP_FUNCTION(pop_key_value_pair) {
     char *filename;
     size_t filename_len;
@@ -222,7 +223,4 @@ PHP_FUNCTION(pop_key_value_pair) {
     } else {
         RETURN_NULL();
     }
-    
-    RETURN_NULL();
-} 
-
+}
