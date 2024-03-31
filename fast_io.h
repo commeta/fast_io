@@ -148,6 +148,13 @@ char *indexed_find_value_by_key(const char *filename, const char *index_key) {
         off_t offset = atoll(token);
         token = strtok(NULL, ":"); 
         size_t size = atoll(token);
+
+        if(offset == 0 || size == 0){
+            close(index_fd);
+            close(data_fd);
+
+            return value;
+        }
         
         value = malloc(size);
 
@@ -158,8 +165,6 @@ char *indexed_find_value_by_key(const char *filename, const char *index_key) {
     }
 
     // Разблокировка и закрытие файлов
-    lock_file(index_fd, F_UNLCK);
-    lock_file(data_fd, F_UNLCK);
     close(index_fd);
     close(data_fd);
 
@@ -179,7 +184,6 @@ void write_key_value_pair(const char *filename, const char *index_key, const cha
     }
 
     dprintf(fd, "%s %s\n", index_key, index_val);
-
     close(fd); // Это также разблокирует файл
 }
 
@@ -217,11 +221,9 @@ void indexed_write_key_value_pair(const char *filename, const char *index_key, c
     }
 
     // Запись индекса в индексный файл
-    dprintf(index_fd, "%s %d:%d\n", index_key, offset, size);
+    dprintf(index_fd, "%s %ld:%zu\n", index_key, offset, size);
 
     // Разблокировка и закрытие файлов
-    lock_file(data_fd, F_UNLCK);
-    lock_file(index_fd, F_UNLCK);
     close(data_fd);
     close(index_fd);
 }
@@ -233,15 +235,8 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
     char temp_filename[256];
     snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
 
-
     int fd = open(filename, O_RDWR);
     if (fd == -1) return;
-
-    if (lock_file(fd, F_WRLCK) == -1) {
-        close(fd);
-        return;
-    }
-
 
     int temp_fd = open(temp_filename, O_RDWR | O_CREAT | O_APPEND, 0644);
     if (temp_fd == -1) {
@@ -249,6 +244,18 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
         //perror("Error opening file");
         return;
     }
+
+    // Блокировка  файлов
+    if (
+        lock_file(fd, F_WRLCK) == -1 || 
+        lock_file(temp_fd, F_WRLCK) == -1
+    ) {
+        //perror("Error locking file");
+        close(fd);
+        close(temp_fd);
+        return;
+    }
+
 
     FILE *file = fdopen(fd, "r");
     FILE *temp_file = fdopen(temp_fd, "w");
@@ -299,47 +306,91 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
 }
 
 
-// Функция для затирания ключа index_key в индексном файле нулями
-void indexed_delete_key(const char *filename, const char *index_key) {
+// Функция для пересоздания файла данных на основе индексного файла
+void rebuild_data_file(const char *filename) {
     char index_filename[256];
     snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
 
-    int index_fd = open(index_filename, O_RDWR);
+    int index_fd = open(index_filename, O_RDONLY);
     if (index_fd == -1) {
-        //perror("Ошибка при открытии индексного файла");
+        //perror("Ошибка открытия индексного файла");
         return;
     }
 
-    // Блокировка индексного файла на запись
-    if (lock_file(index_fd, F_WRLCK) == -1) {
-        //perror("Ошибка при блокировке индексного файла");
+    char temp_filename[256];
+    snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
+
+    int temp_fd = open(temp_filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (temp_fd == -1) {
+        //perror("Ошибка создания временного файла");
         close(index_fd);
         return;
     }
 
-    char buffer[BUFFER_SIZE];
-    ssize_t bytesRead;
-    size_t index_key_len = strlen(index_key);
-    off_t current_pos = 0;
+
+    // Блокировка  файлов
+    if (
+        lock_file(index_fd, F_RDLCK) == -1 || 
+        lock_file(temp_fd, F_WRLCK) == -1
+    ) {
+        //perror("Error locking file");
+        close(index_fd);
+        close(temp_fd);
+        return;
+    }
     
+
+    char buffer[BUFFER_SIZE + 1]; // +1 для нуль-терминатора
+    ssize_t bytesRead;
+
+    // Чтение индексного файла посекторно
     while ((bytesRead = read(index_fd, buffer, BUFFER_SIZE)) > 0) {
-        for (size_t i = 0; i <= bytesRead - index_key_len; ++i) {
-            if (strncmp(buffer + i, index_key, index_key_len) == 0) {
-                // Найден ключ, затираем его нулями
-                memset(buffer + i, '0', index_key_len);
-                if (pwrite(index_fd, buffer + i, index_key_len, current_pos + i) == -1) {
-                    //perror("Ошибка при записи в индексный файл");
-                    close(index_fd);
-                    return;
+        buffer[bytesRead] = '\0'; // Добавляем нуль-терминатор для безопасной работы со строками
+
+        char *ptr = buffer;
+        while (*ptr) {
+            // Находим конец строки или конец буфера
+            char *end_line = strchr(ptr, '\n');
+            if (!end_line) break;
+            *end_line = '\0'; // Заменяем символ конца строки на нуль-терминатор для изоляции строки
+
+            // Парсинг строки индексного файла
+            char *space_pos = strchr(ptr, ' ');
+            if (space_pos) {
+                *space_pos = '\0'; // Разделяем ключ и пару offset:size
+                char *colon_pos = strchr(space_pos + 1, ':');
+                if (colon_pos) {
+                    *colon_pos = '\0'; // Разделяем offset и size
+
+                    off_t offset = atol(space_pos + 1); // Преобразуем offset в число
+                    size_t size = atol(colon_pos + 1); // Преобразуем size в число
+
+                    // Чтение и запись блока данных из оригинального файла данных во временный файл
+                    int data_fd = open(filename, O_RDONLY);
+                    if (data_fd == -1) {
+                        //perror("Ошибка открытия файла данных");
+                        close(temp_fd);
+                        close(index_fd);
+                        return;
+                    }
+
+                    lseek(data_fd, offset, SEEK_SET); // Перемещаемся к началу блока данных
+
+                    char data_buffer[size];
+                    read(data_fd, data_buffer, size); // Читаем блок данных
+                    write(temp_fd, data_buffer, size); // Записываем блок данных во временный файл
+
+                    close(data_fd);
                 }
-                goto unlock_and_close; // Завершаем после первого найденного совпадения
             }
+
+            ptr = end_line + 1; // Перемещаемся к началу следующей строки
         }
-        current_pos += bytesRead;
     }
 
-unlock_and_close:
-    // Разблокировка и закрытие индексного файла
-    lock_file(index_fd, F_UNLCK);
     close(index_fd);
+    close(temp_fd);
+
+    // Замена оригинального файла данных новой версией
+    rename(temp_filename, filename);
 }
