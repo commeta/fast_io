@@ -2,7 +2,6 @@
 
 Буферизованная версия fast_io.h
 ```
-commeta@api:~/project/kernel/fast_io$ php test.php
 /home/commeta/project/kernel/fast_io/fast_io2.dat
 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, Array
 (
@@ -11,6 +10,11 @@ commeta@api:~/project/kernel/fast_io$ php test.php
 Array
 (
     [0] => 
+)
+Array
+(
+    [0] => index_10 data_write_key_value_pair_10
+
 )
 /home/commeta/project/kernel/fast_io/fast_io3.dat
 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, Array
@@ -21,20 +25,18 @@ Array
 (
     [0] => 
 )
-write_key_value_pair: 0.11135983467102 (0.00001114)
-find_value_by_key: 1.2018070220947 (0.00012018)
-find_value_by_key repeat: 0.054724931716919 (0.00000547)
-delete_key_value_pair: 10.749533891678 (0.00107495)
-indexed_write_key_value_pair: 0.190997838974 (0.00001910)
-indexed_find_value_by_key: 0.87064599990845 (0.00008706)
-indexed_find_value_by_key repeat: 0.11166596412659 (0.00001117)
-
-
+write_key_value_pair: 0.11487889289856 (0.00001149)
+find_value_by_key: 1.1644461154938 (0.00011644)
+find_value_by_key repeat: 0.059406042098999 (0.00000594)
+delete_key_value_pair: 10.655761003494 (0.00106558)
+indexed_write_key_value_pair: 0.21924114227295 (0.00002192)
+indexed_find_value_by_key: 0.91544914245605 (0.00009154)
+indexed_find_value_by_key repeat: 0.11506295204163 (0.00001151)
+pop_key_value_pair: 0.20079398155212 (0.00002008)
 ```
 
 Версия с выравниванием данных test/fast_io.h
 ```
-commeta@api:~/project/kernel/fast_io$ php test.php
 /home/commeta/project/kernel/fast_io/fast_io2.dat
 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, Array
 (
