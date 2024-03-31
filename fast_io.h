@@ -159,7 +159,7 @@ char *indexed_find_value_by_key(const char *filename, const char *index_key) {
         value = malloc(size);
 
         if (value) {
-            pread(data_fd, value, size, offset);
+            if(pread(data_fd, value, size, offset) == -1) return NULL;
             value[size] = '\0'; // Добавляем нуль-терминатор
         }
     }
@@ -174,23 +174,26 @@ char *indexed_find_value_by_key(const char *filename, const char *index_key) {
 
 
 // Запись пары ключ-значение
-void write_key_value_pair(const char *filename, const char *index_key, const char *index_val) {
+long write_key_value_pair(const char *filename, const char *index_key, const char *index_val) {
     int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0666);
-    if (fd == -1) return;
+
+    if (fd == -1) return -1;
 
     if (lock_file(fd, F_WRLCK) == -1) {
         close(fd);
-        return;
+        return -1;
     }
 
     dprintf(fd, "%s %s\n", index_key, index_val);
     close(fd); // Это также разблокирует файл
+    return 1;
 }
 
 
 
-void indexed_write_key_value_pair(const char *filename, const char *index_key, const char *index_val) {
+long indexed_write_key_value_pair(const char *filename, const char *index_key, const char *index_val) {
     char index_filename[256];
+
     snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
 
     int data_fd = open(filename, O_RDWR | O_CREAT | O_APPEND, 0644);
@@ -199,7 +202,7 @@ void indexed_write_key_value_pair(const char *filename, const char *index_key, c
         //perror("Error opening file");
         if (data_fd != -1) close(data_fd);
         if (index_fd != -1) close(index_fd);
-        return;
+        return -1;
     }
 
     // Блокировка обоих файлов
@@ -207,7 +210,7 @@ void indexed_write_key_value_pair(const char *filename, const char *index_key, c
         //perror("Error locking file");
         close(data_fd);
         close(index_fd);
-        return;
+        return -1;
     }
 
     // Запись значения в файл данных
@@ -217,7 +220,7 @@ void indexed_write_key_value_pair(const char *filename, const char *index_key, c
         //perror("Error writing to data file");
         close(data_fd);
         close(index_fd);
-        return;
+        return -1;
     }
 
     // Запись индекса в индексный файл
@@ -226,23 +229,25 @@ void indexed_write_key_value_pair(const char *filename, const char *index_key, c
     // Разблокировка и закрытие файлов
     close(data_fd);
     close(index_fd);
+    return 1;
 }
 
 
 
 // Удаление пары ключ-значение с чтением файла порциями
-void delete_key_value_pair(const char *filename, const char *index_key) {
+long delete_key_value_pair(const char *filename, const char *index_key) {
     char temp_filename[256];
+
     snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
 
     int fd = open(filename, O_RDWR);
-    if (fd == -1) return;
+    if (fd == -1) return -1;
 
     int temp_fd = open(temp_filename, O_RDWR | O_CREAT | O_APPEND, 0644);
     if (temp_fd == -1) {
         close(temp_fd);
         //perror("Error opening file");
-        return;
+        return -1;
     }
 
     // Блокировка  файлов
@@ -253,7 +258,7 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
         //perror("Error locking file");
         close(fd);
         close(temp_fd);
-        return;
+        return -1;
     }
 
 
@@ -266,7 +271,7 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
         close(fd);
         close(temp_fd);
         unlink(temp_filename);
-        return;
+        return -1;
     }
 
     char buffer[BUFFER_SIZE + 1];
@@ -302,19 +307,20 @@ void delete_key_value_pair(const char *filename, const char *index_key) {
     // Заменяем оригинальный файл временным файлом
     rename(temp_filename, filename);
 
-    return;
+    return 1;
 }
 
 
 // Функция для пересоздания файла данных на основе индексного файла
-void rebuild_data_file(const char *filename) {
+long rebuild_data_file(const char *filename) {
     char index_filename[256];
+
     snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
 
     int index_fd = open(index_filename, O_RDONLY);
     if (index_fd == -1) {
         //perror("Ошибка открытия индексного файла");
-        return;
+        return -1;
     }
 
     char temp_filename[256];
@@ -324,7 +330,7 @@ void rebuild_data_file(const char *filename) {
     if (temp_fd == -1) {
         //perror("Ошибка создания временного файла");
         close(index_fd);
-        return;
+        return -1;
     }
 
     char temp_index_filename[256];
@@ -334,7 +340,7 @@ void rebuild_data_file(const char *filename) {
     if (temp_index_fd == -1) {
         //perror("Ошибка создания временного файла");
         close(index_fd);
-        return;
+        return -1;
     }
 
 
@@ -348,7 +354,7 @@ void rebuild_data_file(const char *filename) {
         close(index_fd);
         close(temp_fd);
         close(temp_index_fd);
-        return;
+        return -1;
     }
     
 
@@ -383,17 +389,21 @@ void rebuild_data_file(const char *filename) {
                         //perror("Ошибка открытия файла данных");
                         close(temp_fd);
                         close(index_fd);
-                        return;
+                        return -1;
                     }
 
                     lseek(data_fd, offset, SEEK_SET); // Перемещаемся к началу блока данных
 
                     char data_buffer[size];
-                    read(data_fd, data_buffer, size); // Читаем блок данных
+                    
+                    // Читаем блок данных
+                    if(read(data_fd, data_buffer, size) == -1) return -1;
 
                     off_t new_offset = lseek(temp_fd, 0, SEEK_END); // Получаем текущее смещение в файле данных
 
-                    write(temp_fd, data_buffer, size); // Записываем блок данных во временный файл
+                    // Записываем блок данных во временный файл
+                    if(write(temp_fd, data_buffer, size)) return -1;
+
                     close(data_fd);
 
                     dprintf(temp_index_fd, "%s %ld:%zu\n", ptr, new_offset, size);
@@ -411,4 +421,68 @@ void rebuild_data_file(const char *filename) {
     // Замена оригинального файла данных новой версией
     rename(temp_filename, filename);
     rename(temp_index_filename, index_filename);
+    return 1;
+}
+
+
+// Функция для извлечения и удаления последней строки из файла
+char *pop_key_value_pair(const char *filename) {
+    int fd = open(filename, O_RDWR);
+    if (fd == -1) return NULL;
+
+    if (lock_file(fd, F_WRLCK) == -1) {
+        close(fd);
+        return NULL;
+    }
+
+    off_t fileSize = lseek(fd, 0, SEEK_END);
+    if (fileSize == -1) {
+        close(fd);
+        return NULL;
+    }
+
+    char buffer[BUFFER_SIZE];
+    off_t pos = fileSize;
+    ssize_t bytesRead;
+    char *line = NULL;
+    int state = 0; // Состояние конечного автомата
+
+    // Читаем файл с конца, пока не найдем начало строки
+    while (pos > 0 && state != 2) {
+        pos -= BUFFER_SIZE;
+        if (pos < 0) {
+            pos = 0; // Адаптируем позицию, если вышли за начало файла
+        }
+
+        lseek(fd, pos, SEEK_SET);
+        bytesRead = read(fd, buffer, BUFFER_SIZE);
+        if (bytesRead <= 0) break; // Ошибка чтения или достигнут конец файла
+
+        // Обрабатываем буфер с конца к началу
+        for (ssize_t i = bytesRead - 1; i >= 0 && state != 2; --i) {
+            switch (state) {
+                case 0: // Ищем перенос строки
+                    if (buffer[i] == '\n') {
+                        state = 1; // Нашли перенос строки, переходим к следующему состоянию
+                    }
+                    break;
+                case 1: // Ищем начало строки
+                    if (buffer[i] == '\n' || pos + i == 0) { // Второе условие для случая, когда строка - первая в файле
+                        // Выделяем память и копируем строку
+                        size_t len = bytesRead - i - 1;
+                        line = malloc(len + 1);
+                        memcpy(line, buffer + i + 1, len);
+                        line[len] = '\0';
+                        state = 2; // Переходим к финальному состоянию
+
+                        // Усекаем файл
+                        if(ftruncate(fd, pos + i + (pos + i == 0 ? 0 : 1))) return NULL;
+                    }
+                    break;
+            }
+        }
+    }
+
+    close(fd);
+    return line; // Возвращаем последнюю строку или NULL, если строка не найдена
 }
