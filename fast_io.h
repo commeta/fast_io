@@ -355,7 +355,7 @@ long rebuild_data_file(const char *filename, const char *index_key) {
             if (!keyEnd) continue; // Если формат строки неверен
 
             *keyEnd = '\0';
-            if (strcmp(line, index_key) == 0) continue; // Пропускаем строку с исключаемым ключом
+            if (index_key != NULL && strcmp(line, index_key) == 0) continue; // Пропускаем строку с исключаемым ключом
             if (strncmp(lineStart, "000", 3) == 0) continue; // Пропускаем строку с исключаемыми нулями
 
             long offset = atol(keyEnd + 1);
