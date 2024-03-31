@@ -1,4 +1,18 @@
 <?php
+foreach(glob('fast_io*.dat') as $file) {
+	echo $file, "\n";
+	unlink($file);
+}
+foreach(glob('fast_io*.index') as $file) {
+	echo $file, "\n";
+	unlink($file);
+}
+foreach(glob('fast_io*.tmp') as $file) {
+	echo $file, "\n";
+	unlink($file);
+}
+
+
 print_r(__DIR__ . '/fast_io2.dat' . "\n");
 for($i=0; $i <=10; $i++){
 	write_key_value_pair(__DIR__ . '/fast_io2.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i);
@@ -33,6 +47,10 @@ delete_key_value_pair(__DIR__ . '/fast_io3.dat.index', 'index_8');
 print_r([
 	indexed_find_value_by_key(__DIR__ . '/fast_io3.dat', 'index_8')
 ]);
+
+
+rebuild_data_file(__DIR__ . '/fast_io3.dat');
+
 
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
@@ -88,12 +106,3 @@ for($i=0; $i <=10000; $i++){
 }
 $time= microtime(true) - $start;
 echo "indexed_find_value_by_key repeat: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
-
-
-$start= microtime(true);
-for($i=0; $i <=10000; $i++){
-	indexed_delete_key(__DIR__ . '/fast_io33.dat', 'index_' . $i);
-}
-$time= microtime(true) - $start;
-echo "indexed_delete_key: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
-
