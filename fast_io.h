@@ -367,8 +367,8 @@ long rebuild_data_file(const char *filename, const char *index_key) {
             // Чтение и запись блока данных
             lseek(data_fd, offset, SEEK_SET);
             char dataBuffer[size];
-            if(read(data_fd, dataBuffer, size) == -1) return -1;
-            if(write(temp_data_fd, dataBuffer, size)) return -1;
+            if(read(data_fd, dataBuffer, size) == -1) return -2;
+            if(write(temp_data_fd, dataBuffer, size) == -1) return -3;
 
             // Запись во временный индексный файл
             dprintf(temp_index_fd, "%s %ld:%zu\n", line, offset, size);
