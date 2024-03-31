@@ -237,7 +237,6 @@ long indexed_write_key_value_pair(const char *filename, const char *index_key, c
 // Удаление пары ключ-значение с чтением файла порциями
 long delete_key_value_pair(const char *filename, const char *index_key) {
     char temp_filename[256];
-
     snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
 
     int fd = open(filename, O_RDWR);
@@ -314,7 +313,6 @@ long delete_key_value_pair(const char *filename, const char *index_key) {
 // Функция для пересоздания файла данных на основе индексного файла
 long rebuild_data_file(const char *filename) {
     char index_filename[256];
-
     snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
 
     int index_fd = open(index_filename, O_RDONLY);
@@ -486,3 +484,4 @@ char *pop_key_value_pair(const char *filename) {
     close(fd);
     return line; // Возвращаем последнюю строку или NULL, если строка не найдена
 }
+
