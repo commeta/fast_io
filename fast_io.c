@@ -14,6 +14,7 @@ PHP_FUNCTION(write_key_value_pair);
 PHP_FUNCTION(indexed_write_key_value_pair);
 PHP_FUNCTION(delete_key_value_pair);
 PHP_FUNCTION(rebuild_data_file);
+PHP_FUNCTION(pop_key_value_pair);
 
 /* Запись аргументов функций */
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_value_by_key, 0, 2, IS_STRING, 1)
@@ -26,24 +27,28 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_indexed_find_value_by_key, 0, 2,
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_write_key_value_pair, 0, 3, IS_VOID, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_write_key_value_pair, 0, 3, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_val, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_indexed_write_key_value_pair, 0, 3, IS_VOID, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_indexed_write_key_value_pair, 0, 3, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_val, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_delete_key_value_pair, 0, 2, IS_VOID, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_delete_key_value_pair, 0, 2, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_rebuild_data_file, 0, 1, IS_VOID, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_rebuild_data_file, 0, 1, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_pop_key_value_pair, 0, 1, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
@@ -56,6 +61,7 @@ const zend_function_entry fast_io_functions[] = {
     PHP_FE(indexed_write_key_value_pair, arginfo_indexed_write_key_value_pair)
     PHP_FE(delete_key_value_pair, arginfo_delete_key_value_pair)
     PHP_FE(rebuild_data_file, arginfo_rebuild_data_file)
+    PHP_FE(pop_key_value_pair, arginfo_pop_key_value_pair)
     PHP_FE_END
 };
 
@@ -125,14 +131,19 @@ PHP_FUNCTION(write_key_value_pair) {
     size_t index_key_len;
     char *index_val;
     size_t index_val_len;
+    long result;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss", &filename, &filename_len, &index_key, &index_key_len, &index_val, &index_val_len) == FAILURE) {
         RETURN_FALSE;
     }
 
-    write_key_value_pair(filename, index_key, index_val);
-    
-    RETURN_NULL();
+    result = write_key_value_pair(filename, index_key, index_val);
+
+    if (result) {
+        RETURN_LONG(result);
+    } else {
+        RETURN_NULL();
+    }
 }
 
 PHP_FUNCTION(indexed_write_key_value_pair) {
@@ -142,14 +153,19 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
     size_t index_key_len;
     char *index_val;
     size_t index_val_len;
+    long result;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss", &filename, &filename_len, &index_key, &index_key_len, &index_val, &index_val_len) == FAILURE) {
         RETURN_FALSE;
     }
 
-    indexed_write_key_value_pair(filename, index_key, index_val);
+    result = indexed_write_key_value_pair(filename, index_key, index_val);
     
-    RETURN_NULL();
+    if (result) {
+        RETURN_LONG(result);
+    } else {
+        RETURN_NULL();
+    }
 }
 
 PHP_FUNCTION(delete_key_value_pair) {
@@ -157,17 +173,40 @@ PHP_FUNCTION(delete_key_value_pair) {
     size_t filename_len;
     char *index_key;
     size_t index_key_len;
+    long result;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &filename, &filename_len, &index_key, &index_key_len) == FAILURE) {
         RETURN_FALSE;
     }
 
-    delete_key_value_pair(filename, index_key);
+    result = delete_key_value_pair(filename, index_key);
     
-    RETURN_NULL();
+    if (result) {
+        RETURN_LONG(result);
+    } else {
+        RETURN_NULL();
+    }
 } 
 
 PHP_FUNCTION(rebuild_data_file) {
+    char *filename;
+    size_t filename_len;
+    long result;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &filename, &filename_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    result = rebuild_data_file(filename);
+    
+    if (result) {
+        RETURN_LONG(result);
+    } else {
+        RETURN_NULL();
+    }
+} 
+
+PHP_FUNCTION(pop_key_value_pair) {
     char *filename;
     size_t filename_len;
 
@@ -175,7 +214,14 @@ PHP_FUNCTION(rebuild_data_file) {
         RETURN_FALSE;
     }
 
-    rebuild_data_file(filename);
+    char *result = pop_key_value_pair(filename);
+    
+    if (result != NULL) {
+        RETVAL_STRING(result);
+        free(result);
+    } else {
+        RETURN_NULL();
+    }
     
     RETURN_NULL();
 } 
