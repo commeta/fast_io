@@ -11,11 +11,24 @@ foreach(glob('fast_io*.tmp') as $file) {
 }
 
 
+
+for($i=0; $i <=20; $i++){
+	indexed_write_key_value_pair(__DIR__ . '/fast_io4.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i);
+}
+for($i=0; $i <=10; $i++){
+	hide_key_value_pair(__DIR__ . '/fast_io4.dat.index', 'index_' . $i);
+}
+rebuild_data_file(__DIR__ . '/fast_io4.dat', 'index_18');
+
+
+
+
 print_r(__DIR__ . '/fast_io2.dat' . "\n");
 for($i=0; $i <=10; $i++){
 	write_key_value_pair(__DIR__ . '/fast_io2.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i);
 	print_r($i . ', ');
 }
+
 
 
 print_r([
@@ -50,7 +63,6 @@ print_r([
 ]);
 
 
-rebuild_data_file(__DIR__ . '/fast_io3.dat');
 
 
 $start= microtime(true);
