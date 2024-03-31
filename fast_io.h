@@ -182,7 +182,7 @@ long write_key_value_pair(const char *filename, const char *index_key, const cha
 
     if (lock_file(fd, F_WRLCK) == -1) {
         close(fd);
-        return -1;
+        return -2;
     }
 
     dprintf(fd, "%s %s\n", index_key, index_val);
@@ -211,7 +211,7 @@ long indexed_write_key_value_pair(const char *filename, const char *index_key, c
         //perror("Error locking file");
         close(data_fd);
         close(index_fd);
-        return -1;
+        return -2;
     }
 
     // Запись значения в файл данных
@@ -221,7 +221,7 @@ long indexed_write_key_value_pair(const char *filename, const char *index_key, c
         //perror("Error writing to data file");
         close(data_fd);
         close(index_fd);
-        return -1;
+        return -3;
     }
 
     // Запись индекса в индексный файл
@@ -247,7 +247,7 @@ long delete_key_value_pair(const char *filename, const char *index_key) {
     if (temp_fd == -1) {
         close(temp_fd);
         //perror("Error opening file");
-        return -1;
+        return -2;
     }
 
     // Блокировка  файлов
@@ -258,7 +258,7 @@ long delete_key_value_pair(const char *filename, const char *index_key) {
         //perror("Error locking file");
         close(fd);
         close(temp_fd);
-        return -1;
+        return -3;
     }
 
 
@@ -271,7 +271,7 @@ long delete_key_value_pair(const char *filename, const char *index_key) {
         close(fd);
         close(temp_fd);
         unlink(temp_filename);
-        return -1;
+        return -4;
     }
 
     char buffer[BUFFER_SIZE + 1];
@@ -401,7 +401,7 @@ char *pop_key_value_pair(const char *filename) {
     }
 
     off_t fileSize = lseek(fd, 0, SEEK_END);
-    if (fileSize == -1) {
+    if (fileSize == -2) {
         close(fd);
         return NULL;
     }
@@ -460,7 +460,7 @@ long hide_key_value_pair(const char *filename, const char *index_key) {
 
     if (lock_file(fd, F_WRLCK) == -1) {
         close(fd);
-        return -1;
+        return -2;
     }
 
     char buffer[BUFFER_SIZE + 1];
@@ -487,7 +487,7 @@ long hide_key_value_pair(const char *filename, const char *index_key) {
                 
                 // Перемещаемся к началу найденной строки и записываем замену
                 lseek(fd, writeOffset, SEEK_SET);
-                if(write(fd, replacement, keyLength + 1) == -1) return -1;
+                if(write(fd, replacement, keyLength + 1) == -1) return -3;
             }
 
             writeOffset += lineLength; // Обновляем смещение для записи
