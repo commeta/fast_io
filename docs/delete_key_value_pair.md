@@ -24,7 +24,7 @@ long delete_key_value_pair(string $filename, string $index_key)
 ## Пример использования
 
 Для использования этой функции необходимо, чтобы ваше PHP-окружение поддерживало соответствующее расширение.
-
+```
 <?php
 $filename = 'path/to/datafile';
 $key = 'unique_key';
@@ -37,7 +37,7 @@ if ($result == 1) {
     echo "Ошибка при удалении: код ошибки " . $result;
 }
 ?>
-
+```
 
 ### Особенности работы
 
