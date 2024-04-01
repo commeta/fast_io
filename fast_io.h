@@ -358,7 +358,7 @@ long rebuild_data_file(const char *filename, const char *index_key) {
             char specialChar = 127;
 
             if (index_key != NULL && strcmp(line, index_key) == 0) continue; // Пропускаем строку с исключаемым ключом
-            if (strncmp(lineStart, &specialChar, 1) == 0) continue; // Пропускаем строку с исключаемыми нулями
+            if (strncmp(lineStart, &specialChar, 1) == 0) continue; // Пропускаем строку с исключаемыми ключами
 
             long offset = atol(keyEnd + 1);
             char *sizePtr = strchr(keyEnd + 1, ':');
@@ -505,3 +505,77 @@ long hide_key_value_pair(const char *filename, const char *index_key) {
 
     close(fd); // Это также разблокирует файл
 }
+
+
+
+// Структура для хранения динамического массива ключей
+typedef struct {
+    char **keys;
+    size_t count;
+} KeyArray;
+
+// Функция для добавления ключа в массив ключей
+void add_key(KeyArray *array, const char *key) {
+    array->count++;
+    array->keys = realloc(array->keys, array->count * sizeof(char *));
+    array->keys[array->count - 1] = strdup(key);
+}
+
+// Функция для освобождения памяти, выделенной под массив ключей
+void free_key_array(KeyArray *array) {
+    for (size_t i = 0; i < array->count; i++) {
+        free(array->keys[i]);
+    }
+    free(array->keys);
+}
+
+// Функция получения массива ключей из файла
+KeyArray get_index_keys(const char *filename) {
+    KeyArray keys = {0};
+
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        //perror("Failed to open file");
+        //exit(EXIT_FAILURE);
+        return keys;
+    }
+
+    if (lock_file(fd, F_RDLCK) == -1) { // Блокировка файла на чтение
+        close(fd);
+        //perror("Failed to lock file");
+        //exit(EXIT_FAILURE);
+        return keys;
+    }
+
+    
+    char buffer[BUFFER_SIZE + 1]; // Дополнительный байт для нуль-терминатора
+    ssize_t bytesRead;
+    char *lineStart = buffer;
+    char *lineEnd;
+
+    while ((bytesRead = read(fd, buffer, BUFFER_SIZE)) > 0) {
+        buffer[bytesRead] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
+
+        while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
+            *lineEnd = '\0'; // Завершаем строку нуль-терминатором
+
+            // Извлекаем ключ из строки
+            char *spacePos = strchr(lineStart, ' ');
+            if (spacePos) {
+                *spacePos = '\0'; // Обрезаем строку до первого пробела
+                add_key(&keys, lineStart);
+            }
+
+            lineStart = lineEnd + 1; // Переходим к следующей строке
+        }
+
+        // Подготовка к чтению следующего буфера
+        size_t remaining = bytesRead - (lineStart - buffer);
+        memmove(buffer, lineStart, remaining); // Перемещаем оставшуюся часть в начало буфера
+        lineStart = buffer;
+    }
+
+    close(fd); 
+    return keys;
+}
+
