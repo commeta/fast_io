@@ -22,7 +22,7 @@ long write_key_value_pair(string $filename, string $index_key, string $index_val
 ## Пример использования
 
 Для использования этой функции необходимо, чтобы ваше PHP-окружение поддерживало соответствующее расширение.
-
+```
 <?php
 $filename = 'path/to/data.txt';
 $key = 'example_key';
@@ -38,7 +38,7 @@ if ($result == 1) {
     echo "Ошибка: не удалось установить блокировку на файл";
 }
 ?>
-
+```
 
 ### Формат файла
 
