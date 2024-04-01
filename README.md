@@ -20,6 +20,7 @@ Fast_IO - это расширение для PHP 8, предназначенно
 - [update_key_value_pair](/docs/update_key_value_pair.md) - обновления значения по заданному ключу
 - [insert_key_value](/docs/insert_key_value.md) - добавления строк с определённым выравниванием в файл
 - [select_key_value](/docs/select_key_value.md) - выборки строки по указанному номеру строки и выравниванию из файла
+- [update_key_value](/docs/update_key_value.md) - обновления значения по ключу в файле
 
 ## Особенности реализации
 
