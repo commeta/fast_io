@@ -152,7 +152,7 @@ PHP_FUNCTION(find_value_by_key) {
     if (lock_file(fd, LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", strerror(errno));
         close(fd);
-        return 1;
+        RETURN_FALSE;
     }    
 
 
@@ -222,7 +222,7 @@ PHP_FUNCTION(indexed_find_value_by_key) {
     }
 
     // Блокировка индексного файла
-    if (lock_file(index_fd, LOCK_EX) == -1) {
+    if (lock_file(index_fd, LOCK_EX) == -1 || lock_file(data_fd, LOCK_EX) == -1) {
         close(index_fd);
         if (data_fd != -1) close(data_fd);
         php_error_docref(NULL, E_WARNING, "Failed to lock index file");
@@ -328,7 +328,7 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
     }
 
     // Блокировка обоих файлов
-    if (lock_file(index_fd, LOCK_EX) == -1) {
+    if (lock_file(index_fd, LOCK_EX) == -1 || lock_file(data_fd, LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Error locking file");
         close(data_fd);
         close(index_fd);
@@ -455,13 +455,13 @@ PHP_FUNCTION(rebuild_data_file) {
 
     result = rebuild_data_file(filename, index_key);
     
+    
     if (result) {
         RETURN_LONG(result);
     } else {
         RETURN_NULL();
     }
 } 
-
 
 /* Функция для извлечения и удаления последней строки из файла */
 PHP_FUNCTION(pop_key_value_pair) {
@@ -514,16 +514,16 @@ PHP_FUNCTION(pop_key_value_pair) {
         for (ssize_t i = bytesRead - 1; i >= 0 && state != 2; --i) {
             switch (state) {
                 case 0: // Ищем перенос строки
-                    if (buffer[i] == '\\n') {
+                    if (buffer[i] == '\n') {
                         state = 1; // Нашли перенос строки, переходим к следующему состоянию
                     }
                     break;
                 case 1: // Ищем начало строки
-                    if (buffer[i] == '\\n' || pos + i == 0) { // Второе условие для случая, когда строка - первая в файле
+                    if (buffer[i] == '\n' || pos + i == 0) { // Второе условие для случая, когда строка - первая в файле
                         size_t len = bytesRead - i - 1;
                         line = emalloc(len + 1);
                         memcpy(line, buffer + i + 1, len);
-                        line[len] = '\\0';
+                        line[len] = '\0';
                         state = 2; // Переходим к финальному состоянию
 
                         // Усекаем файл
