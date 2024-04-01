@@ -40,14 +40,16 @@ if ($value !== NULL) {
 
 Пример содержимого файла data.txt:
 
-user_id 12345
-username john_doe
-
+```
+data_write_key_value_pair_0data_write_key_value_pair_1data_write_key_value_pair_2
+```
 
 Пример содержимого файла data.txt.index:
-
-user_id:0:5
-username:11:8
+```
+index_0 0:27
+index_1 27:27
+index_2 54:27
+```
 
 
 ## Ограничения
