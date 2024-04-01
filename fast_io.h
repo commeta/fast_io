@@ -579,3 +579,73 @@ KeyArray get_index_keys(const char *filename) {
     return keys;
 }
 
+
+
+// Функция обновления пары ключ-значение
+long update_key_value_pair(const char *filename, const char *index_key, const char *index_value) {
+    char temp_filename[256];
+    snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
+
+    int fd = open(filename, O_RDWR);
+    if (fd == -1) return -1;
+
+    int temp_fd = open(temp_filename, O_RDWR | O_CREAT | O_TRUNC, 0644);
+    if (temp_fd == -1) {
+        close(fd);
+        return -2;
+    }
+
+    // Блокировка файлов
+    if (lock_file(fd, F_WRLCK) == -1 || lock_file(temp_fd, F_WRLCK) == -1) {
+        close(fd);
+        close(temp_fd);
+        return -3;
+    }
+
+    FILE *file = fdopen(fd, "r");
+    FILE *temp_file = fdopen(temp_fd, "w");
+
+    if (!file || !temp_file) {
+        if (file) fclose(file);
+        if (temp_file) fclose(temp_file);
+        close(fd);
+        close(temp_fd);
+        unlink(temp_filename);
+        return -4;
+    }
+
+    char buffer[BUFFER_SIZE + 1];
+    size_t bytesRead;
+    while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
+        buffer[bytesRead] = '\0';
+
+        char *lineStart = buffer;
+        char *lineEnd;
+        while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
+            *lineEnd = '\0';
+            
+            if (strncmp(lineStart, index_key, strlen(index_key)) == 0 && lineStart[strlen(index_key)] == ' ') {
+                // Если строка начинается с ключа, заменяем её новой парой ключ-значение
+                fprintf(temp_file, "%s %s\n", index_key, index_value);
+            } else {
+                // Если это не наш ключ, просто копируем строку во временный файл
+                fprintf(temp_file, "%s\n", lineStart);
+            }
+            
+            lineStart = lineEnd + 1;
+        }
+        
+        if (lineStart != buffer + bytesRead) {
+            fseek(file, -(bytesRead - (lineStart - buffer)), SEEK_CUR);
+        }
+    }
+    
+    fclose(file);
+    fclose(temp_file);
+    close(fd); 
+    close(temp_fd);
+
+    rename(temp_filename, filename);
+
+    return 1;
+}
