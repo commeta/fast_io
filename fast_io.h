@@ -85,8 +85,10 @@ long rebuild_data_file(const char *filename, const char *index_key) {
     }
 
     // Блокировка файлов
-    lock_file(index_fd, F_RDLCK);
-    lock_file(data_fd, F_RDLCK);
+    if (lock_file(index_fd, LOCK_EX) == -1 || lock_file(index_fd, LOCK_EX) == -1) {
+        php_error_docref(NULL, E_WARNING, "Failed to lock files.");
+        return -1;
+    }
 
     char buffer[BUFFER_SIZE];
     ssize_t bytesRead;
