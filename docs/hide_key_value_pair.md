@@ -22,7 +22,7 @@ long hide_key_value_pair(string $filename, string $index_key)
 ## Пример использования
 
 Для использования функции hide_key_value_pair в вашем PHP-приложении, следуйте примеру ниже:
-
+```
 <?php
 $filename = 'path/to/your/datafile.txt';
 $index_key = 'secretKey';
@@ -35,7 +35,7 @@ if ($result == 0) {
     echo "Ошибка при скрытии ключа: код ошибки " . $result;
 }
 ?>
-
+```
 
 ### Особенности работы
 
