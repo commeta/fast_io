@@ -17,6 +17,7 @@ PHP_FUNCTION(rebuild_data_file);
 PHP_FUNCTION(pop_key_value_pair);
 PHP_FUNCTION(hide_key_value_pair);
 PHP_FUNCTION(get_index_keys);
+PHP_FUNCTION(update_key_value_pair);
 
 
 /* Запись аргументов функций */
@@ -65,6 +66,12 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_get_index_keys, 0, 1, IS_ARRAY, 
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_update_key_value_pair, 0, 3, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, index_val, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
 
 /* Регистрация функций */
 const zend_function_entry fast_io_functions[] = {
@@ -77,6 +84,7 @@ const zend_function_entry fast_io_functions[] = {
     PHP_FE(pop_key_value_pair, arginfo_pop_key_value_pair)
     PHP_FE(hide_key_value_pair, arginfo_hide_key_value_pair)
     PHP_FE(get_index_keys, arginfo_get_index_keys)
+    PHP_FE(update_key_value_pair, arginfo_update_key_value_pair)
     PHP_FE_END
 };
 
@@ -287,3 +295,25 @@ PHP_FUNCTION(get_index_keys) {
     free_key_array(&keys);
 }
 
+
+PHP_FUNCTION(update_key_value_pair) {
+    char *filename;
+    size_t filename_len;
+    char *index_key;
+    size_t index_key_len;
+    char *index_val;
+    size_t index_val_len;
+    long result;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss", &filename, &filename_len, &index_key, &index_key_len, &index_val, &index_val_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    result = update_key_value_pair(filename, index_key, index_val);
+    
+    if (result) {
+        RETURN_LONG(result);
+    } else {
+        RETURN_NULL();
+    }
+} 
