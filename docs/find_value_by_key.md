@@ -19,7 +19,7 @@ mixed find_value_by_key(string $filename, string $index_key)
 ## Пример использования
 
 В этом примере мы ищем значение по ключу "user_id" в файле "data.txt".
-
+```
 <?php
 $filename = 'path/to/data.txt';
 $key = 'user_id';
@@ -32,15 +32,17 @@ if ($value !== NULL) {
     echo "Значение не найдено или произошла ошибка";
 }
 ?>
-
+```
 
 ### Формат файла
 
 Функция предполагает, что файл содержит данные в формате "ключ значение", где каждая пара разделена новой строкой. Например:
 
-user_id 12345
-username john_doe
-email john@example.com
+```
+index_0 data_write_key_value_pair_0
+index_1 data_write_key_value_pair_1
+index_2 data_write_key_value_pair_2
+```
 
 
 ## Ограничения
