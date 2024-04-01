@@ -18,6 +18,8 @@ PHP_FUNCTION(pop_key_value_pair);
 PHP_FUNCTION(hide_key_value_pair);
 PHP_FUNCTION(get_index_keys);
 PHP_FUNCTION(update_key_value_pair);
+PHP_FUNCTION(insert_key_value);
+PHP_FUNCTION(select_key_value);
 
 
 /* Запись аргументов функций */
@@ -72,6 +74,18 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_update_key_value_pair, 0, 3, IS_
     ZEND_ARG_TYPE_INFO(0, index_val, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_insert_key_value, 0, 3, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, index_align, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_select_key_value, 0, 3, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, index_row, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, index_align, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
 
 /* Регистрация функций */
 const zend_function_entry fast_io_functions[] = {
@@ -85,6 +99,8 @@ const zend_function_entry fast_io_functions[] = {
     PHP_FE(hide_key_value_pair, arginfo_hide_key_value_pair)
     PHP_FE(get_index_keys, arginfo_get_index_keys)
     PHP_FE(update_key_value_pair, arginfo_update_key_value_pair)
+    PHP_FE(insert_key_value, arginfo_insert_key_value)
+    PHP_FE(select_key_value, arginfo_select_key_value)
     PHP_FE_END
 };
 
@@ -317,3 +333,118 @@ PHP_FUNCTION(update_key_value_pair) {
         RETURN_NULL();
     }
 } 
+
+PHP_FUNCTION(insert_key_value) {
+    char *filename;
+    size_t filename_len;
+    char *index_key;
+    size_t index_key_len;
+    zend_long index_align;
+
+    // Парсинг аргументов, переданных в функцию
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssl", &filename, &filename_len, &index_key, &index_key_len, &index_align) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0666);
+    if (fd == -1) {
+        php_error_docref(NULL, E_WARNING, "Unable to open file: %s", strerror(errno));
+        RETURN_LONG(-1);
+    }
+
+    // Блокировка файла для записи
+    if (lock_file(fd, F_WRLCK) == -1) {
+        php_error_docref(NULL, E_WARNING, "Unable to lock file: %s", strerror(errno));
+        close(fd);
+        RETURN_LONG(-2);
+    }
+
+    // Получение размера файла для определения номера строки
+    struct stat st;
+    if (fstat(fd, &st) != 0) {
+        php_error_docref(NULL, E_WARNING, "Unable to get file size: %s", strerror(errno));
+        close(fd);
+        RETURN_LONG(-3);
+    }
+    off_t file_size = st.st_size;
+    long line_number = file_size / index_align;
+
+    // Подготовка строки к записи с учетом выравнивания
+    char *buffer = (char *)emalloc(index_align + 1); // +1 для '\0'
+    memset(buffer, ' ', index_align); // Заполнение пробелами
+    buffer[index_align] = '\0';
+    
+    // Копирование index_key в буфер с учетом выравнивания
+    strncpy(buffer, index_key, index_align < index_key_len ? index_align : index_key_len);
+
+    // Запись в файл
+    ssize_t written = write(fd, buffer, index_align);
+    efree(buffer);
+    close(fd); // Это также разблокирует файл
+
+    if (written != index_align) {
+        php_error_docref(NULL, E_WARNING, "Error writing to file: %s", strerror(errno));
+        RETURN_LONG(-4);
+    }
+
+    // Возврат номера добавленной строки
+    RETURN_LONG(line_number);
+}
+
+
+// Функция выборки значения по ключу
+PHP_FUNCTION(select_key_value) {
+    char *filename;
+    size_t filename_len;
+    zend_long index_row;
+    zend_long index_align;
+
+    // Парсинг переданных аргументов
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sll", &filename, &filename_len, &index_row, &index_align) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        php_error_docref(NULL, E_WARNING, "Unable to open file: %s", strerror(errno));
+        RETURN_FALSE;
+    }
+
+    // Блокировка файла для чтения
+    if (lock_file(fd, F_RDLCK) == -1) {
+        php_error_docref(NULL, E_WARNING, "Unable to lock file: %s", strerror(errno));
+        close(fd);
+        RETURN_FALSE;
+    }
+
+    off_t offset = index_row * index_align;
+    if (lseek(fd, offset, SEEK_SET) == -1) {
+        php_error_docref(NULL, E_WARNING, "Error seeking in file: %s", strerror(errno));
+        close(fd);
+        RETURN_FALSE;
+    }
+
+    char *buffer = (char *)emalloc(index_align + 1); // +1 для '\0'
+    ssize_t read_bytes = read(fd, buffer, index_align);
+    if (read_bytes == -1) {
+        php_error_docref(NULL, E_WARNING, "Error reading file: %s", strerror(errno));
+        efree(buffer);
+        close(fd);
+        RETURN_FALSE;
+    }
+
+    // Убедимся, что строка нуль-терминирована
+    buffer[read_bytes] = '\0';
+
+    // Обрезка пробелов справа
+    for (int i = read_bytes - 1; i >= 0 && buffer[i] == ' '; --i) {
+        buffer[i] = '\0';
+    }
+
+    close(fd);
+
+    // Возврат строки в PHP
+    RETVAL_STRING(buffer);
+    efree(buffer);
+}
+
