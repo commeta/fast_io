@@ -355,8 +355,10 @@ long rebuild_data_file(const char *filename, const char *index_key) {
             if (!keyEnd) continue; // Если формат строки неверен
 
             *keyEnd = '\0';
+            char specialChar = 127;
+
             if (index_key != NULL && strcmp(line, index_key) == 0) continue; // Пропускаем строку с исключаемым ключом
-            if (strncmp(lineStart, "000", 3) == 0) continue; // Пропускаем строку с исключаемыми нулями
+            if (strncmp(lineStart, &specialChar, 1) == 0) continue; // Пропускаем строку с исключаемыми нулями
 
             long offset = atol(keyEnd + 1);
             char *sizePtr = strchr(keyEnd + 1, ':');
@@ -482,7 +484,7 @@ long hide_key_value_pair(const char *filename, const char *index_key) {
             if (strncmp(lineStart, index_key, keyLength) == 0 && lineStart[keyLength] == ' ') {
                 // Найдено совпадение ключа, подготавливаем замену
                 char replacement[keyLength + 1];
-                memset(replacement, '0', keyLength); // Заполнение символами '0'
+                memset(replacement, 127, keyLength); // Заполнение символами DEL
                 replacement[keyLength] = ' '; // Сохраняем пробел после ключа
                 
                 // Перемещаемся к началу найденной строки и записываем замену
