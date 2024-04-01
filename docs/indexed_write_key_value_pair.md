@@ -23,7 +23,7 @@ long indexed_write_key_value_pair(string $filename, string $index_key, string $i
 ## Пример использования
 
 Для использования этой функции необходимо, чтобы ваше PHP-окружение поддерживало соответствующее расширение.
-
+```
 <?php
 $filename = 'path/to/datafile';
 $key = 'unique_key';
@@ -46,7 +46,7 @@ switch ($result) {
         break;
 }
 ?>
-
+```
 
 ### Формат файла
 
