@@ -306,7 +306,7 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
     }
 
     char *index_filename = emalloc(filename_len + 6); // Дополнительные символы для ".index" и терминирующего нуля
-    snprintf(index_filename, filename_len + 6, "%s.index", filename);
+    snprintf(index_filename, filename_len + 7, "%s.index", filename);
 
     int data_fd = open(filename, O_RDWR | O_CREAT | O_APPEND, 0644);
     int index_fd = open(index_filename, O_RDWR | O_CREAT | O_APPEND, 0644);
