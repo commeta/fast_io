@@ -9,13 +9,14 @@ Fast_IO - это расширение для PHP 8, предназначенно
 
 ## Список функций
 - [write_key_value_pair](/docs/write_key_value_pair.md) - запись пары ключ-значение в текстовый файл
-- [pop_key_value_pair](pop_key_value_pair.md) - извлечение и удаление последней строки из файла
-- [rebuild_data_file](rebuild_data_file.md) - перестройка файла данных и соответствующего индексного файла
-- [indexed_write_key_value_pair](indexed_write_key_value_pair.md) - запись пары ключ-значение в текстовый файл данных и соответствующий индексный файл
-- [indexed_find_value_by_key](indexed_find_value_by_key.md) - Поиск значения по ключу в большом текстовом файле с использованием индексного файла
-- [hide_key_value_pair](hide_key_value_pair.md) - скрытие ключей в файлах, хранящих данные в формате ключ-значение
-- [find_value_by_key](find_value_by_key.md) - поиск значения по ключу в файле данных
-- [delete_key_value_pair](delete_key_value_pair.md) - удаляет пару ключ-значение из файла данных
+- [pop_key_value_pair](/docs/pop_key_value_pair.md) - извлечение и удаление последней строки из файла
+- [rebuild_data_file](/docs/rebuild_data_file.md) - перестройка файла данных и соответствующего индексного файла
+- [indexed_write_key_value_pair](/docs/indexed_write_key_value_pair.md) - запись пары ключ-значение в текстовый файл данных и соответствующий индексный файл
+- [indexed_find_value_by_key](/docs/indexed_find_value_by_key.md) - Поиск значения по ключу в большом текстовом файле с использованием индексного файла
+- [hide_key_value_pair](/docs/hide_key_value_pair.md) - скрытие ключей в файлах, хранящих данные в формате ключ-значение
+- [find_value_by_key](/docs/find_value_by_key.md) - поиск значения по ключу в файле данных
+- [delete_key_value_pair](/docs/delete_key_value_pair.md) - удаляет пару ключ-значение из файла данных
+- [get_index_keys](/docs/get_index_keys.md) - извлечение уникальных ключей из текстового файла
 
 ## Особенности реализации
 
