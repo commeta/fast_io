@@ -24,7 +24,7 @@ long rebuild_data_file(string $filename, string $index_key)
 ## Пример использования
 
 Для использования функции rebuild_data_file в вашем PHP-приложении, убедитесь, что ваше окружение поддерживает необходимое расширение.
-
+```
 <?php
 $filename = 'path/to/datafile';
 $index_key = 'unique_key';
@@ -37,7 +37,7 @@ if ($result == 1) {
     echo "Ошибка при перестройке файла: код ошибки " . $result;
 }
 ?>
-
+```
 
 ### Особенности работы
 
