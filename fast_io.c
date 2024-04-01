@@ -376,32 +376,31 @@ PHP_FUNCTION(insert_key_value) {
         RETURN_LONG(-3);
     }
     off_t file_size = st.st_size;
-    long line_number = file_size / index_align;
+    long line_number = file_size / (index_align + 1); // Учет символа перевода строки
 
     // Подготовка строки к записи с учетом выравнивания
-    char *buffer = (char *)emalloc(index_align + 1); // +1 для '\0'
+    char *buffer = (char *)emalloc(index_align + 2); // +1 для '\n' и +1 для '\0'
     memset(buffer, ' ', index_align); // Заполнение пробелами
-    buffer[index_align] = '\0';
+    buffer[index_align] = '\n'; // Добавление перевода строки
+    buffer[index_align + 1] = '\0';
     
     // Копирование index_key в буфер с учетом выравнивания
     strncpy(buffer, index_key, index_align < index_key_len ? index_align : index_key_len);
 
     // Запись в файл
-    ssize_t written = write(fd, buffer, index_align);
+    ssize_t written = write(fd, buffer, index_align + 1); // +1 для записи '\n'
     efree(buffer);
     close(fd); // Это также разблокирует файл
 
-    if (written != index_align) {
+    if (written != index_align + 1) {
         php_error_docref(NULL, E_WARNING, "Error writing to file: %s", strerror(errno));
         RETURN_LONG(-4);
     }
 
     // Возврат номера добавленной строки
-    RETURN_LONG(line_number);
+    RETURN_LONG(line_number + 1); // Нумерация строк начинается с 1
 }
 
-
-// Функция выборки значения по ключу
 PHP_FUNCTION(select_key_value) {
     char *filename;
     size_t filename_len;
@@ -426,15 +425,17 @@ PHP_FUNCTION(select_key_value) {
         RETURN_FALSE;
     }
 
-    off_t offset = index_row * index_align;
+    // Учет символа перевода строки при вычислении смещения
+    off_t offset = index_row * (index_align + 1); // +1 для '\n'
     if (lseek(fd, offset, SEEK_SET) == -1) {
         php_error_docref(NULL, E_WARNING, "Error seeking in file: %s", strerror(errno));
         close(fd);
         RETURN_FALSE;
     }
 
-    char *buffer = (char *)emalloc(index_align + 1); // +1 для '\0'
-    ssize_t read_bytes = read(fd, buffer, index_align);
+    // Увеличиваем размер буфера на 1 для возможного символа перевода строки
+    char *buffer = (char *)emalloc(index_align + 2); // +1 для '\0' и +1 для '\n'
+    ssize_t read_bytes = read(fd, buffer, index_align + 1); // Чтение строки вместе с '\n'
     if (read_bytes == -1) {
         php_error_docref(NULL, E_WARNING, "Error reading file: %s", strerror(errno));
         efree(buffer);
@@ -445,8 +446,8 @@ PHP_FUNCTION(select_key_value) {
     // Убедимся, что строка нуль-терминирована
     buffer[read_bytes] = '\0';
 
-    // Обрезка пробелов справа
-    for (int i = read_bytes - 1; i >= 0 && buffer[i] == ' '; --i) {
+    // Обрезка пробелов справа и символа перевода строки
+    for (int i = read_bytes - 1; i >= 0 && (buffer[i] == ' ' || buffer[i] == '\n'); --i) {
         buffer[i] = '\0';
     }
 
@@ -456,7 +457,6 @@ PHP_FUNCTION(select_key_value) {
     RETVAL_STRING(buffer);
     efree(buffer);
 }
-
 
 PHP_FUNCTION(update_key_value) {
     char *filename;
@@ -483,28 +483,29 @@ PHP_FUNCTION(update_key_value) {
         RETURN_LONG(-2);
     }
 
-    // Рассчитываем смещение для записи в файл
-    off_t offset = (index_row - 1) * index_align;
+    // Рассчитываем смещение для записи в файл, учитывая перевод строки
+    off_t offset = (index_row - 1) * (index_align + 1); // +1 для '\n'
     if (lseek(fd, offset, SEEK_SET) == -1) {
         php_error_docref(NULL, E_WARNING, "Unable to seek in file: %s", strerror(errno));
         close(fd);
         RETURN_LONG(-3);
     }
 
-    // Подготовка строки к записи с учетом выравнивания
-    char *buffer = (char *)emalloc(index_align + 1); // +1 для '\0'
+    // Подготовка строки к записи с учетом выравнивания и перевода строки
+    char *buffer = (char *)emalloc(index_align + 2); // +1 для '\n', +1 для '\0'
     memset(buffer, ' ', index_align); // Заполнение пробелами
-    buffer[index_align] = '\0';
+    buffer[index_align] = '\n'; // Добавление перевода строки
+    buffer[index_align + 1] = '\0'; // Нуль-терминатор
     
     // Копирование index_key в буфер с учетом выравнивания
-    strncpy(buffer, index_key, index_align < index_key_len ? index_align : index_key_len);
+    strncpy(buffer, index_key, index_key_len < index_align ? index_key_len : index_align);
 
     // Запись в файл
-    ssize_t written = write(fd, buffer, index_align);
+    ssize_t written = write(fd, buffer, index_align + 1); // +1 для '\n'
     efree(buffer);
     close(fd); // Это также разблокирует файл
 
-    if (written != index_align) {
+    if (written != index_align + 1) {
         php_error_docref(NULL, E_WARNING, "Error writing to file: %s", strerror(errno));
         RETURN_LONG(-4);
     }
