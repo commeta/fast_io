@@ -19,7 +19,7 @@ string pop_key_value_pair(string $filename)
 ## Пример использования
 
 Для использования функции pop_key_value_pair в вашем PHP-приложении, следуйте примеру ниже:
-
+```
 <?php
 $filename = 'path/to/your/file.txt';
 
@@ -31,7 +31,7 @@ if ($lastLine !== NULL) {
     echo "Не удалось извлечь последнюю строку из файла.";
 }
 ?>
-
+```
 
 ### Особенности работы
 
