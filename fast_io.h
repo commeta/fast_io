@@ -27,6 +27,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 
 #define BUFFER_SIZE 4096
 
@@ -649,3 +650,4 @@ long update_key_value_pair(const char *filename, const char *index_key, const ch
 
     return 1;
 }
+
