@@ -1,27 +1,3 @@
-/*
- * Fast_IO (beta) Extension for PHP 8
- * https://github.com/commeta/fast_io
- * 
- * Copyright 2024 commeta <dcs-spb@ya.ru>
- * 
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- * MA 02110-1301, USA.
- * 
- * 
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -44,6 +20,7 @@ PHP_FUNCTION(get_index_keys);
 PHP_FUNCTION(update_key_value_pair);
 PHP_FUNCTION(insert_key_value);
 PHP_FUNCTION(select_key_value);
+PHP_FUNCTION(update_key_value);
 
 
 /* Запись аргументов функций */
@@ -110,6 +87,12 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_select_key_value, 0, 3, IS_STRIN
     ZEND_ARG_TYPE_INFO(0, index_align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_update_key_value, 0, 3, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, index_align, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
 
 /* Регистрация функций */
 const zend_function_entry fast_io_functions[] = {
@@ -125,6 +108,7 @@ const zend_function_entry fast_io_functions[] = {
     PHP_FE(update_key_value_pair, arginfo_update_key_value_pair)
     PHP_FE(insert_key_value, arginfo_insert_key_value)
     PHP_FE(select_key_value, arginfo_select_key_value)
+    PHP_FE(update_key_value, arginfo_update_key_value)
     PHP_FE_END
 };
 
@@ -358,6 +342,7 @@ PHP_FUNCTION(update_key_value_pair) {
     }
 } 
 
+
 PHP_FUNCTION(insert_key_value) {
     char *filename;
     size_t filename_len;
@@ -470,5 +455,60 @@ PHP_FUNCTION(select_key_value) {
     // Возврат строки в PHP
     RETVAL_STRING(buffer);
     efree(buffer);
+}
+
+
+PHP_FUNCTION(update_key_value) {
+    char *filename;
+    size_t filename_len;
+    char *index_key;
+    size_t index_key_len;
+    zend_long index_row, index_align;
+
+    // Парсинг аргументов, переданных в функцию
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssll", &filename, &filename_len, &index_key, &index_key_len, &index_row, &index_align) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    int fd = open(filename, O_RDWR);
+    if (fd == -1) {
+        php_error_docref(NULL, E_WARNING, "Unable to open file: %s", strerror(errno));
+        RETURN_LONG(-1);
+    }
+
+    // Блокировка файла для записи
+    if (lock_file(fd, F_WRLCK) == -1) {
+        php_error_docref(NULL, E_WARNING, "Unable to lock file: %s", strerror(errno));
+        close(fd);
+        RETURN_LONG(-2);
+    }
+
+    // Рассчитываем смещение для записи в файл
+    off_t offset = (index_row - 1) * index_align;
+    if (lseek(fd, offset, SEEK_SET) == -1) {
+        php_error_docref(NULL, E_WARNING, "Unable to seek in file: %s", strerror(errno));
+        close(fd);
+        RETURN_LONG(-3);
+    }
+
+    // Подготовка строки к записи с учетом выравнивания
+    char *buffer = (char *)emalloc(index_align + 1); // +1 для '\0'
+    memset(buffer, ' ', index_align); // Заполнение пробелами
+    buffer[index_align] = '\0';
+    
+    // Копирование index_key в буфер с учетом выравнивания
+    strncpy(buffer, index_key, index_align < index_key_len ? index_align : index_key_len);
+
+    // Запись в файл
+    ssize_t written = write(fd, buffer, index_align);
+    efree(buffer);
+    close(fd); // Это также разблокирует файл
+
+    if (written != index_align) {
+        php_error_docref(NULL, E_WARNING, "Error writing to file: %s", strerror(errno));
+        RETURN_LONG(-4);
+    }
+
+    RETURN_TRUE;
 }
 
