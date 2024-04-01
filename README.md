@@ -18,6 +18,8 @@ Fast_IO - это расширение для PHP 8, предназначенно
 - [delete_key_value_pair](/docs/delete_key_value_pair.md) - удаляет пару ключ-значение из файла данных
 - [get_index_keys](/docs/get_index_keys.md) - извлечение уникальных ключей из текстового файла
 - [update_key_value_pair](/docs/update_key_value_pair.md) - обновления значения по заданному ключу
+- [insert_key_value](/docs/insert_key_value.md) - добавления строк с определённым выравниванием в файл
+- [select_key_value](/docs/select_key_value.md) - выборки строки по указанному номеру строки и выравниванию из файла
 
 ## Особенности реализации
 
