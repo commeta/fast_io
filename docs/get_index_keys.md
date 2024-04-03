@@ -40,7 +40,6 @@ print_r($keys);
 Результат выполнения:
 ```
 Array
-Array
 (
     [0] => index_0
     [1] => index_1
