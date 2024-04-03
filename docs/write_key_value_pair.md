@@ -1,10 +1,10 @@
-## Описание
+# Описание функции write_key_value_pair
 
 Функция write_key_value_pair реализована на языке C и предназначена для использования в PHP через Fast_IO специализированное расширение. Эта функция позволяет записывать пары ключ-значение в текстовый файл, обеспечивая при этом блокировку файла для предотвращения одновременной записи из разных процессов. Это гарантирует целостность данных в многопоточных или многопроцессных средах.
 
 ## Синтаксис
 
-long write_key_value_pair(string $filename, string $index_key, string $index_val)
+int write_key_value_pair(string $filename, string $index_key, string $index_val)
 
 
 ### Параметры
@@ -21,7 +21,6 @@ long write_key_value_pair(string $filename, string $index_key, string $index_val
 
 ## Пример использования
 
-Для использования этой функции необходимо, чтобы ваше PHP-окружение поддерживало соответствующее расширение.
 ```
 <?php
 $filename = 'path/to/data.txt';
