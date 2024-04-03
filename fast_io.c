@@ -57,8 +57,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_rebuild_data_file, 0, 2, IS_LONG
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_pop_key_value_pair, 0, 1, IS_STRING, 1)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_pop_key_value_pair, 0, 2, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, index_align, IS_LONG, 1)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_hide_key_value_pair, 0, 2, IS_LONG, 0)
@@ -463,12 +464,14 @@ PHP_FUNCTION(rebuild_data_file) {
     }
 } 
 
+
 /* Функция для извлечения и удаления последней строки из файла */
 PHP_FUNCTION(pop_key_value_pair) {
     char *filename;
     size_t filename_len;
+    zend_long index_align = -1; // Значение по умолчанию для необязательного аргумента
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &filename, &filename_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|l", &filename, &filename_len, &index_align) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -491,11 +494,53 @@ PHP_FUNCTION(pop_key_value_pair) {
         RETURN_FALSE;
     }
 
-    char buffer[BUFFER_SIZE];
     off_t pos = fileSize;
     ssize_t bytesRead;
+
+
+    if (index_align != -1) {
+        pos -= index_align + 1;
+        lseek(fd, pos, SEEK_SET);
+
+        // Увеличиваем размер буфера на 1 для возможного символа перевода строки
+        char *buffer = (char *)emalloc(index_align + 1); // +1 для '\0'
+        ssize_t read_bytes = read(fd, buffer, index_align); // Чтение строки
+        if (read_bytes == -1) {
+            php_error_docref(NULL, E_WARNING, "Error reading file: %s", strerror(errno));
+            efree(buffer);
+            close(fd);
+            RETURN_FALSE;
+        }
+
+        // Убедимся, что строка нуль-терминирована
+        buffer[read_bytes] = '\0';
+
+        // Обрезка пробелов справа и символа перевода строки
+        for (int i = read_bytes - 1; i >= 0 && (buffer[i] == ' ' || buffer[i] == '\n'); --i) {
+            buffer[i] = '\0';
+        }
+
+        // Усекаем файл
+        if(ftruncate(fd, pos)) {
+            efree(buffer);
+            close(fd);
+            php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
+            RETURN_FALSE;
+        }
+        
+        close(fd);
+
+        // Возврат строки в PHP
+        RETVAL_STRING(buffer);
+        efree(buffer);
+        return;
+    }
+
+
+    char buffer[BUFFER_SIZE];
     char *line = NULL;
     int state = 0; // Состояние конечного автомата
+
 
     // Читаем файл с конца, пока не найдем начало строки
     while (pos > 0 && state != 2) {
@@ -548,6 +593,9 @@ PHP_FUNCTION(pop_key_value_pair) {
         RETVAL_FALSE;
     }
 }
+
+
+
 
 /* Реализация функции */
 PHP_FUNCTION(hide_key_value_pair) {
@@ -950,4 +998,3 @@ PHP_FUNCTION(update_key_value) {
 
     RETURN_TRUE;
 }
-
