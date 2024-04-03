@@ -21,7 +21,7 @@ mixed pop_key_value_pair(string $filename[, int $index_align = -1])
 ## Примеры использования
 
 ### Пример 1. Извлечение последней строки из файла
-
+```
 $filename = "/path/to/your/file.txt";
 $lastLine = pop_key_value_pair($filename);
 
@@ -30,10 +30,10 @@ if ($lastLine !== false) {
 } else {
     echo "Ошибка при чтении файла";
 }
-
+```
 
 ### Пример 2. Использование необязательного параметра index_align
-
+```
 $filename = "/path/to/your/file.txt";
 // Предположим, что мы знаем, что строки в файле не превышают 100 байт
 $index_align = 100;
@@ -44,7 +44,7 @@ if ($lastLine !== false) {
 } else {
     echo "Ошибка при чтении файла";
 }
-
+```
 
 ## Замечания
 
