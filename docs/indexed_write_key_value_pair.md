@@ -1,10 +1,10 @@
-## Описание
+# Описание функции indexed_write_key_value_pair
 
 Функция indexed_write_key_value_pair реализована на языке C и предназначена для использования в PHP через Fast_IO специализированное расширение. Эта функция позволяет записывать пары ключ-значение в текстовый файл данных и соответствующий индексный файл, обеспечивая блокировку обоих файлов для предотвращения одновременной записи из разных процессов.
 
 ## Синтаксис
 
-long indexed_write_key_value_pair(string $filename, string $index_key, string $index_val)
+int indexed_write_key_value_pair(string $filename, string $index_key, string $index_val)
 
 
 ### Параметры
