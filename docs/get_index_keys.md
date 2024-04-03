@@ -35,7 +35,7 @@ index_2 data_write_key_value_pair_2
 ```
 $keys = get_index_keys("data.txt");
 print_r($keys);
-``
+```
 
 Результат выполнения:
 ```
