@@ -1,4 +1,4 @@
-## Описание
+# Описание функции rebuild_data_file
 
 Функция rebuild_data_file разработана на языке C и предназначена для вызова из PHP через Fast_IO специализированное расширение. 
 Эта функция выполняет перестройку файла данных и соответствующего индексного файла, удаляя данные, связанные с указанным ключом index_key, 
@@ -6,7 +6,7 @@
 
 ## Синтаксис
 
-long rebuild_data_file(string $filename, string $index_key)
+int rebuild_data_file(string $filename, string $index_key)
 
 
 ### Параметры
