@@ -22,16 +22,6 @@
  * 
  */
 
-#include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <sys/types.h>
-
-
-
 #define BUFFER_SIZE 4096
 
 // Вспомогательная функция для блокировки файла
@@ -64,86 +54,3 @@ void free_key_array(KeyArray *array) {
     }
     free(array->keys);
 }
-
-
-long rebuild_data_file(const char *filename, const char *index_key) {
-    char index_filename[256], temp_filename[260], temp_index_filename[260];
-    snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
-    snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
-    snprintf(temp_index_filename, sizeof(temp_index_filename), "%s.index.tmp", filename);
-
-    // Открытие файлов
-    int index_fd = open(index_filename, O_RDONLY);
-    int data_fd = open(filename, O_RDONLY);
-    int temp_data_fd = open(temp_filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    int temp_index_fd = open(temp_index_filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-
-    if (index_fd == -1 || data_fd == -1 || temp_data_fd == -1 || temp_index_fd == -1) {
-        //perror("Ошибка при открытии файлов");
-        return -1;
-    }
-
-    // Блокировка файлов
-    if (lock_file(index_fd, LOCK_EX) == -1 || lock_file(index_fd, LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock files.");
-        return -1;
-    }
-
-    char buffer[BUFFER_SIZE];
-    ssize_t bytesRead;
-
-    // Чтение индексного файла порциями
-    while ((bytesRead = read(index_fd, buffer, BUFFER_SIZE)) > 0) {
-        int bufferPos = 0;
-        while (bufferPos < bytesRead) {
-            char *lineStart = buffer + bufferPos;
-            char *lineEnd = memchr(lineStart, '\n', bytesRead - bufferPos);
-            if (!lineEnd) break; // Если конец строки не найден
-
-            size_t lineLength = lineEnd - lineStart;
-            char line[BUFFER_SIZE];
-            strncpy(line, lineStart, lineLength);
-            line[lineLength] = '\0';
-
-            bufferPos += lineLength + 1;
-
-            // Парсинг строки индексного файла
-            char *keyEnd = strchr(line, ' ');
-            if (!keyEnd) continue; // Если формат строки неверен
-
-            *keyEnd = '\0';
-            char specialChar = 127;
-
-            if (index_key != NULL && strcmp(line, index_key) == 0) continue; // Пропускаем строку с исключаемым ключом
-            if (strncmp(lineStart, &specialChar, 1) == 0) continue; // Пропускаем строку с исключаемыми ключами
-
-            long offset = atol(keyEnd + 1);
-            char *sizePtr = strchr(keyEnd + 1, ':');
-            if (!sizePtr) continue;
-
-            size_t size = atol(sizePtr + 1);
-
-            // Чтение и запись блока данных
-            lseek(data_fd, offset, SEEK_SET);
-            char dataBuffer[size];
-            if(read(data_fd, dataBuffer, size) == -1) return -2;
-            if(write(temp_data_fd, dataBuffer, size) == -1) return -3;
-
-            // Запись во временный индексный файл
-            dprintf(temp_index_fd, "%s %ld:%zu\n", line, offset, size);
-        }
-    }
-
-    // Закрытие файлов
-    close(index_fd);
-    close(data_fd);
-    close(temp_data_fd);
-    close(temp_index_fd);
-
-    // Переименование временных файлов
-    rename(temp_filename, filename);
-    rename(temp_index_filename, index_filename);
-
-    return 1;
-}
-
