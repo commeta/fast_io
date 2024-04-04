@@ -23,14 +23,13 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <errno.h>
-#include <sys/types.h>
+#include <string.h>
 #include <sys/stat.h>
-#include "ext/standard/info.h"
+#include <stdlib.h>
+#include <sys/types.h>
+
 
 
 #define BUFFER_SIZE 4096
