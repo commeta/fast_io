@@ -1,5 +1,5 @@
 /*
- * Fast_IO (beta) Extension for PHP 8
+ * Fast_IO (pre-release) Extension for PHP 8
  * https://github.com/commeta/fast_io
  * 
  * Copyright 2024 commeta <dcs-spb@ya.ru>
