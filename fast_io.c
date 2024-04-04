@@ -6,6 +6,7 @@
 #include "php_ini.h"
 #include "ext/standard/info.h"
 #include "php_streams.h" // Для работы с потоками PHP
+#include <errno.h>
 #include "fast_io.h"
 
 /* Декларация функций */
@@ -52,14 +53,14 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_delete_key_value_pair, 0, 2, IS_
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_rebuild_data_file, 0, 2, IS_LONG, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_rebuild_data_file, 1, 1, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_pop_key_value_pair, 0, 2, IS_STRING, 1)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_pop_key_value_pair, 1, 1, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, index_align, IS_LONG, 1)
+    ZEND_ARG_TYPE_INFO(0, index_align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_hide_key_value_pair, 0, 2, IS_LONG, 0)
@@ -83,7 +84,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_insert_key_value, 0, 3, IS_LONG,
     ZEND_ARG_TYPE_INFO(0, index_align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_select_key_value, 0, 3, IS_STRING, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_select_key_value, 0, 3, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_row, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, index_align, IS_LONG, 0)
@@ -504,6 +505,7 @@ PHP_FUNCTION(pop_key_value_pair) {
 
         // Увеличиваем размер буфера на 1 для возможного символа перевода строки
         char *buffer = (char *)emalloc(index_align + 1); // +1 для '\0'
+
         ssize_t read_bytes = read(fd, buffer, index_align); // Чтение строки
         if (read_bytes == -1) {
             php_error_docref(NULL, E_WARNING, "Error reading file: %s", strerror(errno));
@@ -998,3 +1000,4 @@ PHP_FUNCTION(update_key_value) {
 
     RETURN_TRUE;
 }
+
