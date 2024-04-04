@@ -1,4 +1,4 @@
-# Fast_IO (beta) Extension for PHP 8
+# Fast_IO (pre-release) Extension for PHP 8
 PHP extension, fast DB with indexes
 
 Интеграция C-функций в модуль PHP через API Zend. 
