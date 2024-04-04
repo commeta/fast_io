@@ -227,13 +227,11 @@ PHP_FUNCTION(indexed_find_value_by_key) {
 
     
     if (index_fd == -1) {
-        close(index_fd);
         close(data_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
         RETURN_FALSE;
     }
     if (data_fd == -1) {
-        close(index_fd);
         close(data_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
@@ -309,7 +307,6 @@ PHP_FUNCTION(write_key_value_pair) {
     int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0666);
     
     if (fd == -1) {
-        close(fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_LONG(-1);
     }
@@ -348,14 +345,12 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
     int index_fd = open(index_filename, O_RDWR | O_CREAT | O_APPEND, 0644);
 
     if (index_fd == -1) {
-        close(index_fd);
         close(data_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
         RETURN_FALSE;
     }
     if (data_fd == -1) {
         close(index_fd);
-        close(data_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
     }
@@ -414,7 +409,6 @@ PHP_FUNCTION(delete_key_value_pair) {
 
     int fd = open(filename, O_RDWR);
     if (fd == -1) {
-        close(fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_LONG(-1);
     }
@@ -422,7 +416,6 @@ PHP_FUNCTION(delete_key_value_pair) {
     int temp_fd = open(temp_filename, O_RDWR | O_CREAT | O_APPEND, 0644);
     if (temp_fd == -1) {
         close(fd);
-        close(temp_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_filename);
         RETURN_LONG(-2);
     }
@@ -509,7 +502,6 @@ PHP_FUNCTION(rebuild_data_file) {
     int temp_index_fd = open(temp_index_filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
     if (index_fd == -1) {
-        close(index_fd);
         close(data_fd);
         close(temp_data_fd);
         close(temp_index_fd);
@@ -518,7 +510,6 @@ PHP_FUNCTION(rebuild_data_file) {
     }
     if (data_fd == -1) {
         close(index_fd);
-        close(data_fd);
         close(temp_data_fd);
         close(temp_index_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
@@ -527,7 +518,6 @@ PHP_FUNCTION(rebuild_data_file) {
     if (temp_data_fd == -1) {
         close(index_fd);
         close(data_fd);
-        close(temp_data_fd);
         close(temp_index_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_filename);
         RETURN_LONG(-1);
@@ -536,7 +526,6 @@ PHP_FUNCTION(rebuild_data_file) {
         close(index_fd);
         close(data_fd);
         close(temp_data_fd);
-        close(temp_index_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_index_filename);
         RETURN_LONG(-1);
     }
@@ -661,7 +650,6 @@ PHP_FUNCTION(pop_key_value_pair) {
 
     int fd = open(filename, O_RDWR);
     if (fd == -1) {
-        close(fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
     }
@@ -681,7 +669,6 @@ PHP_FUNCTION(pop_key_value_pair) {
 
     off_t pos = fileSize;
     ssize_t bytesRead;
-
 
     if (index_align != -1) {
         pos -= index_align + 1;
@@ -796,7 +783,6 @@ PHP_FUNCTION(hide_key_value_pair) {
 
     int fd = open(filename, O_RDWR);
     if (fd == -1) {
-        close(fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
     }
@@ -871,7 +857,6 @@ PHP_FUNCTION(get_index_keys) {
 
     int fd = open(filename, O_RDONLY);
     if (fd == -1) {
-        close(fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
     }
@@ -945,7 +930,6 @@ PHP_FUNCTION(update_key_value_pair) {
 
     int fd = open(filename, O_RDWR);
     if (fd == -1) {
-        close(fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         efree(temp_filename);
         RETURN_LONG(-1);
@@ -955,7 +939,6 @@ PHP_FUNCTION(update_key_value_pair) {
     if (temp_fd == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_filename);
         close(fd);
-        close(temp_fd);
         efree(temp_filename);
         RETURN_LONG(-2);
     }
@@ -1036,7 +1019,6 @@ PHP_FUNCTION(insert_key_value) {
     int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0666);
     if (fd == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
-        close(fd);
         RETURN_LONG(-1);
     }
 
@@ -1097,7 +1079,6 @@ PHP_FUNCTION(select_key_value) {
 
     int fd = open(filename, O_RDONLY);
     if (fd == -1) {
-        close(fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
     }
@@ -1158,7 +1139,6 @@ PHP_FUNCTION(update_key_value) {
 
     int fd = open(filename, O_RDWR);
     if (fd == -1) {
-        close(fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_LONG(-1);
     }
