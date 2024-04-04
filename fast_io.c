@@ -158,7 +158,7 @@ PHP_FUNCTION(find_value_by_key) {
     }    
 
 
-    char buffer[BUFFER_SIZE + 1]; // Дополнительный байт для нуль-терминатора
+    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
     ssize_t bytesRead;
     char *found_value = NULL;
     char *lineStart = buffer;
@@ -188,6 +188,7 @@ PHP_FUNCTION(find_value_by_key) {
     }
 
     close(fd);
+    efree(buffer);
 
     if (found_value == NULL) {
         RETURN_FALSE;
@@ -232,7 +233,7 @@ PHP_FUNCTION(indexed_find_value_by_key) {
     }
 
 
-    char buffer[BUFFER_SIZE + 1]; // Дополнительный байт для нуль-терминатора
+    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
     ssize_t bytesRead;
     char *found_value = NULL;
     char *lineStart = buffer;
@@ -264,6 +265,7 @@ PHP_FUNCTION(indexed_find_value_by_key) {
     // Разблокировка и закрытие файлов
     close(index_fd);
     close(data_fd);
+    efree(buffer);
 
     if (found_value == NULL) {
         RETURN_FALSE;
@@ -406,7 +408,7 @@ PHP_FUNCTION(delete_key_value_pair) {
         RETURN_LONG(-4);
     }
 
-    char buffer[BUFFER_SIZE + 1];
+    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
     size_t bytesRead;
     while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
         buffer[bytesRead] = '\0'; // Добавляем нуль-терминатор для безопасной работы со строками
@@ -432,6 +434,7 @@ PHP_FUNCTION(delete_key_value_pair) {
     fclose(temp_file);
     close(fd); 
     close(temp_fd);
+    efree(buffer);
 
     // Заменяем оригинальный файл временным файлом
     if (rename(temp_filename, filename) == -1) {
@@ -539,7 +542,7 @@ PHP_FUNCTION(pop_key_value_pair) {
     }
 
 
-    char buffer[BUFFER_SIZE];
+    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
     char *line = NULL;
     int state = 0; // Состояние конечного автомата
 
@@ -576,6 +579,7 @@ PHP_FUNCTION(pop_key_value_pair) {
                         // Усекаем файл
                         if(ftruncate(fd, pos + i + (pos + i == 0 ? 0 : 1))) {
                             efree(line);
+                            efree(buffer);
                             close(fd);
                             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
                             RETURN_FALSE;
@@ -587,6 +591,7 @@ PHP_FUNCTION(pop_key_value_pair) {
     }
 
     close(fd);
+    efree(buffer);
 
     if (line != NULL) {
         RETVAL_STRING(line);
@@ -620,7 +625,7 @@ PHP_FUNCTION(hide_key_value_pair) {
         RETURN_FALSE;
     }
 
-    char buffer[BUFFER_SIZE + 1];
+    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
     ssize_t bytesRead, totalRead = 0;
     off_t writeOffset = 0; // Смещение для записи обновленных данных
 
@@ -645,6 +650,7 @@ PHP_FUNCTION(hide_key_value_pair) {
                 lseek(fd, writeOffset, SEEK_SET);
                 if(write(fd, replacement, index_key_len + 1) == -1) {
                     efree(replacement);
+                    efree(buffer);
                     close(fd);
                     php_error_docref(NULL, E_WARNING, "Failed to write to file: %s", filename);
                     RETURN_FALSE;
@@ -664,6 +670,7 @@ PHP_FUNCTION(hide_key_value_pair) {
     }
 
     close(fd); // Это также разблокирует файл
+    efree(buffer);
     RETURN_TRUE;
 }
 
@@ -692,7 +699,7 @@ PHP_FUNCTION(get_index_keys) {
         RETURN_FALSE;
     }
 
-    char buffer[BUFFER_SIZE + 1]; // Дополнительный байт для нуль-терминатора
+    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
     ssize_t bytesRead;
     char *lineStart = buffer;
     char *lineEnd;
@@ -727,8 +734,10 @@ PHP_FUNCTION(get_index_keys) {
         add_next_index_string(return_value, keys.keys[i]);
     }
 
+
     // Освобождаем выделенную память
     free_key_array(&keys);
+    efree(buffer);
 }
 
 
@@ -789,7 +798,7 @@ PHP_FUNCTION(update_key_value_pair) {
         RETURN_LONG(-4);
     }
 
-    char *buffer = emalloc(BUFFER_SIZE + 1);
+    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
     size_t bytesRead;
     while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
         buffer[bytesRead] = '\0';
