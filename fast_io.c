@@ -1,5 +1,5 @@
 /*
- * Fast_IO (pre-release) Extension for PHP 8
+ * Fast_IO (beta) Extension for PHP 8
  * https://github.com/commeta/fast_io
  * 
  * Copyright 2024 commeta <dcs-spb@ya.ru>
@@ -21,7 +21,7 @@
  * 
  * 
  */
- 
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -256,7 +256,7 @@ PHP_FUNCTION(indexed_find_value_by_key) {
         RETURN_FALSE;
     }
     if (data_fd == -1) {
-        close(data_fd);
+        close(index_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
     }
