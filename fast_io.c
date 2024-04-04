@@ -440,6 +440,7 @@ PHP_FUNCTION(delete_key_value_pair) {
     int temp_fd = open(temp_filename, O_RDWR | O_CREAT | O_APPEND, 0644);
     if (temp_fd == -1) {
         close(fd);
+        unlink(temp_filename);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_filename);
         RETURN_LONG(-2);
     }
@@ -449,6 +450,7 @@ PHP_FUNCTION(delete_key_value_pair) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         close(fd);
         close(temp_fd);
+        unlink(temp_filename);
         RETURN_LONG(-3);
     }
 
@@ -529,6 +531,8 @@ PHP_FUNCTION(rebuild_data_file) {
         close(data_fd);
         close(temp_data_fd);
         close(temp_index_fd);
+        unlink(temp_filename);
+        unlink(temp_index_filename);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
         RETURN_LONG(-1);
     }
@@ -536,6 +540,8 @@ PHP_FUNCTION(rebuild_data_file) {
         close(index_fd);
         close(temp_data_fd);
         close(temp_index_fd);
+        unlink(temp_filename);
+        unlink(temp_index_filename);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
         RETURN_LONG(-1);
     }
@@ -543,6 +549,8 @@ PHP_FUNCTION(rebuild_data_file) {
         close(index_fd);
         close(data_fd);
         close(temp_index_fd);
+        unlink(temp_filename);
+        unlink(temp_index_filename);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_filename);
         RETURN_LONG(-1);
     }
@@ -550,6 +558,8 @@ PHP_FUNCTION(rebuild_data_file) {
         close(index_fd);
         close(data_fd);
         close(temp_data_fd);
+        unlink(temp_filename);
+        unlink(temp_index_filename);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_index_filename);
         RETURN_LONG(-1);
     }
@@ -561,6 +571,8 @@ PHP_FUNCTION(rebuild_data_file) {
         close(data_fd);
         close(temp_data_fd);
         close(temp_index_fd);
+        unlink(temp_filename);
+        unlink(temp_index_filename);
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         RETURN_LONG(-2);
     }
@@ -569,6 +581,8 @@ PHP_FUNCTION(rebuild_data_file) {
         close(data_fd);
         close(temp_data_fd);
         close(temp_index_fd);
+        unlink(temp_filename);
+        unlink(temp_index_filename);
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_filename);
         RETURN_LONG(-2);
     }
@@ -622,6 +636,8 @@ PHP_FUNCTION(rebuild_data_file) {
                 close(data_fd);
                 close(temp_data_fd);
                 close(temp_index_fd);
+                unlink(temp_filename);
+                unlink(temp_index_filename);
                 RETURN_LONG(-3);
             }
             if(write(temp_data_fd, dataBuffer, size) == -1) {
@@ -633,6 +649,8 @@ PHP_FUNCTION(rebuild_data_file) {
                 close(data_fd);
                 close(temp_data_fd);
                 close(temp_index_fd);
+                unlink(temp_filename);
+                unlink(temp_index_filename);
                 RETURN_LONG(-4);
             }
 
@@ -972,6 +990,7 @@ PHP_FUNCTION(update_key_value_pair) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         close(fd);
         close(temp_fd);
+        unlink(temp_filename);
         efree(temp_filename);
         RETURN_LONG(-3);
     }
@@ -1203,4 +1222,3 @@ PHP_FUNCTION(update_key_value) {
 
     RETURN_TRUE;
 }
-
