@@ -525,7 +525,7 @@ PHP_FUNCTION(delete_key_value_pair) {
 PHP_FUNCTION(rebuild_data_file) {
     char *filename, *index_key = NULL;
     size_t filename_len, index_key_len = 0;
-    int ret_code = 0;
+    long ret_code = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|s", &filename, &filename_len, &index_key, &index_key_len) == FAILURE) {
         RETURN_FALSE;
