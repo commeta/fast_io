@@ -509,6 +509,7 @@ PHP_FUNCTION(delete_key_value_pair) {
 
     // Заменяем оригинальный файл временным файлом
     if (rename(temp_filename, filename) == -1) {
+        unlink(temp_filename);
         efree(temp_filename);
         php_error_docref(NULL, E_WARNING, "Failed to replace the original file with the temporary file.");
         RETURN_LONG(-5);
@@ -707,6 +708,8 @@ PHP_FUNCTION(rebuild_data_file) {
 
     // Заменяем оригинальный файл временным файлом
     if (rename(temp_filename, filename) == -1 || rename(temp_index_filename, index_filename)) {
+        unlink(temp_filename);
+        unlink(temp_index_filename);
         efree(buffer);
         efree(index_filename);
         efree(temp_filename);
@@ -1085,6 +1088,7 @@ PHP_FUNCTION(update_key_value_pair) {
 
     // Заменяем оригинальный файл временным файлом
     if (rename(temp_filename, filename) == -1) {
+        unlink(temp_filename);
         efree(buffer);
         efree(temp_filename);
         php_error_docref(NULL, E_WARNING, "Failed to replace the original file with the temporary file.");
