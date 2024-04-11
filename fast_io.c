@@ -525,6 +525,7 @@ PHP_FUNCTION(delete_key_value_pair) {
 PHP_FUNCTION(rebuild_data_file) {
     char *filename, *index_key = NULL;
     size_t filename_len, index_key_len = 0;
+    int ret_code = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|s", &filename, &filename_len, &index_key, &index_key_len) == FAILURE) {
         RETURN_FALSE;
@@ -546,67 +547,40 @@ PHP_FUNCTION(rebuild_data_file) {
 
     if (index_fd == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
-        close(data_fd);
-        close(temp_data_fd);
-        close(temp_index_fd);
-        unlink(temp_filename);
-        unlink(temp_index_filename);
-        efree(index_filename);
-        efree(temp_filename);
-        efree(temp_index_filename);
-        RETURN_LONG(-1);
+        ret_code = -1;
+        goto check;
     }
     if (data_fd == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
-        close(index_fd);
-        close(temp_data_fd);
-        close(temp_index_fd);
-        unlink(temp_filename);
-        unlink(temp_index_filename);
-        efree(index_filename);
-        efree(temp_filename);
-        efree(temp_index_filename);
-        RETURN_LONG(-1);
+        ret_code = -1;
+        goto check;
     }
     if (temp_data_fd == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_filename);
-        close(index_fd);
-        close(data_fd);
-        close(temp_index_fd);
-        unlink(temp_filename);
-        unlink(temp_index_filename);
-        RETURN_LONG(-1);
+        ret_code = -1;
+        goto check;
     }
     if (temp_index_fd == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_index_filename);
-        close(index_fd);
-        close(data_fd);
-        close(temp_data_fd);
-        unlink(temp_filename);
-        unlink(temp_index_filename);
-        efree(index_filename);
-        efree(temp_filename);
-        efree(temp_index_filename);
-        RETURN_LONG(-1);
+        ret_code = -1;
+        goto check;
     }
 
 
     // Блокировка файлов
     if (lock_file(data_fd, LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        close(index_fd);
-        close(data_fd);
-        close(temp_data_fd);
-        close(temp_index_fd);
-        unlink(temp_filename);
-        unlink(temp_index_filename);
-        efree(index_filename);
-        efree(temp_filename);
-        efree(temp_index_filename);
-        RETURN_LONG(-2);
+        ret_code = -2;
+        goto check;
     }
     if (lock_file(index_fd, LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_filename);
+        ret_code = -2;
+        goto check;
+    }
+
+    goto skip;
+    check:
         close(index_fd);
         close(data_fd);
         close(temp_data_fd);
@@ -616,8 +590,9 @@ PHP_FUNCTION(rebuild_data_file) {
         efree(index_filename);
         efree(temp_filename);
         efree(temp_index_filename);
-        RETURN_LONG(-2);
-    }
+        RETURN_LONG(ret_code);
+    skip:
+
 
     char *buffer = emalloc(BUFFER_SIZE);
     ssize_t bytesRead;
@@ -657,26 +632,20 @@ PHP_FUNCTION(rebuild_data_file) {
             // Чтение и запись блока данных
             lseek(data_fd, offset, SEEK_SET);
             char *dataBuffer = emalloc(size);
-
-
+            
             if(read(data_fd, dataBuffer, size) == -1) {
                 php_error_docref(NULL, E_WARNING, "Failed to read data block.");
-                efree(dataBuffer);
-                efree(line);
-                efree(buffer);
-                close(index_fd);
-                close(data_fd);
-                close(temp_data_fd);
-                close(temp_index_fd);
-                unlink(temp_filename);
-                unlink(temp_index_filename);
-                efree(index_filename);
-                efree(temp_filename);
-                efree(temp_index_filename);
-                RETURN_LONG(-3);
+                ret_code = -3;
+                goto check_error;
             }
             if(write(temp_data_fd, dataBuffer, size) == -1) {
                 php_error_docref(NULL, E_WARNING, "Failed to write data block.");
+                ret_code = -4;
+                goto check_error;
+            }
+
+            goto skip_return;
+            check_error:
                 efree(dataBuffer);
                 efree(line);
                 efree(buffer);
@@ -689,9 +658,8 @@ PHP_FUNCTION(rebuild_data_file) {
                 efree(index_filename);
                 efree(temp_filename);
                 efree(temp_index_filename);
-                RETURN_LONG(-4);
-            }
-
+                RETURN_LONG(ret_code);
+            skip_return:
 
             // Запись во временный индексный файл
             dprintf(temp_index_fd, "%s %ld:%zu\n", line, offset, size);
