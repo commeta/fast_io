@@ -705,9 +705,15 @@ PHP_FUNCTION(rebuild_data_file) {
     close(temp_data_fd);
     close(temp_index_fd);
 
-    // Переименование временных файлов
-    rename(temp_filename, filename);
-    rename(temp_index_filename, index_filename);
+    // Заменяем оригинальный файл временным файлом
+    if (rename(temp_filename, filename) == -1 || rename(temp_index_filename, index_filename)) {
+        efree(buffer);
+        efree(index_filename);
+        efree(temp_filename);
+        efree(temp_index_filename);
+        php_error_docref(NULL, E_WARNING, "Failed to replace the original file with the temporary file.");
+        RETURN_LONG(-5);
+    }
 
     efree(buffer);
     efree(index_filename);
@@ -1077,7 +1083,13 @@ PHP_FUNCTION(update_key_value_pair) {
     close(fd); 
     close(temp_fd);
 
-    rename(temp_filename, filename);
+    // Заменяем оригинальный файл временным файлом
+    if (rename(temp_filename, filename) == -1) {
+        efree(buffer);
+        efree(temp_filename);
+        php_error_docref(NULL, E_WARNING, "Failed to replace the original file with the temporary file.");
+        RETURN_LONG(-5);
+    }
 
     efree(buffer);
     efree(temp_filename);
