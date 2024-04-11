@@ -1,5 +1,36 @@
 <?php
 // Stress test
+function memory_get_process_usage_kernel(){
+    $statusFile = '/proc/' . getmypid() . '/status';
+    
+    if (!file_exists($statusFile)) {
+        return 0;
+    }
+    
+    $status = file_get_contents($statusFile);
+    if ($status === false) {
+        // Не удалось прочитать файл
+        return 0;
+    }
+    
+    $totalMemory = 0;
+    
+    // Извлечение VmRSS
+    if (preg_match('~^VmRSS:\s*([0-9]+) kB~mi', $status, $matches)) {
+        $totalMemory += intval($matches[1]);
+    }
+    
+    // Извлечение VmSwap (если нужно учитывать)
+    if (preg_match('~^VmSwap:\s*([0-9]+) kB~mi', $status, $matches)) {
+        $totalMemory += intval($matches[1]);
+    }
+    
+    return $totalMemory;
+}
+
+
+
+$r_total= memory_get_process_usage_kernel();
 
 foreach(glob('fast_io*.dat') as $file) {
 	unlink($file);
@@ -48,7 +79,7 @@ for($i=0; $i <=10; $i++){
 
 print_r([
 	'rebuild_data_file',
-	rebuild_data_file(__DIR__ . '/fast_io2.dat', null)
+	rebuild_data_file(__DIR__ . '/fast_io2.dat', 'index_19')
 ]);
 
 print_r([
@@ -109,7 +140,7 @@ print_r([
 	'indexed_find_value_by_key',
 	indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_8')
 ]);
-sleep(60);
+sleep(10);
 
 
 $start= microtime(true);
@@ -120,7 +151,7 @@ $time= microtime(true) - $start;
 echo "write_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
-sleep(60);
+sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
 	find_value_by_key(__DIR__ . '/fast_io5.dat', 'index_' . $i);
@@ -129,7 +160,7 @@ $time= microtime(true) - $start;
 echo "find_value_by_key: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
-sleep(60);
+sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
 	find_value_by_key(__DIR__ . '/fast_io5.dat', 'index_10');
@@ -138,7 +169,7 @@ $time= microtime(true) - $start;
 echo "find_value_by_key repeat: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
-sleep(60);
+sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
 	delete_key_value_pair(__DIR__ . '/fast_io5.dat', 'index_' . $i);
@@ -147,7 +178,7 @@ $time= microtime(true) - $start;
 echo "delete_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
-sleep(60);
+sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
 	indexed_write_key_value_pair(__DIR__ . '/fast_io6.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i);
@@ -156,7 +187,7 @@ $time= microtime(true) - $start;
 echo "indexed_write_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
-sleep(60);
+sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
 	indexed_find_value_by_key(__DIR__ . '/fast_io6.dat', 'index_' . $i);
@@ -165,7 +196,7 @@ $time= microtime(true) - $start;
 echo "indexed_find_value_by_key: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
-sleep(60);
+sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
 	indexed_find_value_by_key(__DIR__ . '/fast_io6.dat', 'index_10');
@@ -174,7 +205,7 @@ $time= microtime(true) - $start;
 echo "indexed_find_value_by_key repeat: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
-sleep(60);
+sleep(10);
 for($i=0; $i <=10000; $i++){
 	write_key_value_pair(__DIR__ . '/fast_io7.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i);
 }
@@ -185,3 +216,9 @@ for($i=0; $i <=10000; $i++){
 $time= microtime(true) - $start;
 echo "pop_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
+print_r([
+	'memory_get_process_usage_kernel in Kilo Bytes',
+	$r_total,
+	memory_get_process_usage_kernel(),
+	memory_get_process_usage_kernel() - $r_total
+]);
