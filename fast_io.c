@@ -1,5 +1,5 @@
 /*
- * Fast_IO (beta) Extension for PHP 8
+ * Fast_IO (pre-release) Extension for PHP 8
  * https://github.com/commeta/fast_io
  * 
  * Copyright 2024 commeta <dcs-spb@ya.ru>
@@ -243,8 +243,8 @@ PHP_FUNCTION(indexed_find_value_by_key) {
         RETURN_FALSE;
     }
 
-    char index_filename[256];
-    snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
+    char *index_filename = emalloc(filename_len + 7); // Дополнительные символы для ".index" и терминирующего нуля
+    snprintf(index_filename, filename_len + 7, "%s.index", filename);
 
     int index_fd = open(index_filename, O_RDONLY);
     int data_fd = open(filename, O_RDONLY);
@@ -253,11 +253,13 @@ PHP_FUNCTION(indexed_find_value_by_key) {
     if (index_fd == -1) {
         close(data_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
+        efree(index_filename);
         RETURN_FALSE;
     }
     if (data_fd == -1) {
         close(index_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
+        efree(index_filename);
         RETURN_FALSE;
     }
 
@@ -266,12 +268,14 @@ PHP_FUNCTION(indexed_find_value_by_key) {
         close(index_fd);
         close(data_fd);
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_filename);
+        efree(index_filename);
         RETURN_FALSE;
     }
     if (lock_file(data_fd, LOCK_EX) == -1) {
         close(index_fd);
         close(data_fd);
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
+        efree(index_filename);
         RETURN_FALSE;
     }
 
@@ -309,6 +313,7 @@ PHP_FUNCTION(indexed_find_value_by_key) {
     close(index_fd);
     close(data_fd);
     efree(buffer);
+    efree(index_filename);
 
     if (found_value == NULL) {
         RETURN_FALSE;
@@ -362,7 +367,7 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
         RETURN_FALSE;
     }
 
-    char *index_filename = emalloc(filename_len + 6); // Дополнительные символы для ".index" и терминирующего нуля
+    char *index_filename = emalloc(filename_len + 7); // Дополнительные символы для ".index" и терминирующего нуля
     snprintf(index_filename, filename_len + 7, "%s.index", filename);
 
     int data_fd = open(filename, O_RDWR | O_CREAT | O_APPEND, 0644);
@@ -371,11 +376,13 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
     if (index_fd == -1) {
         close(data_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
+        efree(index_filename);
         RETURN_FALSE;
     }
     if (data_fd == -1) {
         close(index_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
+        efree(index_filename);
         RETURN_FALSE;
     }
 
@@ -428,11 +435,12 @@ PHP_FUNCTION(delete_key_value_pair) {
         RETURN_FALSE;
     }
 
-    char temp_filename[256];
-    snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
-
+    char *temp_filename = emalloc(filename_len + 5); // Дополнительные символы для ".tmp" и терминирующего нуля
+    snprintf(temp_filename, filename_len + 5, "%s.tmp", filename);
+    
     int fd = open(filename, O_RDWR);
     if (fd == -1) {
+        efree(temp_filename);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_LONG(-1);
     }
@@ -442,6 +450,7 @@ PHP_FUNCTION(delete_key_value_pair) {
         close(fd);
         unlink(temp_filename);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_filename);
+        efree(temp_filename);
         RETURN_LONG(-2);
     }
 
@@ -451,6 +460,7 @@ PHP_FUNCTION(delete_key_value_pair) {
         close(fd);
         close(temp_fd);
         unlink(temp_filename);
+        efree(temp_filename);
         RETURN_LONG(-3);
     }
 
@@ -464,6 +474,7 @@ PHP_FUNCTION(delete_key_value_pair) {
         close(fd);
         close(temp_fd);
         unlink(temp_filename);
+        efree(temp_filename);
         RETURN_LONG(-4);
     }
 
@@ -494,12 +505,15 @@ PHP_FUNCTION(delete_key_value_pair) {
     close(fd); 
     close(temp_fd);
     efree(buffer);
+    
 
     // Заменяем оригинальный файл временным файлом
     if (rename(temp_filename, filename) == -1) {
+        efree(temp_filename);
         php_error_docref(NULL, E_WARNING, "Failed to replace the original file with the temporary file.");
         RETURN_LONG(-5);
     }
+    efree(temp_filename);
 
     RETURN_TRUE;
 }
@@ -515,11 +529,13 @@ PHP_FUNCTION(rebuild_data_file) {
         RETURN_FALSE;
     }
     
-    
-    char index_filename[256], temp_filename[260], temp_index_filename[260];
-    snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
-    snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
-    snprintf(temp_index_filename, sizeof(temp_index_filename), "%s.index.tmp", filename);
+    char *index_filename = emalloc(filename_len + 7); // Дополнительные символы для ".index" и терминирующего нуля
+    snprintf(index_filename, filename_len + 7, "%s.index", filename);
+    char *temp_filename = emalloc(filename_len + 5); // Дополнительные символы для ".tmp" и терминирующего нуля
+    snprintf(temp_filename, filename_len + 5, "%s.tmp", filename);
+    char *temp_index_filename = emalloc(filename_len + 11); // Дополнительные символы для ".index.tmp" и терминирующего нуля
+    snprintf(temp_index_filename, filename_len + 11, "%s.index.tmp", filename);
+
 
     // Открытие файлов
     int index_fd = open(index_filename, O_RDONLY);
@@ -528,62 +544,77 @@ PHP_FUNCTION(rebuild_data_file) {
     int temp_index_fd = open(temp_index_filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
     if (index_fd == -1) {
+        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
         close(data_fd);
         close(temp_data_fd);
         close(temp_index_fd);
         unlink(temp_filename);
         unlink(temp_index_filename);
-        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
+        efree(index_filename);
+        efree(temp_filename);
+        efree(temp_index_filename);
         RETURN_LONG(-1);
     }
     if (data_fd == -1) {
+        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
         close(index_fd);
         close(temp_data_fd);
         close(temp_index_fd);
         unlink(temp_filename);
         unlink(temp_index_filename);
-        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
+        efree(index_filename);
+        efree(temp_filename);
+        efree(temp_index_filename);
         RETURN_LONG(-1);
     }
     if (temp_data_fd == -1) {
+        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_filename);
         close(index_fd);
         close(data_fd);
         close(temp_index_fd);
         unlink(temp_filename);
         unlink(temp_index_filename);
-        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_filename);
         RETURN_LONG(-1);
     }
     if (temp_index_fd == -1) {
+        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_index_filename);
         close(index_fd);
         close(data_fd);
         close(temp_data_fd);
         unlink(temp_filename);
         unlink(temp_index_filename);
-        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_index_filename);
+        efree(index_filename);
+        efree(temp_filename);
+        efree(temp_index_filename);
         RETURN_LONG(-1);
     }
 
 
     // Блокировка файлов
     if (lock_file(data_fd, LOCK_EX) == -1) {
+        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         close(index_fd);
         close(data_fd);
         close(temp_data_fd);
         close(temp_index_fd);
         unlink(temp_filename);
         unlink(temp_index_filename);
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
+        efree(index_filename);
+        efree(temp_filename);
+        efree(temp_index_filename);
         RETURN_LONG(-2);
     }
     if (lock_file(index_fd, LOCK_EX) == -1) {
+        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_filename);
         close(index_fd);
         close(data_fd);
         close(temp_data_fd);
         close(temp_index_fd);
         unlink(temp_filename);
         unlink(temp_index_filename);
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_filename);
+        efree(index_filename);
+        efree(temp_filename);
+        efree(temp_index_filename);
         RETURN_LONG(-2);
     }
 
@@ -638,6 +669,9 @@ PHP_FUNCTION(rebuild_data_file) {
                 close(temp_index_fd);
                 unlink(temp_filename);
                 unlink(temp_index_filename);
+                efree(index_filename);
+                efree(temp_filename);
+                efree(temp_index_filename);
                 RETURN_LONG(-3);
             }
             if(write(temp_data_fd, dataBuffer, size) == -1) {
@@ -651,6 +685,9 @@ PHP_FUNCTION(rebuild_data_file) {
                 close(temp_index_fd);
                 unlink(temp_filename);
                 unlink(temp_index_filename);
+                efree(index_filename);
+                efree(temp_filename);
+                efree(temp_index_filename);
                 RETURN_LONG(-4);
             }
 
@@ -673,7 +710,9 @@ PHP_FUNCTION(rebuild_data_file) {
     rename(temp_index_filename, index_filename);
 
     efree(buffer);
-    
+    efree(index_filename);
+    efree(temp_filename);
+    efree(temp_index_filename);
     RETURN_TRUE;
 }
 
@@ -1222,3 +1261,4 @@ PHP_FUNCTION(update_key_value) {
 
     RETURN_TRUE;
 }
+
