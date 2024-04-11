@@ -649,16 +649,7 @@ PHP_FUNCTION(rebuild_data_file) {
                 efree(dataBuffer);
                 efree(line);
                 efree(buffer);
-                close(index_fd);
-                close(data_fd);
-                close(temp_data_fd);
-                close(temp_index_fd);
-                unlink(temp_filename);
-                unlink(temp_index_filename);
-                efree(index_filename);
-                efree(temp_filename);
-                efree(temp_index_filename);
-                RETURN_LONG(ret_code);
+                goto check;
             skip_return:
 
             // Запись во временный индексный файл
@@ -668,29 +659,28 @@ PHP_FUNCTION(rebuild_data_file) {
         }
     }
 
+    efree(buffer);
+
     // Закрытие файлов
     close(index_fd);
     close(data_fd);
     close(temp_data_fd);
     close(temp_index_fd);
 
+    ret_code = 1;
+
     // Заменяем оригинальный файл временным файлом
     if (rename(temp_filename, filename) == -1 || rename(temp_index_filename, index_filename)) {
+        php_error_docref(NULL, E_WARNING, "Failed to replace the original file with the temporary file.");
         unlink(temp_filename);
         unlink(temp_index_filename);
-        efree(buffer);
-        efree(index_filename);
-        efree(temp_filename);
-        efree(temp_index_filename);
-        php_error_docref(NULL, E_WARNING, "Failed to replace the original file with the temporary file.");
-        RETURN_LONG(-5);
+        ret_code = -5;
     }
 
-    efree(buffer);
     efree(index_filename);
     efree(temp_filename);
     efree(temp_index_filename);
-    RETURN_TRUE;
+    RETURN_LONG(ret_code);
 }
 
 
