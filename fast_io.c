@@ -316,7 +316,6 @@ PHP_FUNCTION(indexed_find_value_by_key) {
         close(data_fd);
         RETURN_FALSE;
     } else {
-
         // Находим позицию двоеточия в строке
         char *colon_ptr = strchr(found_value, ':');
         if (!colon_ptr) {
@@ -336,6 +335,8 @@ PHP_FUNCTION(indexed_find_value_by_key) {
             RETURN_FALSE;
         }
 
+        efree(found_value);
+
         // Чтение и запись блока данных
         lseek(data_fd, offset, SEEK_SET);
         char *dataBuffer = emalloc(size);
@@ -351,7 +352,6 @@ PHP_FUNCTION(indexed_find_value_by_key) {
 
         close(data_fd);
         RETVAL_STRING(dataBuffer);
-        efree(found_value);
         efree(dataBuffer);
     }
 }
