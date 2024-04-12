@@ -64,7 +64,7 @@ phpize
 ./configure
 make
 make
-
+```
 
 These commands will create the basic structure for your Fast_IO extension.
 
