@@ -1,74 +1,80 @@
-# Fast_IO - Расширение для PHP 8
+# Fast_IO Extension for PHP 8
 
-## Описание
+[Описание на русском](README.RU.md)
 
-Fast_IO - это высокопроизводительное расширение для PHP 8, разработанное для эффективной работы с файлами данных. Оно предлагает набор функций для чтения, записи, обновления и удаления пар ключ-значение в файлах данных, используя низкоуровневый посекторный доступ и механизмы блокировки для синхронизации доступа. Это расширение идеально подходит для работы с большими объемами данных, обеспечивая высокую скорость и эффективность операций благодаря оптимизированному управлению памятью и дисковым вводом-выводом.
+## Overview
 
-## Основные возможности
+Fast_IO is a high-performance PHP 8 extension designed for efficient data file management, focusing on key-value pairs. It offers a suite of functions for reading, writing, and deleting data using low-level sector access and portable file locking to synchronize access across concurrent instances. This extension facilitates the storage and maintenance of arbitrarily large database files, with buffered functions reading files in chunks of 4096 bytes (1 OS kernel-cached page), ensuring high efficiency and performance.
 
-- **Быстрая запись и чтение**: Позволяет выполнять операции записи и чтения для пар ключ-значение с высокой производительностью.
-- **Транзакции с блокировкой**: Использует механизм портируемой блокировки файла для обеспечения синхронизации доступа между параллельными операциями.
-- **Эффективное управление памятью**: Чтение данных осуществляется порциями, что предотвращает переполнение памяти при работе с большими файлами.
-- **Поддержка индексных файлов**: Улучшает производительность поиска по ключу за счет использования отдельных индексных файлов.
-- **Бинарная безопасность**: Функции с префиксом index_ обеспечивают безопасную работу с бинарными данными.
+## Features
 
-## Функции расширения
-- [write_key_value_pair](/docs/write_key_value_pair.md) - Запись пары ключ-значение в текстовый файл.
-- [pop_key_value_pair](/docs/pop_key_value_pair.md) - Извлечение и удаление последней строки из файла.
-- [rebuild_data_file](/docs/rebuild_data_file.md) - Перестройка файла данных и соответствующего индексного файла.
-- [indexed_write_key_value_pair](/docs/indexed_write_key_value_pair.md) - Запись пары ключ-значение в текстовый файл данных и соответствующий индексный файл.
-- [indexed_find_value_by_key](/docs/indexed_find_value_by_key.md) - Поиск значения по ключу с использованием индексного файла.
-- [hide_key_value_pair](/docs/hide_key_value_pair.md) - Скрытие ключей в файлах данных.
-- [find_value_by_key](/docs/find_value_by_key.md) - Поиск значения по ключу в файле данных.
-- [delete_key_value_pair](/docs/delete_key_value_pair.md) - Удаление пары ключ-значение из файла данных.
-- [get_index_keys](/docs/get_index_keys.md) - Извлечение уникальных ключей из текстового файла.
-- [update_key_value_pair](/docs/update_key_value_pair.md) - Обновление значения по заданному ключу.
-- [insert_key_value](/docs/insert_key_value.md) - Добавление строк с определённым выравниванием в файл.
-- [select_key_value](/docs/select_key_value.md) - Выборка строки по указанному номеру строки и выравниванию из файла.
-- [update_key_value](/docs/update_key_value.md) - Обновление значения по ключу в файле.
+- **High-Performance Data Handling**: Fast_IO is built for speed, allowing rapid manipulation of large data files.
+- **Key-Value Pair Operations**: Comprehensive support for creating, reading, updating, and deleting key-value pairs.
+- **Index Support**: Enhances search operations through the use of index files, making data retrieval fast and efficient.
+- **Portable File Locking**: Ensures data integrity by using UNIX portable file locking, allowing safe concurrent access.
+- **Buffered Reading**: Functions read data in chunks, preventing memory overflow and ensuring efficient data processing.
+- **Framework-Free**: Developed without third-party frameworks or libraries for maximum performance and compatibility with PHP 8.
+- **Binary-Safe Index Functions**: The index_ prefixed functions support unlimited data volume storage with binary safety.
+- **Data File Storage**: Non-indexed functions store strings - key:value pairs (string, json, serialized) in data files with a maximum pair size of 4096 bytes.
 
+## Function List
 
-## Особенности реализации
+- [write_key_value_pair](/docs/write_key_value_pair.md): Writes a key-value pair to a text file.
+- [pop_key_value_pair](/docs/pop_key_value_pair.md): Extracts and deletes the last line from a file.
+- [rebuild_data_file](/docs/rebuild_data_file.md): Reconstructs a data file and its corresponding index file.
+- [indexed_write_key_value_pair](/docs/indexed_write_key_value_pair.md): Writes a key-value pair to a text data file and its corresponding index file.
+- [indexed_find_value_by_key](/docs/indexed_find_value_by_key.md): Searches for a value by key in a large text file using an index file.
+- [hide_key_value_pair](/docs/hide_key_value_pair.md): Hides keys in files storing data in key-value format.
+- [find_value_by_key](/docs/find_value_by_key.md): Searches for a value by key in a data file.
+- [delete_key_value_pair](/docs/delete_key_value_pair.md): Deletes a key-value pair from a data file.
+- [get_index_keys](/docs/get_index_keys.md): Extracts unique keys from a text file.
+- [update_key_value_pair](/docs/update_key_value_pair.md): Updates a value by the given key.
+- [insert_key_value](/docs/insert_key_value.md): Adds lines with specific alignment to a file.
+- [select_key_value](/docs/select_key_value.md): Selects a line by the specified line number and alignment from a file.
+- [update_key_value](/docs/update_key_value.md): Updates a value by key in the file.
 
-- Все функции используют UNIX портируемую блокировку файла на запись, что гарантирует целостность данных при параллельном доступе.
-- Расширение разработано без использования сторонних фреймворков и библиотек, обеспечивая высокую производительность и совместимость с PHP 8.
-- Функции производят чтение данных порциями, оптимизируя использование памяти и уменьшая нагрузку на систему.
+## Implementation Highlights
 
-Fast_IO представляет собой мощное расширение для PHP 8, которое значительно упрощает и ускоряет работу с большими объемами данных. Благодаря эффективным механизмам чтения, записи, блокировки и управления памятью, разработчики могут создавать высокопроизводительные приложения, оптимизированные для обработки файлов данных.
+- All functions utilize UNIX portable file locking on write operations to ensure data integrity during concurrent access.
+- Concurrent function instances wait in queue for file release, ensuring orderly access and operation.
+- To prevent memory overflow, functions read data in portions without loading the entire file into memory.
+- The extension is developed without reliance on external frameworks or libraries, ensuring high performance and compatibility with PHP 8.
 
-## Примеры использования
+## Getting Started
 
-Для каждой функции расширения Fast_IO предоставлены подробные описания с примерами на PHP. Эти примеры помогут разработчикам быстро начать работу с расширением и эффективно использовать его возможности в своих проектах.
+Each function within the Fast_IO extension is documented in detail on separate pages with PHP examples. These resources will help developers quickly get started with the extension and efficiently utilize its capabilities in their projects.
+
+For more information on how to install, configure, and use Fast_IO in your PHP 8 environment, please refer to the detailed documentation provided with the extension.
+
+## Conclusion
+
+Fast_IO represents a significant advancement in PHP data file management, offering unparalleled speed, efficiency, and reliability for handling large volumes of key-value pairs. Its comprehensive feature set makes it an ideal choice for developers seeking to optimize their data-driven applications.
 
 
 ---
 
-## Установка
+## Installation
 
-### Шаг 1: Создание каркаса расширения
-Скопируйте файлы: `config.m4`, `fast_io.c`, `fast_io.h` в текущий каталог проекта.
+### Step 1: Creating the Extension Skeleton
 
-Для начала, вам нужно создать каркас вашего расширения. Это можно сделать вручную или с помощью инструмента ext_skel в исходниках PHP. Например:
+Firstly, you need to prepare the skeleton of your extension. This can be achieved manually or by using the ext_skel tool available in the PHP source. Begin by copying config.m4, fast_io.c, and fast_io.h into your project directory. Then, execute the following commands:
+
 ```
 phpize
 ./configure
 make
-make test
-```
-
-Это создаст базовую структуру для вашего расширения.
+make
 
 
+These commands will create the basic structure for your Fast_IO extension.
 
-### Шаг 2: Компиляция и тестирование
+### Step 2: Compilation and Testing
 
-Вам нужно скомпилировать расширение и протестировать его. Используйте phpize, ./configure, make и make test для компиляции и установки вашего расширения.
+Next, compile and test your extension using phpize, ./configure, make, and make test. After successful compilation and testing, remember to add the line extension=fast_io.so to your php.ini file to activate the extension. Now, you can use the new functions provided by Fast_IO just like any other PHP function.
 
-После установки не забудьте добавить строку `extension=fast_io.so` в ваш `php.ini`, чтобы активировать расширение.
+## Performance Test Results
 
-Теперь вы можете вызывать новые функции из PHP как обычные функции.
-
-Результат тестирования: Ubuntu 24.04, Ryzen 12 Cores, 16GB RAM, SATA 3 SSD.
+The Fast_IO extension was rigorously tested on Ubuntu 24.04, with a Ryzen 12 Cores CPU, 16GB RAM, and a SATA 3 SSD. Here are the results for some of the key functions when executed in a loop of 10,000 iterations, with linear index incrementation (to avoid cache hits) and repeated searches for the same index:
 
 ```
 write_key_value_pair: 0.11487889289856 (0.00001149)
@@ -81,5 +87,21 @@ indexed_find_value_by_key repeat: 0.11506295204163 (0.00001151)
 pop_key_value_pair: 0.20079398155212 (0.00002008)
 ```
 
-Функция запускалась в цикле 10000 раз, с линейным инкрементом индекса (без попадания в кэш) и repeat многократный поиск одного и того же индекса.
-Показано время в секундах по результатам теста: 10000 запусков (1 запуск).
+## Function Overview
+
+Each function within the Fast_IO extension has been meticulously documented on separate pages, complete with PHP examples to guide you through their usage. This ensures that you have all the necessary information to effectively utilize these functions in your projects. Here are some of the key features provided by Fast_IO:
+
+- Efficient key-value pair manipulation
+- Advanced indexing for quick data retrieval
+- Portable file locking for data integrity
+- Buffered reading for performance optimization
+
+For detailed information about each function and how to use them, please refer to their respective documentation pages.
+
+## Getting Started
+
+Now that you have installed the Fast_IO extension, you can begin optimizing your PHP applications for better performance in file operations. Whether you're managing large datasets or require fast and reliable data access, Fast_IO provides the tools you need to succeed.
+
+We hope this guide has been helpful in setting up the Fast_IO extension for PHP 8. For further assistance or more detailed examples, please consult the individual function documentation pages.
+
+Happy coding!
