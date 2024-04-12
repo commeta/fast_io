@@ -87,6 +87,25 @@ indexed_find_value_by_key repeat: 0.11506295204163 (0.00001151)
 pop_key_value_pair: 0.20079398155212 (0.00002008)
 ```
 
+## Call Costs
+
+The table of function call costs in ascending order:
+
+- select_key_value Very low consumption, sector-based reading of a file segment.
+- update_key_value Very low consumption, sector-based writing of a file segment.
+- pop_key_value_pair Low consumption, with very low alignment, reading from the end of the file, truncating the file.
+- write_key_value_pair Very low consumption, writing a line at the end of the file.
+- insert_key_value Very low consumption, writing a line at the end of the file.
+- indexed_write_key_value_pair Low consumption, writing a line at the end of the index file and a block at the end of the data file.
+- find_value_by_key Medium consumption, reading the entire file.
+- get_index_keys Medium consumption, reading the entire file.
+- hide_key_value_pair Medium consumption, reading the entire file, writing a line to the file.
+- indexed_find_value_by_key Medium consumption, reading the entire index file and a block of the data file.
+- delete_key_value_pair High consumption, reading/writing the entire file.
+- update_key_value_pair High consumption, full reading/writing of the entire file.
+- rebuild_data_file Very high consumption, full reading/writing of index and data files.
+
+
 ## Function Overview
 
 Each function within the Fast_IO extension has been meticulously documented on separate pages, complete with PHP examples to guide you through their usage. This ensures that you have all the necessary information to effectively utilize these functions in your projects. Here are some of the key features provided by Fast_IO:
