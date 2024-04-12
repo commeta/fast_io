@@ -845,6 +845,11 @@ PHP_FUNCTION(pop_key_value_pair) {
                         line[len] = '\0';
                         state = 2; // Переходим к финальному состоянию
 
+                        // Обрезка пробелов справа и символа перевода строки
+                        for (int i = len - 1; i >= 0 && (line[i] == ' ' || line[i] == '\n'); --i) {
+                            line[i] = '\0';
+                        }
+
                         // Усекаем файл
                         if(ftruncate(fd, pos + i + (pos + i == 0 ? 0 : 1))) {
                             efree(line);
