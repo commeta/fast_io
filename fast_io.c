@@ -595,12 +595,17 @@ PHP_FUNCTION(rebuild_data_file) {
 
     goto skip;
     check:
-        close(index_fd);
-        close(data_fd);
-        close(temp_data_fd);
-        close(temp_index_fd);
-        unlink(temp_filename);
-        unlink(temp_index_filename);
+        if (index_fd != -1) close(index_fd);
+        if (data_fd != -1) close(data_fd);
+        if (temp_data_fd != -1) {
+            close(temp_data_fd);
+            unlink(temp_filename);
+        }
+        if (temp_index_fd != -1) {
+            close(temp_index_fd);
+            unlink(temp_index_filename);
+        }
+        
         efree(index_filename);
         efree(temp_filename);
         efree(temp_index_filename);
