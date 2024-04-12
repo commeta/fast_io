@@ -172,8 +172,11 @@ print_r([
 
 print_r([
 	'pop_key_value_pair',
-	trim(pop_key_value_pair(__DIR__ . '/fast_io3.dat'))
+	pop_key_value_pair(__DIR__ . '/fast_io3.dat')
 ]);
+
+
+
 
 print_r([
 	'update_key_value_pair',
