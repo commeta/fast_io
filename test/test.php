@@ -61,7 +61,7 @@ function memory_get_process_usage_kernel(){
 - и так далее, в зависимости от содержимого файла /proc/[pid]/io.
 */
 
-function getProcessIOStats() {
+function get_process_io_stats() {
     $ioFile = '/proc/' . getmypid() . '/io';
     
     if (!file_exists($ioFile)) {
@@ -131,7 +131,7 @@ print_r([
 
 
 for($i=0; $i <=20; $i++){
-	indexed_write_key_value_pair(__DIR__ . '/fast_io2.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i);
+	indexed_write_key_value_pair(__DIR__ . '/fast_io2.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i . "\n");
 }
 for($i=0; $i <=10; $i++){
 	hide_key_value_pair(__DIR__ . '/fast_io2.dat.index', 'index_' . $i);
@@ -188,7 +188,7 @@ delete_key_value_pair(__DIR__ . '/fast_io3.dat');
 
 print_r(__DIR__ . '/fast_io4.dat' . "\n");
 for($i=0; $i <=10; $i++){
-	indexed_write_key_value_pair(__DIR__ . '/fast_io4.dat', 'index_' . $i, 'data_indexed_write_key_value_pair_' . $i);
+	indexed_write_key_value_pair(__DIR__ . '/fast_io4.dat', 'index_' . $i, 'data_indexed_write_key_value_pair_' . $i . "\n");
 
 	print_r($i . ', ');
 }
@@ -246,7 +246,7 @@ echo "delete_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), "
 sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
-	indexed_write_key_value_pair(__DIR__ . '/fast_io6.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i);
+	indexed_write_key_value_pair(__DIR__ . '/fast_io6.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i . "\n");
 }
 $time= microtime(true) - $start;
 echo "indexed_write_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
@@ -285,11 +285,8 @@ print_r([
 	'memory_get_process_usage_kernel in Kilo Bytes',
 	$r_total,
 	memory_get_process_usage_kernel(),
-	memory_get_process_usage_kernel() - $r_total
-]);
-
-print_r([
-	'getProcessIOStats',
-	getProcessIOStats()
+	memory_get_process_usage_kernel() - $r_total,
+	'get_process_io_stats',
+	get_process_io_stats()
 ]);
 
