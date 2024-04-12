@@ -1,4 +1,28 @@
 <?php
+/*
+ * Fast_IO (pre-release) Extension for PHP 8
+ * https://github.com/commeta/fast_io
+ * 
+ * Copyright 2024 commeta <dcs-spb@ya.ru>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
+ * 
+ * 
+ */
+
 // Stress test
 function memory_get_process_usage_kernel(){
     $statusFile = '/proc/' . getmypid() . '/status';
@@ -28,9 +52,42 @@ function memory_get_process_usage_kernel(){
     return $totalMemory;
 }
 
+/*
+Каждый ключ массива представляет определённый тип статистики ввода-вывода:
+- rchar: количество байт, которые процесс прочитал из ядра (не обязательно с диска).
+- wchar: количество байт, которые процесс записал в ядро.
+- syscr: количество вызовов чтения, выполненных процессом.
+- syscw: количество вызовов записи, выполненных процессом.
+- и так далее, в зависимости от содержимого файла /proc/[pid]/io.
+*/
 
+function getProcessIOStats() {
+    $ioFile = '/proc/' . getmypid() . '/io';
+    
+    if (!file_exists($ioFile)) {
+        return [];
+    }
+    
+    $ioData = file_get_contents($ioFile);
+    if ($ioData === false) {
+        // Не удалось прочитать файл
+        return [];
+    }
+    
+    $ioStats = [];
+    
+    // Разбор данных файла
+    $lines = explode("\n", trim($ioData));
+    foreach ($lines as $line) {
+        list($key, $value) = explode(':', $line, 2);
+        $key = trim($key);
+        $value = trim($value);
+        $ioStats[$key] = intval($value);
+    }
+    
+    return $ioStats;
+}
 
-$r_total= memory_get_process_usage_kernel();
 
 foreach(glob('fast_io*.dat') as $file) {
 	unlink($file);
@@ -41,6 +98,9 @@ foreach(glob('fast_io*.index') as $file) {
 foreach(glob('fast_io*.tmp') as $file) {
 	unlink($file);
 }
+
+
+$r_total= memory_get_process_usage_kernel();
 
 
 for($i=0; $i <=4; $i++){
@@ -121,6 +181,10 @@ print_r([
 ]);
 
 
+hide_key_value_pair(__DIR__ . '/fast_io3.dat', 'index_7');
+delete_key_value_pair(__DIR__ . '/fast_io3.dat');
+
+
 
 print_r(__DIR__ . '/fast_io4.dat' . "\n");
 for($i=0; $i <=10; $i++){
@@ -131,7 +195,7 @@ for($i=0; $i <=10; $i++){
 
 print_r([
 	'indexed_find_value_by_key',
-	indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_8')
+	indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_10')
 ]);
 
 delete_key_value_pair(__DIR__ . '/fast_io4.dat.index', 'index_8');
@@ -140,6 +204,7 @@ print_r([
 	'indexed_find_value_by_key',
 	indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_8')
 ]);
+
 sleep(10);
 
 
@@ -222,3 +287,9 @@ print_r([
 	memory_get_process_usage_kernel(),
 	memory_get_process_usage_kernel() - $r_total
 ]);
+
+print_r([
+	'getProcessIOStats',
+	getProcessIOStats()
+]);
+
