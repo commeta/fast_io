@@ -790,8 +790,9 @@ PHP_FUNCTION(pop_key_value_pair) {
         buffer[read_bytes] = '\0';
 
         // Обрезка пробелов справа и символа перевода строки
-        for (int i = read_bytes - 1; i >= 0 && (buffer[i] == ' ' || buffer[i] == '\n'); --i) {
-            buffer[i] = '\0';
+        for (int i = read_bytes - 1; i >= 0; --i) {
+            if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
+            else break;
         }
 
         // Усекаем файл
@@ -846,8 +847,9 @@ PHP_FUNCTION(pop_key_value_pair) {
                         state = 2; // Переходим к финальному состоянию
 
                         // Обрезка пробелов справа и символа перевода строки
-                        for (int i = len - 1; i >= 0 && (line[i] == ' ' || line[i] == '\n'); --i) {
-                            line[i] = '\0';
+                        for (int i = len - 1; i >= 0; --i) {
+                            if(line[i] == ' ' || line[i] == '\n') line[i] = '\0';
+                            else break;
                         }
 
                         // Усекаем файл
@@ -1226,8 +1228,9 @@ PHP_FUNCTION(select_key_value) {
     buffer[read_bytes] = '\0';
 
     // Обрезка пробелов справа и символа перевода строки
-    for (int i = read_bytes - 1; i >= 0 && (buffer[i] == ' ' || buffer[i] == '\n'); --i) {
-        buffer[i] = '\0';
+    for (int i = read_bytes - 1; i >= 0; --i) {
+        if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
+        else break;
     }
 
     close(fd);
