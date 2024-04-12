@@ -233,8 +233,6 @@ PHP_FUNCTION(find_value_by_key) {
 
 
 
-
-
 PHP_FUNCTION(indexed_find_value_by_key) {
     char *filename, *index_key;
     size_t filename_len, index_key_len;
@@ -311,17 +309,55 @@ PHP_FUNCTION(indexed_find_value_by_key) {
 
     // Разблокировка и закрытие файлов
     close(index_fd);
-    close(data_fd);
     efree(buffer);
     efree(index_filename);
 
     if (found_value == NULL) {
+        close(data_fd);
         RETURN_FALSE;
     } else {
-        RETVAL_STRING(found_value);
+
+        // Находим позицию двоеточия в строке
+        char *colon_ptr = strchr(found_value, ':');
+        if (!colon_ptr) {
+            close(data_fd);
+            php_error_docref(NULL, E_WARNING, "Input string does not contain ':'");
+            RETURN_FALSE;
+        }
+
+        // Конвертируем данные до двоеточия в long
+        *colon_ptr = '\0'; // временно заменяем двоеточие на нулевой символ для корректной работы atol
+        long offset = atol(found_value);
+
+        // Конвертируем данные после двоеточия в size_t через strtoul для большей корректности
+        size_t size = (size_t)strtoul(colon_ptr + 1, NULL, 10);
+
+        if (!size || !offset) {
+            close(data_fd);
+            php_error_docref(NULL, E_WARNING, "Input string does not contain offset:size");
+            RETURN_FALSE;
+        }
+
+        // Чтение и запись блока данных
+        lseek(data_fd, offset, SEEK_SET);
+        char *dataBuffer = emalloc(size);
+            
+        if(read(data_fd, dataBuffer, size) == -1) {
+            close(data_fd);
+            efree(dataBuffer);
+            php_error_docref(NULL, E_WARNING, "Failed to read data block.");
+            RETURN_FALSE;
+        }
+
+        dataBuffer[size] = '\0'; // Добавляем нуль-терминатор
+
+        close(data_fd);
+        RETVAL_STRING(dataBuffer);
         efree(found_value);
+        efree(dataBuffer);
     }
 }
+
 
 
 /* Реализация функции */
