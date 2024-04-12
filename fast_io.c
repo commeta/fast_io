@@ -226,6 +226,13 @@ PHP_FUNCTION(find_value_by_key) {
     if (found_value == NULL) {
         RETURN_FALSE;
     } else {
+        // Обрезка пробелов справа и символа перевода строки
+        size_t len = strlen(found_value);
+        for (int i = len - 1; i >= 0; --i) {
+            if(found_value[i] == ' ' || found_value[i] == '\n') found_value[i] = '\0';
+            else break;
+        }
+
         RETVAL_STRING(found_value);
         efree(found_value);
     }
