@@ -101,7 +101,7 @@ The table of function call costs in ascending order:
 - get_index_keys Medium consumption, reading the entire file.
 - hide_key_value_pair Medium consumption, reading the entire file, writing a line to the file.
 - indexed_find_value_by_key Medium consumption, reading the entire index file and a block of the data file.
-- delete_key_value_pair High consumption, reading/writing the entire file.
+- delete_key_value_pair High consumption, full reading/writing the entire file.
 - update_key_value_pair High consumption, full reading/writing of the entire file.
 - rebuild_data_file Very high consumption, full reading/writing of index and data files.
 
