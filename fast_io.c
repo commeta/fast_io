@@ -81,7 +81,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_indexed_write_key_value_pair, 0,
     ZEND_ARG_TYPE_INFO(0, index_val, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_delete_key_value_pair, 0, 2, IS_LONG, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_delete_key_value_pair, 1, 1, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
 ZEND_END_ARG_INFO()
@@ -431,7 +431,7 @@ PHP_FUNCTION(delete_key_value_pair) {
     char *filename, *index_key = NULL;
     size_t filename_len, index_key_len = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &filename, &filename_len, &index_key, &index_key_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|s", &filename, &filename_len, &index_key, &index_key_len) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -480,6 +480,8 @@ PHP_FUNCTION(delete_key_value_pair) {
 
     char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
     size_t bytesRead;
+    char specialChar = 127;
+
     while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
         buffer[bytesRead] = '\0'; // Добавляем нуль-терминатор для безопасной работы со строками
         
@@ -487,9 +489,21 @@ PHP_FUNCTION(delete_key_value_pair) {
         char *lineEnd;
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
             *lineEnd = '\0'; // Заменяем символ новой строки на нуль-терминатор
-            
-            if (strncmp(lineStart, index_key, strlen(index_key)) != 0 || lineStart[strlen(index_key)] != ' ') {
-                fprintf(temp_file, "%s\n", lineStart);
+
+            if (index_key != NULL){
+                if (
+                    strncmp(lineStart, &specialChar, 1) != 0 &&
+                    (
+                        strncmp(lineStart, index_key, strlen(index_key)) != 0 || 
+                        lineStart[strlen(index_key)] != ' '
+                    )
+                ) {
+                    fprintf(temp_file, "%s\n", lineStart);
+                }
+            } else {
+                if (strncmp(lineStart, &specialChar, 1) != 0) {
+                    fprintf(temp_file, "%s\n", lineStart);
+                }
             }
             
             lineStart = lineEnd + 1; // Переходим к следующей строке
@@ -595,6 +609,7 @@ PHP_FUNCTION(rebuild_data_file) {
 
 
     char *buffer = emalloc(BUFFER_SIZE);
+    char specialChar = 127;
     ssize_t bytesRead;
 
     // Чтение индексного файла порциями
@@ -618,7 +633,6 @@ PHP_FUNCTION(rebuild_data_file) {
             if (!keyEnd) continue; // Если формат строки неверен
 
             *keyEnd = '\0';
-            char specialChar = 127;
 
             if (index_key != NULL && strcmp(line, index_key) == 0) continue; // Пропускаем строку с исключаемым ключом
             if (strncmp(lineStart, &specialChar, 1) == 0) continue; // Пропускаем строку с исключаемыми ключами
