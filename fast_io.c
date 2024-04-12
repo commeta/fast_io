@@ -593,8 +593,8 @@ PHP_FUNCTION(rebuild_data_file) {
         goto check;
     }
 
-    goto skip;
     check:
+    if(ret_code != 0){
         if (index_fd != -1) close(index_fd);
         if (data_fd != -1) close(data_fd);
         if (temp_data_fd != -1) {
@@ -610,7 +610,7 @@ PHP_FUNCTION(rebuild_data_file) {
         efree(temp_filename);
         efree(temp_index_filename);
         RETURN_LONG(ret_code);
-    skip:
+    }
 
 
     char *buffer = emalloc(BUFFER_SIZE);
@@ -663,13 +663,13 @@ PHP_FUNCTION(rebuild_data_file) {
                 goto check_error;
             }
 
-            goto skip_return;
             check_error:
+            if(ret_code != 0){
                 efree(dataBuffer);
                 efree(line);
                 efree(buffer);
                 goto check;
-            skip_return:
+            }
 
             // Запись во временный индексный файл
             dprintf(temp_index_fd, "%s %ld:%zu\n", line, offset, size);
