@@ -321,7 +321,6 @@ PHP_FUNCTION(indexed_find_value_by_key) {
         char *colon_ptr = strchr(found_value, ':');
         if (!colon_ptr) {
             close(data_fd);
-            php_error_docref(NULL, E_WARNING, "Input string does not contain ':'");
             RETURN_FALSE;
         }
 
@@ -334,7 +333,6 @@ PHP_FUNCTION(indexed_find_value_by_key) {
 
         if (!size || !offset) {
             close(data_fd);
-            php_error_docref(NULL, E_WARNING, "Input string does not contain offset:size");
             RETURN_FALSE;
         }
 
