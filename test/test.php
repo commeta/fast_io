@@ -172,7 +172,7 @@ print_r([
 
 print_r([
 	'pop_key_value_pair',
-	pop_key_value_pair(__DIR__ . '/fast_io3.dat')
+	trim(pop_key_value_pair(__DIR__ . '/fast_io3.dat'))
 ]);
 
 print_r([
@@ -195,7 +195,7 @@ for($i=0; $i <=10; $i++){
 
 print_r([
 	'indexed_find_value_by_key',
-	indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_10')
+	trim(indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_10'))
 ]);
 
 delete_key_value_pair(__DIR__ . '/fast_io4.dat.index', 'index_8');
