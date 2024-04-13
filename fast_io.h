@@ -22,7 +22,24 @@
  * 
  */
 
-#define BUFFER_SIZE 4096
+// В файле php_fast_io.h
+extern zend_module_entry fast_io_module_entry;
+#define phpext_fast_io_ptr &fast_io_module_entry
+
+#ifdef ZTS
+#include "TSRM.h"
+#endif
+
+ZEND_BEGIN_MODULE_GLOBALS(fast_io)
+    zend_long buffer_size;
+ZEND_END_MODULE_GLOBALS(fast_io)
+
+#ifdef ZTS
+#define FAST_IO_G(v) TSRMG(fast_io_globals_id, zend_fast_io_globals *, v)
+#else
+#define FAST_IO_G(v) (fast_io_globals.v)
+#endif
+
 
 // Вспомогательная функция для блокировки файла
 int lock_file(int fd, int lock_type) {
