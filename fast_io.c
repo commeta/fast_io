@@ -78,6 +78,7 @@ PHP_FUNCTION(update_key_value_pair);
 PHP_FUNCTION(insert_key_value);
 PHP_FUNCTION(select_key_value);
 PHP_FUNCTION(update_key_value);
+PHP_FUNCTION(detect_align_size);
 
 
 /* Запись аргументов функций */
@@ -151,6 +152,10 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_update_key_value, 0, 3, IS_LONG,
     ZEND_ARG_TYPE_INFO(0, index_align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_detect_align_size, 0, 1, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
 
 /* Регистрация функций */
 const zend_function_entry fast_io_functions[] = {
@@ -167,6 +172,7 @@ const zend_function_entry fast_io_functions[] = {
     PHP_FE(insert_key_value, arginfo_insert_key_value)
     PHP_FE(select_key_value, arginfo_select_key_value)
     PHP_FE(update_key_value, arginfo_update_key_value)
+    PHP_FE(detect_align_size, arginfo_detect_align_size)
     PHP_FE_END
 };
 
@@ -1058,7 +1064,6 @@ PHP_FUNCTION(get_index_keys) {
 
 
 
-
 // Функция обновления пары ключ-значение
 PHP_FUNCTION(update_key_value_pair) {
     char *filename;
@@ -1072,6 +1077,8 @@ PHP_FUNCTION(update_key_value_pair) {
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss", &filename, &filename_len, &index_key, &index_key_len, &index_value, &index_value_len) == FAILURE) {
         RETURN_FALSE;
     }
+
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
     char *temp_filename = emalloc(filename_len + 5); // Дополнительные символы для ".tmp" и нуль-терминатора
     snprintf(temp_filename, filename_len + 5, "%s.tmp", filename);
@@ -1114,9 +1121,6 @@ PHP_FUNCTION(update_key_value_pair) {
         efree(temp_filename);
         RETURN_LONG(-4);
     }
-
-    // Использование глобальной переменной
-    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
     char *buffer = (char *)emalloc(ini_buffer_size + 1);
     size_t bytesRead;
@@ -1338,5 +1342,52 @@ PHP_FUNCTION(update_key_value) {
     }
 
     RETURN_TRUE;
+}
+
+
+PHP_FUNCTION(detect_align_size) {
+    char *filename;
+    size_t filename_len;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &filename, &filename_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
+        RETURN_FALSE;
+    }
+
+    if (lock_file(fd, LOCK_EX) == -1) { // Блокировка файла на чтение
+        close(fd);
+        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
+        RETURN_FALSE;
+    }
+
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+    char *buffer = (char *)emalloc(ini_buffer_size + 1);
+
+    ssize_t bytes_read;
+    long max_length = 0, current_length = 0;
+
+    while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
+        for (ssize_t i = 0; i < bytes_read; ++i) {
+            if (buffer[i] == '\n') { // Конец текущей строки
+                if (current_length > max_length) {
+                    max_length = current_length; // Обновляем максимальную длину
+                }
+                current_length = 0; // Сброс длины для следующей строки
+            } else {
+                ++current_length; // Увеличиваем длину текущей строки
+            }
+        }
+    }
+
+    close(fd);
+    efree(buffer);
+
+    // Возвращаем максимальную длину строки. Если строка оканчивается в конце файла без '\n', её длина уже учтена.
+    RETURN_LONG(max_length);
 }
 
