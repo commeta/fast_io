@@ -1,5 +1,5 @@
 <?php
-ini_set('fast_io.buffer_size', 16384);
+ini_set('fast_io.buffer_size', 4096);
 
 /*
  * Fast_IO (pre-release) Extension for PHP 8
@@ -144,6 +144,7 @@ print_r([
 
 print_r([
 	'pop_key_value_pair',
+	pop_key_value_pair(__DIR__ . '/fast_io1.dat'),
 	pop_key_value_pair(__DIR__ . '/fast_io1.dat'),
 ]);
 
