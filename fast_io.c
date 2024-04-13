@@ -812,8 +812,6 @@ PHP_FUNCTION(pop_key_value_pair) {
     off_t pos = fileSize;
     ssize_t bytesRead;
 
-    
-
     if (index_align != -1) {
         pos -= index_align + 1;
         lseek(fd, pos, SEEK_SET);
@@ -855,69 +853,82 @@ PHP_FUNCTION(pop_key_value_pair) {
     }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
-
     char *buffer = (char *)emalloc(ini_buffer_size + 1);
     char *line = NULL;
-    int state = 0; // Состояние конечного автомата
+    size_t line_len = 0;
+    size_t line_cap = 0;
+    int state = 0;
+    ssize_t total_read = 0; // Общее количество прочитанных символов
 
+    // Переменная для хранения позиции начала последней строки
+    off_t last_line_start = -1;
 
-    // Читаем файл с конца, пока не найдем начало строки
-    while (pos > 0 && state != 2) {
+    // Поиск позиции начала последней строки
+    while (pos > 0 && last_line_start == -1) {
         pos -= ini_buffer_size;
-        pos = pos < 0 ? 0 : pos; // Адаптируем позицию, если вышли за начало файла
-
+        pos = pos < 0 ? 0 : pos;
         lseek(fd, pos, SEEK_SET);
-        bytesRead = read(fd, buffer, ini_buffer_size);
+        ssize_t bytesRead = read(fd, buffer, ini_buffer_size);
         if (bytesRead <= 0) {
             php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
             close(fd);
+            efree(buffer);
+            if (line) efree(line);
             RETURN_FALSE;
         }
-
-        // Обрабатываем буфер с конца к началу
-        for (ssize_t i = bytesRead - 1; i >= 0 && state != 2; --i) {
-            switch (state) {
-                case 0: // Ищем перенос строки
-                    if (buffer[i] == '\n') {
-                        state = 1; // Нашли перенос строки, переходим к следующему состоянию
-                    }
+        for (ssize_t i = bytesRead - 1; i >= 0; --i) {
+            if (buffer[i] == '\n') {
+                if (total_read > 0) { // Найден конец предыдущей строки
+                    last_line_start = pos + i + 1;
                     break;
-                case 1: // Ищем начало строки
-                    if (buffer[i] == '\n' || pos + i == 0) { // Второе условие для случая, когда строка - первая в файле
-                        size_t len = bytesRead - i - 1;
-                        line = emalloc(len + 1);
-                        memcpy(line, buffer + i + 1, len);
-                        line[len] = '\0';
-                        state = 2; // Переходим к финальному состоянию
-
-                        // Обрезка пробелов справа и символа перевода строки
-                        for (int i = len - 1; i >= 0; --i) {
-                            if(line[i] == ' ' || line[i] == '\n') line[i] = '\0';
-                            else break;
-                        }
-
-                        // Усекаем файл
-                        if(ftruncate(fd, pos + i + (pos + i == 0 ? 0 : 1))) {
-                            efree(line);
-                            efree(buffer);
-                            close(fd);
-                            php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
-                            RETURN_FALSE;
-                        }
-                    }
-                    break;
+                } else { // Пропускаем перенос строки в конце файла (если он есть)
+                    total_read++;
+                }
+            } else {
+                total_read++;
             }
+        }
+    }
+
+    if (last_line_start != -1) {
+        // Установка указателя на начало последней строки
+        lseek(fd, last_line_start, SEEK_SET);
+        size_t to_read = total_read; // Сколько осталось прочитать
+        while (to_read > 0) {
+            ssize_t bytesRead = read(fd, buffer, MIN(ini_buffer_size, to_read));
+            if (bytesRead <= 0) {
+                // Ошибка чтения файла
+                php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
+                close(fd);
+                efree(buffer);
+                if (line) efree(line);
+                RETURN_FALSE;
+            }
+            // Добавление прочитанного содержимого к строке
+            if (line_len + bytesRead > line_cap) {
+                line_cap = line_len + bytesRead;
+                line = erealloc(line, line_cap + 1);
+            }
+            memcpy(line + line_len, buffer, bytesRead);
+            line_len += bytesRead;
+            to_read -= bytesRead;
         }
     }
 
     close(fd);
     efree(buffer);
 
-    if (line != NULL) {
-        RETVAL_STRING(line);
+    if (line) {
+        // Обрезка пробелов справа и символа перевода строки
+        for (int i = line_len - 1; i >= 0; --i) {
+            if(line[i] == ' ' || line[i] == '\n') line[i] = '\0';
+            else break;
+        }
+        
+        RETURN_STRING(line);
         efree(line);
     } else {
-        RETVAL_FALSE;
+        RETURN_FALSE;
     }
 }
 
@@ -1081,6 +1092,7 @@ PHP_FUNCTION(update_key_value_pair) {
     }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+    if(index_key_len + index_value_len + 1 > ini_buffer_size) ini_buffer_size = index_key_len + index_value_len + 1;
 
     char *temp_filename = emalloc(filename_len + 5); // Дополнительные символы для ".tmp" и нуль-терминатора
     snprintf(temp_filename, filename_len + 5, "%s.tmp", filename);
