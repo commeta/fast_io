@@ -42,6 +42,28 @@
 
 #include "fast_io.h"
 
+
+
+ZEND_DECLARE_MODULE_GLOBALS(fast_io)
+
+// Функция для обновления значения параметра
+PHP_INI_BEGIN()
+    STD_PHP_INI_ENTRY("fast_io.buffer_size", "4096", PHP_INI_ALL, OnUpdateLong, buffer_size, zend_fast_io_globals, fast_io_globals)
+PHP_INI_END()
+
+PHP_MINIT_FUNCTION(fast_io)
+{
+    REGISTER_INI_ENTRIES();
+    return SUCCESS;
+}
+
+PHP_MSHUTDOWN_FUNCTION(fast_io)
+{
+    UNREGISTER_INI_ENTRIES();
+    return SUCCESS;
+}
+
+
 /* Декларация функций */
 PHP_FUNCTION(find_value_by_key);
 PHP_FUNCTION(indexed_find_value_by_key);
@@ -153,12 +175,12 @@ zend_module_entry fast_io_module_entry = {
     STANDARD_MODULE_HEADER,
     "fast_io",
     fast_io_functions,
+    PHP_MINIT(fast_io),
+    PHP_MSHUTDOWN(fast_io),
     NULL,
     NULL,
     NULL,
-    NULL,
-    NULL,
-    NO_VERSION_YET,
+    "0.1",
     STANDARD_MODULE_PROPERTIES
 };
 
@@ -190,13 +212,14 @@ PHP_FUNCTION(find_value_by_key) {
         RETURN_FALSE;
     }    
 
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
-    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
+    char *buffer = (char *)emalloc(ini_buffer_size + 1);
     ssize_t bytesRead;
     char *found_value = NULL;
     char *lineStart = buffer;
 
-    while ((bytesRead = read(fd, buffer, BUFFER_SIZE)) > 0) {
+    while ((bytesRead = read(fd, buffer, ini_buffer_size)) > 0) {
         buffer[bytesRead] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
 
         // Обработка данных в буфере
@@ -284,13 +307,14 @@ PHP_FUNCTION(indexed_find_value_by_key) {
         RETURN_FALSE;
     }
 
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
-    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
+    char *buffer = (char *)emalloc(ini_buffer_size + 1);
     ssize_t bytesRead;
     char *found_value = NULL;
     char *lineStart = buffer;
 
-    while ((bytesRead = read(index_fd, buffer, BUFFER_SIZE)) > 0) {
+    while ((bytesRead = read(index_fd, buffer, ini_buffer_size)) > 0) {
         buffer[bytesRead] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
 
         // Обработка данных в буфере
@@ -519,11 +543,13 @@ PHP_FUNCTION(delete_key_value_pair) {
         RETURN_LONG(-4);
     }
 
-    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    char *buffer = (char *)emalloc(ini_buffer_size + 1);
     size_t bytesRead;
     char specialChar = 127;
 
-    while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
+    while ((bytesRead = fread(buffer, 1, ini_buffer_size, file)) > 0) {
         buffer[bytesRead] = '\0'; // Добавляем нуль-терминатор для безопасной работы со строками
         
         char *lineStart = buffer;
@@ -654,12 +680,14 @@ PHP_FUNCTION(rebuild_data_file) {
     }
 
 
-    char *buffer = emalloc(BUFFER_SIZE);
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    char *buffer = emalloc(ini_buffer_size);
     char specialChar = 127;
     ssize_t bytesRead;
 
     // Чтение индексного файла порциями
-    while ((bytesRead = read(index_fd, buffer, BUFFER_SIZE)) > 0) {
+    while ((bytesRead = read(index_fd, buffer, ini_buffer_size)) > 0) {
         int bufferPos = 0;
         while (bufferPos < bytesRead) {
             char *lineStart = buffer + bufferPos;
@@ -667,7 +695,7 @@ PHP_FUNCTION(rebuild_data_file) {
             if (!lineEnd) break; // Если конец строки не найден
 
             size_t lineLength = lineEnd - lineStart;
-            char *line = emalloc(BUFFER_SIZE);
+            char *line = emalloc(ini_buffer_size);
 
             strncpy(line, lineStart, lineLength);
             line[lineLength] = '\0';
@@ -818,19 +846,20 @@ PHP_FUNCTION(pop_key_value_pair) {
         return;
     }
 
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
-    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
+    char *buffer = (char *)emalloc(ini_buffer_size + 1);
     char *line = NULL;
     int state = 0; // Состояние конечного автомата
 
 
     // Читаем файл с конца, пока не найдем начало строки
     while (pos > 0 && state != 2) {
-        pos -= BUFFER_SIZE;
+        pos -= ini_buffer_size;
         pos = pos < 0 ? 0 : pos; // Адаптируем позицию, если вышли за начало файла
 
         lseek(fd, pos, SEEK_SET);
-        bytesRead = read(fd, buffer, BUFFER_SIZE);
+        bytesRead = read(fd, buffer, ini_buffer_size);
         if (bytesRead <= 0) {
             php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
             close(fd);
@@ -908,11 +937,13 @@ PHP_FUNCTION(hide_key_value_pair) {
         RETURN_FALSE;
     }
 
-    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    char *buffer = (char *)emalloc(ini_buffer_size + 1);
     ssize_t bytesRead, totalRead = 0;
     off_t writeOffset = 0; // Смещение для записи обновленных данных
 
-    while ((bytesRead = read(fd, buffer + totalRead, BUFFER_SIZE - totalRead)) > 0) {
+    while ((bytesRead = read(fd, buffer + totalRead, ini_buffer_size - totalRead)) > 0) {
         totalRead += bytesRead;
         buffer[totalRead] = '\0';
 
@@ -982,12 +1013,14 @@ PHP_FUNCTION(get_index_keys) {
         RETURN_FALSE;
     }
 
-    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    char *buffer = (char *)emalloc(ini_buffer_size + 1);
     ssize_t bytesRead;
     char *lineStart = buffer;
     char *lineEnd;
 
-    while ((bytesRead = read(fd, buffer, BUFFER_SIZE)) > 0) {
+    while ((bytesRead = read(fd, buffer, ini_buffer_size)) > 0) {
         buffer[bytesRead] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
 
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
@@ -1034,15 +1067,11 @@ PHP_FUNCTION(update_key_value_pair) {
     size_t index_key_len;
     char *index_value;
     size_t index_value_len;
-    size_t auto_buffer_size;
 
     // Парсинг аргументов
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss", &filename, &filename_len, &index_key, &index_key_len, &index_value, &index_value_len) == FAILURE) {
         RETURN_FALSE;
     }
-
-    if(index_key_len + index_value_len  > BUFFER_SIZE) auto_buffer_size = index_key_len + index_value_len;
-    else auto_buffer_size = BUFFER_SIZE;
 
     char *temp_filename = emalloc(filename_len + 5); // Дополнительные символы для ".tmp" и нуль-терминатора
     snprintf(temp_filename, filename_len + 5, "%s.tmp", filename);
@@ -1086,9 +1115,12 @@ PHP_FUNCTION(update_key_value_pair) {
         RETURN_LONG(-4);
     }
 
-    char *buffer = (char *)emalloc(auto_buffer_size + 1);
+    // Использование глобальной переменной
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    char *buffer = (char *)emalloc(ini_buffer_size + 1);
     size_t bytesRead;
-    while ((bytesRead = fread(buffer, 1, auto_buffer_size, file)) > 0) {
+    while ((bytesRead = fread(buffer, 1, ini_buffer_size, file)) > 0) {
         buffer[bytesRead] = '\0';
 
         char *lineStart = buffer;
