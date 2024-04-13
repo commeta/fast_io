@@ -110,7 +110,10 @@ for($i=0; $i <=400; $i++){
 }
 
 $align_size = detect_align_size(__DIR__ . '/fast_io1.dat');
-if((int) ini_get('fast_io.buffer_size') < $align_size + 1) ini_set('fast_io.buffer_size', $align_size + 1);
+if(
+	$align_size && 
+	(int) ini_get('fast_io.buffer_size') < $align_size + 1
+) ini_set('fast_io.buffer_size', $align_size + 1);
 
 print_r([
 	'detect_align_size',
@@ -148,19 +151,6 @@ print_r([
 ]);
 
 
-print_r([
-	'memory_get_process_usage_kernel in Kilo Bytes',
-	$r_total,
-	memory_get_process_usage_kernel(),
-	memory_get_process_usage_kernel() - $r_total,
-	'get_process_io_stats',
-	get_process_io_stats()
-]);
-
-
-
-
-
 for($i=0; $i <=20; $i++){
 	indexed_write_key_value_pair(__DIR__ . '/fast_io2.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i . "\n");
 }
@@ -177,9 +167,6 @@ print_r([
 	'get_index_keys',
 	get_index_keys(__DIR__ . '/fast_io2.dat.index')
 ]);
-
-
-
 
 
 
