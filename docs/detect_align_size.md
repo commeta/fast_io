@@ -46,7 +46,10 @@ if ($maxLineLength !== FALSE) {
 ```
 <?php
 $align_size = detect_align_size(__DIR__ . '/fast_io.dat');
-if($align_size && (int) ini_get('fast_io.buffer_size') < $align_size + 1) ini_set('fast_io.buffer_size', $align_size + 1);
+if(
+    $align_size &&
+    (int) ini_get('fast_io.buffer_size') < $align_size + 1
+) ini_set('fast_io.buffer_size', $align_size + 1);
 ?>
 ```
 
