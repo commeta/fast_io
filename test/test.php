@@ -1,4 +1,6 @@
 <?php
+ini_set('fast_io.buffer_size', 16384);
+
 /*
  * Fast_IO (pre-release) Extension for PHP 8
  * https://github.com/commeta/fast_io
@@ -109,15 +111,10 @@ for($i=0; $i <=400; $i++){
 	);
 }
 
-$align_size = detect_align_size(__DIR__ . '/fast_io1.dat');
-if(
-	$align_size && 
-	(int) ini_get('fast_io.buffer_size') < $align_size + 1
-) ini_set('fast_io.buffer_size', $align_size + 1);
 
 print_r([
 	'detect_align_size',
-	$align_size,
+	detect_align_size(__DIR__ . '/fast_io1.dat'),
 ]);
 
 
@@ -289,6 +286,8 @@ for($i=0; $i <=10000; $i++){
 }
 $time= microtime(true) - $start;
 echo "indexed_find_value_by_key repeat: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
+
+
 
 
 sleep(10);
