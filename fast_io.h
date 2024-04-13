@@ -41,6 +41,8 @@ ZEND_END_MODULE_GLOBALS(fast_io)
 #endif
 
 
+
+
 // Вспомогательная функция для блокировки файла
 int lock_file(int fd, int lock_type) {
     struct flock fl;
