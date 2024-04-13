@@ -219,40 +219,48 @@ PHP_FUNCTION(find_value_by_key) {
     }    
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
-
-    char *buffer = (char *)emalloc(ini_buffer_size + 1);
+    zend_long dynamic_buffer_size = ini_buffer_size;
+    char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     ssize_t bytesRead;
     char *found_value = NULL;
-    char *lineStart = buffer;
+    
+    size_t current_size = 0; // Текущий размер данных в динамическом буфере
 
-    while ((bytesRead = read(fd, buffer, ini_buffer_size)) > 0) {
-        buffer[bytesRead] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
+    while ((bytesRead = read(fd, dynamic_buffer + current_size, ini_buffer_size)) > 0) {
+        current_size += bytesRead;
+        dynamic_buffer[current_size] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
 
-        // Обработка данных в буфере
+        char *lineStart = dynamic_buffer;
         char *lineEnd;
+
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
             *lineEnd = '\0'; // Завершаем строку нуль-терминатором
 
-            // Проверяем, начинается ли строка с ключа
             if (strncmp(lineStart, index_key, index_key_len) == 0 && lineStart[index_key_len] == ' ') {
-                found_value = estrndup(lineStart + index_key_len + 1, strlen(lineStart + index_key_len + 1)); // Пропускаем ключ и пробел
+                found_value = estrndup(lineStart + index_key_len + 1, lineEnd - (lineStart + index_key_len + 1));
                 break;
             }
 
             lineStart = lineEnd + 1; // Переходим к следующей строке
         }
+
         if (found_value != NULL) break;
 
-        // Если не нашли в этом буфере, подготавливаемся к чтению следующего
-        size_t remaining = bytesRead - (lineStart - buffer);
-        memmove(buffer, lineStart, remaining); // Перемещаем оставшуюся часть в начало буфера
-        lineStart = buffer;
+        // Перемещаем непрочитанную часть в начало буфера и обновляем current_size
+        current_size -= (lineStart - dynamic_buffer);
+        memmove(dynamic_buffer, lineStart, current_size);
+
+        // Проверяем, нужно ли расширить буфер
+        if (current_size == dynamic_buffer_size) {
+            dynamic_buffer_size *= 2; // Удваиваем размер буфера
+            dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+        }
     }
 
     close(fd);
-    efree(buffer);
 
     if (found_value == NULL) {
+        efree(dynamic_buffer);
         RETURN_FALSE;
     } else {
         // Обрезка пробелов справа и символа перевода строки
@@ -262,9 +270,12 @@ PHP_FUNCTION(find_value_by_key) {
             else break;
         }
 
+
         RETVAL_STRING(found_value);
         efree(found_value);
     }
+
+    efree(dynamic_buffer);
 }
 
 
@@ -555,22 +566,32 @@ PHP_FUNCTION(delete_key_value_pair) {
     size_t bytesRead;
     char specialChar = 127;
 
+    // Инициализация динамического буфера
+    char *dynamicBuffer = NULL;
+    size_t dynamicBufferSize = 0;
+    
     while ((bytesRead = fread(buffer, 1, ini_buffer_size, file)) > 0) {
-        buffer[bytesRead] = '\0'; // Добавляем нуль-терминатор для безопасной работы со строками
-        
-        char *lineStart = buffer;
-        char *lineEnd;
-        while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
-            *lineEnd = '\0'; // Заменяем символ новой строки на нуль-терминатор
+        buffer[bytesRead] = '\0';
 
-            if (index_key != NULL){
-                if (
-                    strncmp(lineStart, &specialChar, 1) != 0 &&
-                    (
-                        strncmp(lineStart, index_key, strlen(index_key)) != 0 || 
-                        lineStart[strlen(index_key)] != ' '
-                    )
-                ) {
+        // Если в динамическом буфере уже есть данные, добавляем новые данные к ним
+        if (dynamicBufferSize > 0) {
+            dynamicBuffer = (char *)erealloc(dynamicBuffer, dynamicBufferSize + bytesRead + 1);
+            memcpy(dynamicBuffer + dynamicBufferSize, buffer, bytesRead + 1);
+            dynamicBufferSize += bytesRead;
+        } else {
+            dynamicBuffer = (char *)emalloc(bytesRead + 1);
+            memcpy(dynamicBuffer, buffer, bytesRead + 1);
+            dynamicBufferSize = bytesRead;
+        }
+
+        char *lineStart = dynamicBuffer;
+        char *lineEnd;
+
+        while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
+            *lineEnd = '\0';
+
+            if (index_key != NULL) {
+                if (strncmp(lineStart, &specialChar, 1) != 0 && (strncmp(lineStart, index_key, strlen(index_key)) != 0 || lineStart[strlen(index_key)] != ' ')) {
                     fprintf(temp_file, "%s\n", lineStart);
                 }
             } else {
@@ -578,20 +599,21 @@ PHP_FUNCTION(delete_key_value_pair) {
                     fprintf(temp_file, "%s\n", lineStart);
                 }
             }
-            
-            lineStart = lineEnd + 1; // Переходим к следующей строке
+
+            lineStart = lineEnd + 1;
         }
-        
-        if (lineStart != buffer + bytesRead) {
-            fseek(file, -(long)(bytesRead - (lineStart - buffer)), SEEK_CUR); // Возвращаемся назад в исходном файле
-        }
+
+        // Переносим непрочитанный остаток в начало динамического буфера
+        dynamicBufferSize -= (lineStart - dynamicBuffer);
+        memmove(dynamicBuffer, lineStart, dynamicBufferSize + 1); // +1 для '\\0'
     }
-    
+
     fclose(file);
     fclose(temp_file);
     close(fd); 
     close(temp_fd);
     efree(buffer);
+    if (dynamicBuffer) efree(dynamicBuffer);
     
 
     // Заменяем оригинальный файл временным файлом
