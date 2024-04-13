@@ -1036,43 +1036,45 @@ PHP_FUNCTION(get_index_keys) {
 
     char *buffer = (char *)emalloc(ini_buffer_size + 1);
     ssize_t bytesRead;
-    char *lineStart = buffer;
-    char *lineEnd;
+    size_t leftover_length = 0;
 
-    while ((bytesRead = read(fd, buffer, ini_buffer_size)) > 0) {
-        buffer[bytesRead] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
+    while ((bytesRead = read(fd, buffer + leftover_length, ini_buffer_size - leftover_length)) > 0 || leftover_length > 0) {
+        bytesRead += leftover_length;
+        buffer[bytesRead] = '\0';
+        char *lineStart = buffer;
+        char *lineEnd;
 
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
-            *lineEnd = '\0'; // Завершаем строку нуль-терминатором
-
-            // Извлекаем ключ из строки
+            *lineEnd = '\0';
             char *spacePos = strchr(lineStart, ' ');
             if (spacePos) {
-                *spacePos = '\0'; // Обрезаем строку до первого пробела
+                *spacePos = '\0';
                 add_key(&keys, lineStart);
             }
-
-            lineStart = lineEnd + 1; // Переходим к следующей строке
+            lineStart = lineEnd + 1;
         }
 
-        // Подготовка к чтению следующего буфера
-        size_t remaining = bytesRead - (lineStart - buffer);
-        memmove(buffer, lineStart, remaining); // Перемещаем оставшуюся часть в начало буфера
-        lineStart = buffer;
+        leftover_length = bytesRead - (lineStart - buffer);
+        if (leftover_length > 0 && lineStart != buffer) {
+            memmove(buffer, lineStart, leftover_length); // Перемещаем оставшиеся данные в начало буфера
+        } else if (leftover_length == ini_buffer_size) {
+            // Если остаток равен размеру буфера, нужно его увеличить
+            ini_buffer_size *= 2;
+            buffer = (char *)erealloc(buffer, ini_buffer_size + 1);
+        } else {
+            leftover_length = 0; // Если строка обработана полностью
+        }
     }
 
     close(fd);
+    efree(buffer);
 
-    // Возвращаем результат в виде массива PHP
     array_init(return_value);
     for (size_t i = 0; i < keys.count; i++) {
         add_next_index_string(return_value, keys.keys[i]);
     }
 
-
-    // Освобождаем выделенную память
     free_key_array(&keys);
-    efree(buffer);
 }
 
 
