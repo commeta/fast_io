@@ -32,6 +32,7 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - [insert_key_value](/docs/insert_key_value.md): Adds lines with specific alignment to a file.
 - [select_key_value](/docs/select_key_value.md): Selects a line by the specified line number and alignment from a file.
 - [update_key_value](/docs/update_key_value.md): Updates a value by key in the file.
+- [detect_align_size](/docs/detect_align_size.md) - Returns the maximum length of a line in a file.
 
 ## Implementation Highlights
 
@@ -127,6 +128,7 @@ The table of function call costs in ascending order:
 - insert_key_value Very low consumption, writing a line at the end of the file.
 - indexed_write_key_value_pair Low consumption, writing a line at the end of the index file and a block at the end of the data file.
 - find_value_by_key Medium consumption, reading the entire file.
+- detect_align_size Medium consumption, reading the entire file.
 - get_index_keys Medium consumption, reading the entire file.
 - hide_key_value_pair Medium consumption, reading the entire file, writing a line to the file.
 - indexed_find_value_by_key Medium consumption, reading the entire index file and a block of the data file.
