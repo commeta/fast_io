@@ -103,29 +103,60 @@ foreach(glob('fast_io*.tmp') as $file) {
 $r_total= memory_get_process_usage_kernel();
 
 
-for($i=0; $i <=4; $i++){
+for($i=0; $i <=400; $i++){
 	print_r(
-		insert_key_value(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i, 32)
+		insert_key_value(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i, 8192)
 	);
 }
+
+$align_size = detect_align_size(__DIR__ . '/fast_io1.dat');
+if((int) ini_get('fast_io.buffer_size') < $align_size + 1) ini_set('fast_io.buffer_size', $align_size + 1);
+
+print_r([
+	'detect_align_size',
+	$align_size,
+]);
 
 
 print_r([
 	'select_key_value',
-	select_key_value(__DIR__ . '/fast_io1.dat', 2, 32)
+	select_key_value(__DIR__ . '/fast_io1.dat', 2, 8192)
 ]);
+
+
 print_r([
 	'update_key_value',
-	update_key_value(__DIR__ . '/fast_io1.dat', 'update_key_value', 3, 32)
+	update_key_value(__DIR__ . '/fast_io1.dat', 'update_key_value', 3, 8192),
+	update_key_value(__DIR__ . '/fast_io1.dat', chr(127), 2, 8192),
 ]);
-
-
 
 
 print_r([
 	'pop_key_value_pair',
-	pop_key_value_pair(__DIR__ . '/fast_io1.dat', 32),
+	pop_key_value_pair(__DIR__ . '/fast_io1.dat', 8192),
 ]);
+
+print_r([
+	'update_key_value_pair',
+	update_key_value_pair(__DIR__ . '/fast_io1.dat', 'index_30', str_pad('update_key_value_pair', 8192, ' ') ),
+]);
+
+
+print_r([
+	'pop_key_value_pair',
+	pop_key_value_pair(__DIR__ . '/fast_io1.dat'),
+]);
+
+
+print_r([
+	'memory_get_process_usage_kernel in Kilo Bytes',
+	$r_total,
+	memory_get_process_usage_kernel(),
+	memory_get_process_usage_kernel() - $r_total,
+	'get_process_io_stats',
+	get_process_io_stats()
+]);
+
 
 
 
