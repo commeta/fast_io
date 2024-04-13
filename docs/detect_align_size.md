@@ -42,15 +42,19 @@ if ($maxLineLength !== FALSE) {
 ?>
 ```
 
-#### Пример #2 Установка размера буфера по максимальному размеру строки
+#### Пример #2 Обработка ошибок
 ```
 <?php
-$align_size = detect_align_size(__DIR__ . '/fast_io.dat');
-if(
-    $align_size &&
-    (int) ini_get('fast_io.buffer_size') < $align_size + 1
-) ini_set('fast_io.buffer_size', $align_size + 1);
+$filename = "non_existent_file.txt";
+$maxLineLength = detect_align_size($filename);
+
+if ($maxLineLength === FALSE) {
+    echo "Не удалось обработать файл. Пожалуйста, проверьте, существует ли файл и доступен ли он для чтения.";
+} else {
+    echo "Самая длинная строка содержит $maxLineLength символов.";
+}
 ?>
+
 ```
 
 
