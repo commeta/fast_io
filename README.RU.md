@@ -26,6 +26,7 @@ Fast_IO - это высокопроизводительное расширени
 - [insert_key_value](/docs/insert_key_value.md) - Добавление строк с определённым выравниванием в файл.
 - [select_key_value](/docs/select_key_value.md) - Выборка строки по указанному номеру строки и выравниванию из файла.
 - [update_key_value](/docs/update_key_value.md) - Обновление значения по ключу в файле.
+- [detect_align_size](/docs/detect_align_size.md) - Возвращает максимальную длину строки в файле.
 
 
 ## Особенности реализации
