@@ -1034,11 +1034,15 @@ PHP_FUNCTION(update_key_value_pair) {
     size_t index_key_len;
     char *index_value;
     size_t index_value_len;
+    size_t auto_buffer_size;
 
     // Парсинг аргументов
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss", &filename, &filename_len, &index_key, &index_key_len, &index_value, &index_value_len) == FAILURE) {
         RETURN_FALSE;
     }
+
+    if(index_key_len + index_value_len  > BUFFER_SIZE) auto_buffer_size = index_key_len + index_value_len;
+    else auto_buffer_size = BUFFER_SIZE;
 
     char *temp_filename = emalloc(filename_len + 5); // Дополнительные символы для ".tmp" и нуль-терминатора
     snprintf(temp_filename, filename_len + 5, "%s.tmp", filename);
@@ -1082,22 +1086,22 @@ PHP_FUNCTION(update_key_value_pair) {
         RETURN_LONG(-4);
     }
 
-    char *buffer = (char *)emalloc(BUFFER_SIZE + 1);
+    char *buffer = (char *)emalloc(auto_buffer_size + 1);
     size_t bytesRead;
-    while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
+    while ((bytesRead = fread(buffer, 1, auto_buffer_size, file)) > 0) {
         buffer[bytesRead] = '\0';
 
         char *lineStart = buffer;
         char *lineEnd;
+
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
             *lineEnd = '\0';
-            
+
             if (strncmp(lineStart, index_key, index_key_len) == 0 && lineStart[index_key_len] == ' ') {
                 fprintf(temp_file, "%s %s\n", index_key, index_value);
             } else {
                 fprintf(temp_file, "%s\n", lineStart);
             }
-            
             lineStart = lineEnd + 1;
         }
         
