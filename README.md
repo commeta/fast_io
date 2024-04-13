@@ -46,6 +46,34 @@ Each function within the Fast_IO extension is documented in detail on separate p
 
 For more information on how to install, configure, and use Fast_IO in your PHP 8 environment, please refer to the detailed documentation provided with the extension.
 
+## Parameters
+
+buffer_size is a configuration parameter that determines the buffer size for read and write operations. Specifying the optimal buffer size can significantly improve performance when working with large volumes of data.
+
+#### Setting via php.ini
+
+To configure the buffer size in the global PHP configuration, add or modify the following line in the php.ini file:
+
+fast_io.buffer_size = 4096
+
+The value is specified in bytes. By default, the buffer size is set to 4096 bytes (4 KB).
+
+#### Using in PHP code
+
+You can get the current value of buffer_size or set a new value dynamically right from your PHP script:
+// Get the current buffer size
+$currentBufferSize = ini_get('fast_io.buffer_size');
+
+// Set a new buffer size
+ini_set('fast_io.buffer_size', 8192); // 8 KB
+
+
+### Notes
+
+- Changing the buffer size during script execution can affect the performance of I/O operations performed after this change.
+- Choosing the optimal buffer size depends on specific tasks and working conditions of the application. It is recommended to perform testing with different values to find the best option.
+- Specify the buffer size based on the size of the data chunk; the default value of 4096 is sufficient for working with strings not larger than 4096 bytes.
+
 ## Conclusion
 
 Fast_IO represents a significant advancement in PHP data file management, offering unparalleled speed, efficiency, and reliability for handling large volumes of key-value pairs. Its comprehensive feature set makes it an ideal choice for developers seeking to optimize their data-driven applications.
