@@ -812,6 +812,8 @@ PHP_FUNCTION(pop_key_value_pair) {
     off_t pos = fileSize;
     ssize_t bytesRead;
 
+    
+
     if (index_align != -1) {
         pos -= index_align + 1;
         lseek(fd, pos, SEEK_SET);
