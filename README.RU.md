@@ -60,7 +60,7 @@ fast_io.buffer_size = 4096
 // Получить текущий размер буфера
 $currentBufferSize = ini_get('fast_io.buffer_size');
 
-// Установить новый размер буфера
+// Установить новый размер буфера, до вызова функций!
 ini_set('fast_io.buffer_size', 8192); // 8 КБ
 ```
 
