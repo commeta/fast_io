@@ -61,12 +61,12 @@ The value is specified in bytes. By default, the buffer size is set to 4096 byte
 
 #### Using in PHP code
 
-You can get the current value of buffer_size or set a new value dynamically right from your PHP script:
+You can get the current buffer_size value or set a new value at the beginning of your PHP script:
 ```
 // Get the current buffer size
 $currentBufferSize = ini_get('fast_io.buffer_size');
 
-// Set a new buffer size
+// Set a new buffer size, before calling functions!
 ini_set('fast_io.buffer_size', 8192); // 8 KB
 ```
 
