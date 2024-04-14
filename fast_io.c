@@ -902,8 +902,6 @@ PHP_FUNCTION(pop_key_value_pair) {
                 if (!result_str) { // Найден первый перенос строки с конца
                     result_str = zend_string_alloc(bytesRead - i - 1, 0);
                     memcpy(ZSTR_VAL(result_str), buffer + i + 1, bytesRead - i - 1);
-
-                    
                 } else if (i != bytesRead - 1 || pos + bytesRead < fileSize) { // Найдено начало строки
                     size_t new_len = ZSTR_LEN(result_str) + bytesRead - i - 1;
                     result_str = zend_string_extend(result_str, new_len, 0);
@@ -1053,7 +1051,6 @@ PHP_FUNCTION(hide_key_value_pair) {
                 break;
             }
 
-            //count_str += strlen(lineStart);
             writeOffset += lineLength; // Обновляем смещение для записи
             lineStart = lineEnd + 1; // Переходим к следующей строке
         }
@@ -1162,9 +1159,6 @@ PHP_FUNCTION(update_key_value_pair) {
         RETURN_FALSE;
     }
 
-    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
-    if(index_key_len + index_value_len + 1 > ini_buffer_size) ini_buffer_size = index_key_len + index_value_len + 1;
-
     char *temp_filename = emalloc(filename_len + 5); // Дополнительные символы для ".tmp" и нуль-терминатора
     snprintf(temp_filename, filename_len + 5, "%s.tmp", filename);
 
@@ -1207,30 +1201,47 @@ PHP_FUNCTION(update_key_value_pair) {
         RETURN_LONG(-4);
     }
 
-    char *buffer = (char *)emalloc(ini_buffer_size + 1);
-    size_t bytesRead;
-    while ((bytesRead = fread(buffer, 1, ini_buffer_size, file)) > 0) {
-        buffer[bytesRead] = '\0';
 
-        char *lineStart = buffer;
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+    zend_long dynamic_buffer_size = ini_buffer_size;
+    char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+    ssize_t bytesRead;
+    bool found_value = false;
+    size_t current_size = 0; // Текущий размер данных в динамическом буфере
+
+    while ((bytesRead = read(fd, dynamic_buffer + current_size, ini_buffer_size)) > 0) {
+        current_size += bytesRead;
+        dynamic_buffer[current_size] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
+
+        char *lineStart = dynamic_buffer;
         char *lineEnd;
 
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
-            *lineEnd = '\0';
+            *lineEnd = '\0'; // Завершаем строку нуль-терминатором
+            ssize_t lineLength = lineEnd - lineStart + 1;
 
             if (strncmp(lineStart, index_key, index_key_len) == 0 && lineStart[index_key_len] == ' ') {
                 fprintf(temp_file, "%s %s\n", index_key, index_value);
             } else {
                 fprintf(temp_file, "%s\n", lineStart);
             }
-            lineStart = lineEnd + 1;
+
+            lineStart = lineEnd + 1; // Переходим к следующей строке
         }
-        
-        if (lineStart != buffer + bytesRead) {
-            fseek(file, -(long)(bytesRead - (lineStart - buffer)), SEEK_CUR);
+
+        if (found_value) break;
+
+        // Перемещаем непрочитанную часть в начало буфера и обновляем current_size
+        current_size -= (lineStart - dynamic_buffer);
+        memmove(dynamic_buffer, lineStart, current_size);
+
+        // Проверяем, нужно ли расширить буфер
+        if (current_size == dynamic_buffer_size) {
+            dynamic_buffer_size *= 2; // Удваиваем размер буфера
+            dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
         }
     }
-    
+
     fclose(file);
     fclose(temp_file);
     close(fd); 
@@ -1239,13 +1250,13 @@ PHP_FUNCTION(update_key_value_pair) {
     // Заменяем оригинальный файл временным файлом
     if (rename(temp_filename, filename) == -1) {
         unlink(temp_filename);
-        efree(buffer);
+        efree(dynamic_buffer);
         efree(temp_filename);
         php_error_docref(NULL, E_WARNING, "Failed to replace the original file with the temporary file.");
         RETURN_LONG(-5);
     }
 
-    efree(buffer);
+    efree(dynamic_buffer);
     efree(temp_filename);
 
     RETURN_LONG(1); // Успешное завершение операции
