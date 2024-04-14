@@ -1,6 +1,4 @@
 <?php
-ini_set('fast_io.buffer_size', 4096);
-
 /*
  * Fast_IO (pre-release) Extension for PHP 8
  * https://github.com/commeta/fast_io
@@ -24,6 +22,8 @@ ini_set('fast_io.buffer_size', 4096);
  * 
  * 
  */
+
+ini_set('fast_io.buffer_size', 4096);
 
 // Stress test
 function memory_get_process_usage_kernel(){
@@ -107,9 +107,10 @@ $r_total= memory_get_process_usage_kernel();
 
 for($i=0; $i <=400; $i++){
 	print_r(
-		insert_key_value(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i, 8192)
+		insert_key_value(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i . ' ' . str_pad('', 8192, '1234567890'), 8192)
 	);
 }
+
 
 
 print_r([
@@ -136,6 +137,8 @@ print_r([
 	pop_key_value_pair(__DIR__ . '/fast_io1.dat', 8192),
 ]);
 
+
+
 print_r([
 	'update_key_value_pair',
 	update_key_value_pair(__DIR__ . '/fast_io1.dat', 'index_30', str_pad('update_key_value_pair', 8192, ' ') ),
@@ -145,8 +148,33 @@ print_r([
 print_r([
 	'pop_key_value_pair',
 	pop_key_value_pair(__DIR__ . '/fast_io1.dat'),
-	pop_key_value_pair(__DIR__ . '/fast_io1.dat'),
 ]);
+
+
+print_r([
+	'get_index_keys',
+	get_index_keys(__DIR__ . '/fast_io1.dat')
+]);
+
+print_r([
+	'delete_key_value_pair',
+	delete_key_value_pair(__DIR__ . '/fast_io1.dat', 'index_360')
+]);
+
+
+print_r([
+	'hide_key_value_pair',
+	hide_key_value_pair(__DIR__ . '/fast_io1.dat', 'index_350')
+]);
+
+
+print_r([
+	'find_value_by_key',
+	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_340'),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_350'),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_360')
+]);
+
 
 
 for($i=0; $i <=20; $i++){
