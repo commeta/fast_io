@@ -75,6 +75,7 @@ ini_set('fast_io.buffer_size', 8192); // 8 KB
 - Changing the buffer size during script execution can affect the performance of I/O operations performed after this change.
 - Choosing the optimal buffer size depends on specific tasks and working conditions of the application. It is recommended to perform testing with different values to find the best option.
 - Specify the buffer size based on the size of the data chunk; the default value of 4096 is sufficient for working with strings not larger than 4096 bytes.
+- With a large buffer size, unnecessary file reads are possible, for example, during a full-text search, when the value can be found at the beginning of the file, and it will be read by the size of the buffer.
 
 ## Conclusion
 
