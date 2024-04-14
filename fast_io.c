@@ -196,6 +196,7 @@ ZEND_GET_MODULE(fast_io)
 
 
 
+
 // Функция поиска значения по ключу с чтением файла порциями
 PHP_FUNCTION(find_value_by_key) {
     char *filename, *index_key;
@@ -257,10 +258,10 @@ PHP_FUNCTION(find_value_by_key) {
         }
     }
 
+    efree(dynamic_buffer);
     close(fd);
 
     if (found_value == NULL) {
-        efree(dynamic_buffer);
         RETURN_FALSE;
     } else {
         // Обрезка пробелов справа и символа перевода строки
@@ -270,12 +271,9 @@ PHP_FUNCTION(find_value_by_key) {
             else break;
         }
 
-
         RETVAL_STRING(found_value);
         efree(found_value);
     }
-
-    efree(dynamic_buffer);
 }
 
 
@@ -614,7 +612,6 @@ PHP_FUNCTION(delete_key_value_pair) {
     close(temp_fd);
     efree(buffer);
     if (dynamicBuffer) efree(dynamicBuffer);
-    
 
     // Заменяем оригинальный файл временным файлом
     if (rename(temp_filename, filename) == -1) {
@@ -802,6 +799,7 @@ PHP_FUNCTION(rebuild_data_file) {
 
 
 
+
 /* Функция для извлечения и удаления последней строки из файла */
 PHP_FUNCTION(pop_key_value_pair) {
     char *filename;
@@ -874,84 +872,118 @@ PHP_FUNCTION(pop_key_value_pair) {
         return;
     }
 
+
+    // Авто поиск последней строки
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
     char *buffer = (char *)emalloc(ini_buffer_size + 1);
-    char *line = NULL;
-    size_t line_len = 0;
-    size_t line_cap = 0;
-    int state = 0;
-    ssize_t total_read = 0; // Общее количество прочитанных символов
+    zend_string *result_str = NULL;
+    int found_line_start = 0;
 
-    // Переменная для хранения позиции начала последней строки
-    off_t last_line_start = -1;
-
-    // Поиск позиции начала последней строки
-    while (pos > 0 && last_line_start == -1) {
+    while (pos > 0 && !found_line_start) {
         pos -= ini_buffer_size;
         pos = pos < 0 ? 0 : pos;
+
         lseek(fd, pos, SEEK_SET);
-        ssize_t bytesRead = read(fd, buffer, ini_buffer_size);
+        bytesRead = read(fd, buffer, ini_buffer_size);
+
         if (bytesRead <= 0) {
             php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
             close(fd);
             efree(buffer);
-            if (line) efree(line);
+            if (result_str) zend_string_release(result_str);
             RETURN_FALSE;
         }
+
+
         for (ssize_t i = bytesRead - 1; i >= 0; --i) {
-            if (buffer[i] == '\n') {
-                if (total_read > 0) { // Найден конец предыдущей строки
-                    last_line_start = pos + i + 1;
+            if (
+                buffer[i] == '\n'
+            ) {
+                if (!result_str) { // Найден первый перенос строки с конца
+                    result_str = zend_string_alloc(bytesRead - i - 1, 0);
+                    memcpy(ZSTR_VAL(result_str), buffer + i + 1, bytesRead - i - 1);
+
+                    
+                } else if (i != bytesRead - 1 || pos + bytesRead < fileSize) { // Найдено начало строки
+                    size_t new_len = ZSTR_LEN(result_str) + bytesRead - i - 1;
+                    result_str = zend_string_extend(result_str, new_len, 0);
+                    memmove(ZSTR_VAL(result_str) + bytesRead - i - 1, ZSTR_VAL(result_str), ZSTR_LEN(result_str) - (bytesRead - i - 1));
+                    memcpy(ZSTR_VAL(result_str), buffer + i + 1, bytesRead - i - 1);
+
+                    found_line_start = 1;
                     break;
-                } else { // Пропускаем перенос строки в конце файла (если он есть)
-                    total_read++;
                 }
-            } else {
-                total_read++;
             }
+        }
+
+
+        if (!found_line_start && bytesRead > 0 && result_str != NULL && pos == 0) {
+            size_t result_str_len = ZSTR_LEN(result_str);
+            zend_string *new_result_str = NULL;
+
+            if(result_str_len + 1 > ini_buffer_size && bytesRead == ini_buffer_size ){
+                result_str = zend_string_alloc(result_str_len + 1, 0);
+                memcpy(ZSTR_VAL(result_str), buffer, bytesRead);
+            } else {
+                result_str = zend_string_alloc(bytesRead, 0);
+                memcpy(ZSTR_VAL(result_str), buffer, bytesRead);
+            }
+
+            found_line_start = 1;
+            break;
+        }
+
+        if (!found_line_start && bytesRead == ini_buffer_size && result_str != NULL) { // Если строка начинается до текущего буфера
+            result_str = zend_string_extend(result_str, ZSTR_LEN(result_str) + ini_buffer_size, 0);
+            memmove(ZSTR_VAL(result_str) + ini_buffer_size, ZSTR_VAL(result_str), ZSTR_LEN(result_str) - ini_buffer_size);
+            memcpy(ZSTR_VAL(result_str), buffer, ini_buffer_size);
         }
     }
 
-    if (last_line_start != -1) {
-        // Установка указателя на начало последней строки
-        lseek(fd, last_line_start, SEEK_SET);
-        size_t to_read = total_read; // Сколько осталось прочитать
-        while (to_read > 0) {
-            ssize_t bytesRead = read(fd, buffer, MIN(ini_buffer_size, to_read));
-            if (bytesRead <= 0) {
-                // Ошибка чтения файла
-                php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
-                close(fd);
-                efree(buffer);
-                if (line) efree(line);
-                RETURN_FALSE;
-            }
-            // Добавление прочитанного содержимого к строке
-            if (line_len + bytesRead > line_cap) {
-                line_cap = line_len + bytesRead;
-                line = erealloc(line, line_cap + 1);
-            }
-            memcpy(line + line_len, buffer, bytesRead);
-            line_len += bytesRead;
-            to_read -= bytesRead;
+    efree(buffer);
+
+    if (
+        found_line_start && result_str != NULL ||
+        (
+            result_str != NULL
+        )
+    ) {
+        ZSTR_VAL(result_str)[ZSTR_LEN(result_str)] = '\0'; // Установить конечный нулевой символ
+
+        // Обрезка пробелов справа и символа перевода строки
+        size_t len = ZSTR_LEN(result_str);
+        char *str = ZSTR_VAL(result_str);
+
+        // Усечь файл
+        off_t new_file_size = fileSize - len;
+        if(new_file_size < 0) new_file_size = 0;
+
+        if(ftruncate(fd, new_file_size)) {
+            close(fd);
+            php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
+            RETURN_FALSE;
         }
+
+        // Находим позицию, до которой нужно обрезать строку
+        ssize_t i;
+        for (i = len - 1; i >= 0; --i) {
+            if(str[i] != ' ' && str[i] != '\n') break;
+        }
+
+        // Обрезаем строку, если найдены пробелы или символы перевода строки
+        if (i < (ssize_t)(len - 1)) {
+            // Устанавливаем новый конец строки
+            str[i + 1] = '\0';
+            // Обновляем длину zend_string
+            ZSTR_LEN(result_str) = i + 1;
+        }
+
+        RETVAL_STR(result_str);
+    } else {
+        RETVAL_FALSE;
     }
 
     close(fd);
-    efree(buffer);
-
-    if (line) {
-        // Обрезка пробелов справа и символа перевода строки
-        for (int i = line_len - 1; i >= 0; --i) {
-            if(line[i] == ' ' || line[i] == '\n') line[i] = '\0';
-            else break;
-        }
-        
-        RETURN_STRING(line);
-        efree(line);
-    } else {
-        RETURN_FALSE;
-    }
 }
 
 
@@ -970,25 +1002,30 @@ PHP_FUNCTION(hide_key_value_pair) {
     if (fd == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
+        RETURN_LONG(-1);
     }
 
     if (lock_file(fd, LOCK_EX) == -1) { // Блокировка файла на запись
         close(fd);
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         RETURN_FALSE;
+        RETURN_LONG(-2);
     }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+    zend_long dynamic_buffer_size = ini_buffer_size;
+    char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+    ssize_t bytesRead;
+    bool found_value = false;
 
-    char *buffer = (char *)emalloc(ini_buffer_size + 1);
-    ssize_t bytesRead, totalRead = 0;
     off_t writeOffset = 0; // Смещение для записи обновленных данных
+    size_t current_size = 0; // Текущий размер данных в динамическом буфере
 
-    while ((bytesRead = read(fd, buffer + totalRead, ini_buffer_size - totalRead)) > 0) {
-        totalRead += bytesRead;
-        buffer[totalRead] = '\0';
+    while ((bytesRead = read(fd, dynamic_buffer + current_size, ini_buffer_size)) > 0) {
+        current_size += bytesRead;
+        dynamic_buffer[current_size] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
 
-        char *lineStart = buffer;
+        char *lineStart = dynamic_buffer;
         char *lineEnd;
 
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
@@ -1005,28 +1042,38 @@ PHP_FUNCTION(hide_key_value_pair) {
                 lseek(fd, writeOffset, SEEK_SET);
                 if(write(fd, replacement, index_key_len + 1) == -1) {
                     efree(replacement);
-                    efree(buffer);
+                    efree(dynamic_buffer);
                     close(fd);
                     php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
-                    RETURN_FALSE;
+                    RETURN_LONG(-3);
                 }
+
                 efree(replacement);
+                found_value = true;
+                break;
             }
 
+            //count_str += strlen(lineStart);
             writeOffset += lineLength; // Обновляем смещение для записи
             lineStart = lineEnd + 1; // Переходим к следующей строке
         }
 
-        // Подготовка к следующему чтению, если остались данные в буфере
-        totalRead -= (lineStart - buffer);
-        if (totalRead > 0) {
-            memmove(buffer, lineStart, totalRead);
+        if (found_value) break;
+
+        // Перемещаем непрочитанную часть в начало буфера и обновляем current_size
+        current_size -= (lineStart - dynamic_buffer);
+        memmove(dynamic_buffer, lineStart, current_size);
+
+        // Проверяем, нужно ли расширить буфер
+        if (current_size == dynamic_buffer_size) {
+            dynamic_buffer_size *= 2; // Удваиваем размер буфера
+            dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
         }
     }
 
     close(fd); // Это также разблокирует файл
-    efree(buffer);
-    RETURN_TRUE;
+    efree(dynamic_buffer);
+    RETURN_LONG(1);
 }
 
 
@@ -1397,14 +1444,14 @@ PHP_FUNCTION(detect_align_size) {
         RETURN_FALSE;
     }
 
-    if (lock_file(fd, LOCK_EX) == -1) { // Блокировка файла на чтение
+    if (lock_file(fd, LOCK_EX) == -1) { // Блокировка файла
         close(fd);
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         RETURN_FALSE;
     }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
-    char *buffer = (char *)emalloc(ini_buffer_size + 1);
+    char *buffer = (char *)emalloc(ini_buffer_size);
 
     ssize_t bytes_read;
     long max_length = 0, current_length = 0;
