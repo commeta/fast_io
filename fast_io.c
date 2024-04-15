@@ -259,7 +259,6 @@ PHP_FUNCTION(find_value_by_key) {
 
             if (search_state == 3) found_val++;
 
-            //if (search_state == 3 && strncmp(lineStart, index_key, index_key_len) == 0) {
             if (search_state == 3 && strstr(lineStart, index_key) != NULL) {
                 if(found_count + 11 > dynamic_count) {
                     dynamic_count += ini_buffer_size;
@@ -372,7 +371,7 @@ PHP_FUNCTION(indexed_find_value_by_key) {
             *lineEnd = '\0'; // Завершаем строку нуль-терминатором
 
             // Проверяем, начинается ли строка с ключа
-            if (strncmp(lineStart, index_key, index_key_len) == 0 && lineStart[index_key_len] == ' ') {
+            if (strstr(lineStart, index_key) != NULL && lineStart[index_key_len] == ' ') {
                 found_value = estrdup(lineStart + index_key_len + 1); // Пропускаем ключ и пробел
                 break;
             }
@@ -623,7 +622,13 @@ PHP_FUNCTION(delete_key_value_pair) {
             *lineEnd = '\0';
 
             if (index_key != NULL) {
-                if (strncmp(lineStart, &specialChar, 1) != 0 && (strncmp(lineStart, index_key, strlen(index_key)) != 0 || lineStart[strlen(index_key)] != ' ')) {
+                if (
+                    strncmp(lineStart, &specialChar, 1) != 0 && 
+                    (
+                        strstr(lineStart, index_key) != NULL || 
+                        lineStart[strlen(index_key)] != ' '
+                    )
+                ) {
                     fprintf(temp_file, "%s\n", lineStart);
                 }
             } else {
@@ -1064,7 +1069,7 @@ PHP_FUNCTION(hide_key_value_pair) {
             *lineEnd = '\0'; // Завершаем строку нуль-терминатором
             ssize_t lineLength = lineEnd - lineStart + 1;
 
-            if (strncmp(lineStart, index_key, index_key_len) == 0 && lineStart[index_key_len] == ' ') {
+            if (strstr(lineStart, index_key) != NULL && lineStart[index_key_len] == ' ') {
                 // Найдено совпадение ключа, подготавливаем замену
                 char *replacement = emalloc(index_key_len + 1);
                 memset(replacement, 127, index_key_len); // Заполнение символами DEL
@@ -1254,7 +1259,7 @@ PHP_FUNCTION(update_key_value_pair) {
             *lineEnd = '\0'; // Завершаем строку нуль-терминатором
             ssize_t lineLength = lineEnd - lineStart + 1;
 
-            if (strncmp(lineStart, index_key, index_key_len) == 0 && lineStart[index_key_len] == ' ') {
+            if (strstr(lineStart, index_key) != NULL && lineStart[index_key_len] == ' ') {
                 fprintf(temp_file, "%s %s\n", index_key, index_value);
             } else {
                 fprintf(temp_file, "%s\n", lineStart);
