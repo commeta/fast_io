@@ -88,12 +88,23 @@ function fast_io_mysql_adapter(& $parser, $sql){
 
             $insert_values= implode(" ", $values);
 
-            if(file_exists($data_file) && filesize($data_file) > 0){
-                $last_id = filesize($data_file) / ($index_align + 1);
-                $last_id ++;
-            }
+
+            if(!file_exists($data_file . '.lock')) touch($data_file . '.lock');
+            $lock= fopen($data_file . '.lock', "r+");
+    
+            if(flock($lock, LOCK_EX)) {
+                if(file_exists($data_file) && filesize($data_file) > 0){
+                    $last_id = filesize($data_file) / ($index_align + 1);
+                    $last_id ++;
+                }
+                    
+                $last_id = insert_key_value($data_file, $column_list[0] . "_" . $last_id . ' ' . $insert_values, $index_align);
                 
-            $last_id = insert_key_value($data_file, $column_list[0] . "_" . $last_id . ' ' . $insert_values, $index_align);
+                flock($lock, LOCK_UN);
+            }
+            
+            fclose($lock);
+
             if ($last_id < 0) {
                 echo "Произошла ошибка при добавлении записи. Код ошибки: $last_id";
                 return 0;
