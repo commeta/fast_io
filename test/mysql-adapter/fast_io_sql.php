@@ -42,8 +42,12 @@ function fast_io_mysql_adapter(& $parser, $sql){
 
     $parsed = $parser->parse($sql, true);
 
-    $table = $colref = $operator = $const = null;
-    $column_list = $values = [];
+    $table = null;
+    $colref = null;
+    $operator = null;
+    $const = null;
+    $column_list = [];
+    $values = [];
 
     if(isset($parsed['INSERT'])){ // INSERT
         foreach($parsed['INSERT'] as $expr){
@@ -162,6 +166,7 @@ SQL;
 print_r([
     fast_io_mysql_adapter($parser, $sql)
 ]);
+
 
 $sql = <<<SQL
     SELECT *
