@@ -40,7 +40,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <pcre2.h>
-#include <stdbool.h>
 #include "fast_io.h"
 
 
@@ -296,7 +295,7 @@ PHP_FUNCTION(find_value_by_key) {
 
                 found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
             }
-            
+
 
             lineStart = lineEnd + 1; // Переходим к следующей строке
         }
