@@ -39,6 +39,8 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <pcre2.h>
+#include <stdbool.h>
 #include "fast_io.h"
 
 
@@ -195,6 +197,11 @@ ZEND_GET_MODULE(fast_io)
 #endif
 
 
+
+
+
+
+
 // Функция поиска значения по ключу с чтением файла порциями
 PHP_FUNCTION(find_value_by_key) {
     char *filename, *index_key;
@@ -229,7 +236,7 @@ PHP_FUNCTION(find_value_by_key) {
     int found_count = 0;
     zend_long dynamic_count = ini_buffer_size;
 
-    if(search_state == 3){
+    if(search_state == 3 || search_state == 5){
         found_value = (char *)emalloc(dynamic_count);
     }
 
@@ -257,9 +264,15 @@ PHP_FUNCTION(find_value_by_key) {
                 found_val++;
             }
 
-            if (search_state == 3) found_val++;
+            if (search_state == 3 || search_state == 5) found_val++;
 
-            if (search_state == 3 && strstr(lineStart, index_key) != NULL) {
+            if (
+                (
+                    search_state == 3 ||
+                    search_state == 5
+                ) && 
+                strstr(lineStart, index_key) != NULL
+            ) {
                 if(found_count + 11 > dynamic_count) {
                     dynamic_count += ini_buffer_size;
                     found_value = (char *)erealloc(found_value, dynamic_count);
@@ -267,6 +280,23 @@ PHP_FUNCTION(find_value_by_key) {
 
                 found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
             }
+
+
+            if (search_state == 4 && find_substrings(lineStart, index_key) != false) {
+                found_value = estrndup(lineStart, lineEnd - lineStart);
+                break;
+            }
+
+
+            if (search_state == 5 && find_substrings(lineStart, index_key) != false) {
+                if(found_count + 11 > dynamic_count) {
+                    dynamic_count += ini_buffer_size;
+                    found_value = (char *)erealloc(found_value, dynamic_count);
+                }
+
+                found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
+            }
+            
 
             lineStart = lineEnd + 1; // Переходим к следующей строке
         }
@@ -302,7 +332,7 @@ PHP_FUNCTION(find_value_by_key) {
             else break;
         }
 
-        if (search_state == 3) found_value[strlen(found_value) - 1] = '\0';
+        if (search_state == 3 || search_state == 5) found_value[strlen(found_value) - 1] = '\0';
 
         RETVAL_STRING(found_value);
         efree(found_value);
