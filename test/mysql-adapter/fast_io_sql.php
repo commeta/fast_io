@@ -83,8 +83,7 @@ function fast_io_mysql_adapter(& $parser, $sql){
             $last_id = 0;
 
             if(file_exists($data_file)){
-                $keys = get_index_keys($data_file);
-                $last_id = count($keys);
+                $last_id = filesize($data_file) / ($index_align + 1);
             }
 
             $insert_values= implode(" ", $values);
