@@ -21,9 +21,6 @@
  * MA 02110-1301, USA.
  * 
  * 
- */
-
-/*
  * use greenlion/PHP-SQL-Parser
  * Copyright (c) 2014, Justin Swanhart <greenlion@gmail.com> and André Rothe <phosco@gmx.de>
  * https://github.com/greenlion/PHP-SQL-Parser
@@ -170,7 +167,7 @@ print_r([
 $sql = <<<SQL
     SELECT *
         FROM fast_io
-    WHERE id = 1;
+    WHERE id = 0;
 SQL;
 print_r([
     fast_io_mysql_adapter($parser, $sql)
