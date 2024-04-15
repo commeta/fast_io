@@ -82,11 +82,11 @@ function fast_io_mysql_adapter(& $parser, $sql){
             $data_file= $data_dir . "/" . $table . ".sql.dat";
             $last_id = 0;
 
+            $insert_values= implode(" ", $values);
+
             if(file_exists($data_file)){
                 $last_id = filesize($data_file) / ($index_align + 1);
             }
-
-            $insert_values= implode(" ", $values);
                 
             $last_id = insert_key_value($data_file, $column_list[0] . "_" . $last_id . ' ' . $insert_values, $index_align);
             if ($last_id < 0) {
@@ -132,9 +132,9 @@ function fast_io_mysql_adapter(& $parser, $sql){
         if(
             $table && 
             count($column_list) && 
-            $colref != '' && 
-            $operator != '' && 
-            $const != ''
+            $colref != null && 
+            $operator != null && 
+            $const != null
         ){
             $data_file= $data_dir . "/" . $table . ".sql.dat";
             
