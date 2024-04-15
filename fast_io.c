@@ -228,9 +228,10 @@ PHP_FUNCTION(find_value_by_key) {
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
 
     int found_count = 0;
+    zend_long dynamic_count = ini_buffer_size;
 
     if(search_state == 3){
-        found_value = (char *)emalloc(1024);
+        found_value = (char *)emalloc(dynamic_count);
     }
 
     while ((bytesRead = read(fd, dynamic_buffer + current_size, ini_buffer_size)) > 0) {
@@ -260,6 +261,11 @@ PHP_FUNCTION(find_value_by_key) {
             if (search_state == 3) found_val++;
 
             if (search_state == 3 && strncmp(lineStart, index_key, index_key_len) == 0) {
+                if(found_count + 11 > dynamic_count) {
+                    dynamic_count += ini_buffer_size;
+                    found_value = (char *)erealloc(found_value, dynamic_count);
+                }
+
                 found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
             }
 
