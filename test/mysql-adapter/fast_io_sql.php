@@ -84,12 +84,13 @@ function fast_io_mysql_adapter(& $parser, $sql){
         ){
             $count = count($column_list);
             $data_file= $data_dir . "/" . $table . ".sql.dat";
-            $last_id = 0;
+            $last_id = 1;
 
             $insert_values= implode(" ", $values);
 
             if(file_exists($data_file) && filesize($data_file) > 0){
                 $last_id = filesize($data_file) / ($index_align + 1);
+                $last_id ++;
             }
                 
             $last_id = insert_key_value($data_file, $column_list[0] . "_" . $last_id . ' ' . $insert_values, $index_align);
