@@ -96,10 +96,12 @@ function fast_io_mysql_adapter(& $parser, $sql){
             if ($last_id < 0) {
                 echo "Произошла ошибка при добавлении записи. Код ошибки: $last_id";
                 return 1;
+            } else {
+                return $last_id;
             }
-
-            return 0;
         }
+
+        return 0;
     }
 
 
@@ -164,6 +166,7 @@ $sql = <<<SQL
     ;
 SQL;
 print_r([
+    'last_id',
     fast_io_mysql_adapter($parser, $sql)
 ]);
 
@@ -174,6 +177,7 @@ $sql = <<<SQL
     WHERE id = 0;
 SQL;
 print_r([
+    'select',
     fast_io_mysql_adapter($parser, $sql)
 ]);
 
