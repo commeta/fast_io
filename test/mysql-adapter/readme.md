@@ -9,6 +9,6 @@ Array
 Array
 (
     [0] => select
-    [1] => index_key_0 index_value
+    [1] => index_key_1 index_value
 )
 ```
