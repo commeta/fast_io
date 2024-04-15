@@ -82,9 +82,10 @@ PHP_FUNCTION(detect_align_size);
 
 
 /* Запись аргументов функций */
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_value_by_key, 0, 2, IS_STRING, 1)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_value_by_key, 1, 2, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, search_state, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_indexed_find_value_by_key, 0, 2, IS_STRING, 1)
@@ -195,14 +196,13 @@ ZEND_GET_MODULE(fast_io)
 #endif
 
 
-
-
 // Функция поиска значения по ключу с чтением файла порциями
 PHP_FUNCTION(find_value_by_key) {
     char *filename, *index_key;
     size_t filename_len, index_key_len;
+    zend_long search_state = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &filename, &filename_len, &index_key, &index_key_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &filename, &filename_len, &index_key, &index_key_len, &search_state) == FAILURE) {
         RETURN_FALSE; // Неправильные параметры вызова функции
     }
 
@@ -217,15 +217,21 @@ PHP_FUNCTION(find_value_by_key) {
         php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
         close(fd);
         RETURN_FALSE;
-    }    
+    }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     ssize_t bytesRead;
     char *found_value = NULL;
-    
+    zend_long found_val = 0;
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
+
+    int found_count = 0;
+
+    if(search_state == 3){
+        found_value = (char *)emalloc(1024);
+    }
 
     while ((bytesRead = read(fd, dynamic_buffer + current_size, ini_buffer_size)) > 0) {
         current_size += bytesRead;
@@ -237,15 +243,30 @@ PHP_FUNCTION(find_value_by_key) {
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
             *lineEnd = '\0'; // Завершаем строку нуль-терминатором
 
-            if (strncmp(lineStart, index_key, index_key_len) == 0 && lineStart[index_key_len] == ' ') {
+            if (search_state == 0 && strncmp(lineStart, index_key, index_key_len) == 0 && lineStart[index_key_len] == ' ') {
                 found_value = estrndup(lineStart + index_key_len + 1, lineEnd - (lineStart + index_key_len + 1));
                 break;
+            }
+
+            if (search_state == 1 && strncmp(lineStart, index_key, index_key_len) == 0) {
+                found_value = estrndup(lineStart, lineEnd - lineStart);
+                break;
+            }
+
+            if (search_state == 2 && strncmp(lineStart, index_key, index_key_len) == 0) {
+                found_val++;
+            }
+
+            if (search_state == 3) found_val++;
+
+            if (search_state == 3 && strncmp(lineStart, index_key, index_key_len) == 0) {
+                found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
             }
 
             lineStart = lineEnd + 1; // Переходим к следующей строке
         }
 
-        if (found_value != NULL) break;
+        if (found_value != NULL && search_state != 3) break;
 
         // Перемещаем непрочитанную часть в начало буфера и обновляем current_size
         current_size -= (lineStart - dynamic_buffer);
@@ -256,6 +277,11 @@ PHP_FUNCTION(find_value_by_key) {
             dynamic_buffer_size *= 2; // Удваиваем размер буфера
             dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
         }
+    }
+
+    if(search_state == 2){
+        found_value = emalloc(12);
+        snprintf(found_value, 11, "%ld", found_val);
     }
 
     efree(dynamic_buffer);
@@ -270,6 +296,8 @@ PHP_FUNCTION(find_value_by_key) {
             if(found_value[i] == ' ' || found_value[i] == '\n') found_value[i] = '\0';
             else break;
         }
+
+        if (search_state == 3) found_value[strlen(found_value) - 1] = '\0';
 
         RETVAL_STRING(found_value);
         efree(found_value);
