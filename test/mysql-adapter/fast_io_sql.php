@@ -96,7 +96,7 @@ function fast_io_mysql_adapter(& $parser, $sql){
             $last_id = insert_key_value($data_file, $column_list[0] . "_" . $last_id . ' ' . $insert_values, $index_align);
             if ($last_id < 0) {
                 echo "Произошла ошибка при добавлении записи. Код ошибки: $last_id";
-                return 1;
+                return 0;
             } else {
                 return $last_id;
             }
