@@ -16,7 +16,7 @@ mixed find_value_by_key(string $filename, string $index_key[, int search_state =
 
 - **filename** - Путь к файлу, в котором будет производиться поиск.
 - **index_key** - Ключ, по которому осуществляется поиск значения.
-- **search_state** (int, optional): - Режим поиска.
+- **search_state** (int, optional) - Режим поиска.
 
 
 #### Режимы поиска
