@@ -144,6 +144,8 @@ function fast_io_mysql_adapter(& $parser, $sql){
             $const != null
         ){
             $data_file= $data_dir . "/" . $table . ".sql.dat";
+            if($const > 0) $const --;
+            else $const = 0;
             
             if(file_exists($data_file) && in_array('*', $column_list)){
                 if($colref == 'id' && $operator == "="){
@@ -175,7 +177,7 @@ print_r([
 $sql = <<<SQL
     SELECT *
         FROM fast_io
-    WHERE id = 0;
+    WHERE id = 1;
 SQL;
 print_r([
     'select',
