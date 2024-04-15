@@ -39,7 +39,6 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <sys/types.h>
-
 #include "fast_io.h"
 
 
@@ -244,23 +243,24 @@ PHP_FUNCTION(find_value_by_key) {
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
             *lineEnd = '\0'; // Завершаем строку нуль-терминатором
 
-            if (search_state == 0 && strncmp(lineStart, index_key, index_key_len) == 0 && lineStart[index_key_len] == ' ') {
+            if (search_state == 0 && strstr(lineStart, index_key) != NULL && lineStart[index_key_len] == ' ') {
                 found_value = estrndup(lineStart + index_key_len + 1, lineEnd - (lineStart + index_key_len + 1));
                 break;
             }
 
-            if (search_state == 1 && strncmp(lineStart, index_key, index_key_len) == 0) {
+            if (search_state == 1 && strstr(lineStart, index_key) != NULL) {
                 found_value = estrndup(lineStart, lineEnd - lineStart);
                 break;
             }
 
-            if (search_state == 2 && strncmp(lineStart, index_key, index_key_len) == 0) {
+            if (search_state == 2 && strstr(lineStart, index_key) != NULL) {
                 found_val++;
             }
 
             if (search_state == 3) found_val++;
 
-            if (search_state == 3 && strncmp(lineStart, index_key, index_key_len) == 0) {
+            //if (search_state == 3 && strncmp(lineStart, index_key, index_key_len) == 0) {
+            if (search_state == 3 && strstr(lineStart, index_key) != NULL) {
                 if(found_count + 11 > dynamic_count) {
                     dynamic_count += ini_buffer_size;
                     found_value = (char *)erealloc(found_value, dynamic_count);
