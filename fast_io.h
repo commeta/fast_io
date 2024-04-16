@@ -57,12 +57,14 @@ typedef struct {
     size_t count;
 } KeyValueArray;
 
-void add_key_value(KeyValueArray *array, int value[2]) {
+bool add_key_value(KeyValueArray *array, int value[2]) {
     array->count++;
     array->values = erealloc(array->values, array->count * sizeof(int[2]));
+    if(array->values == NULL) return false;
     
     array->values[array->count - 1][0] = value[0];
     array->values[array->count - 1][1] = value[1];
+    return true;
 }
 
 void free_key_value_array(KeyValueArray *array) {
@@ -78,11 +80,13 @@ typedef struct {
 
 
 // Функция для добавления ключа в массив ключей
-void add_key(KeyArray *array, char *key) {
+bool add_key(KeyArray *array, char *key) {
     array->count++;
     array->keys = erealloc(array->keys, array->count * (sizeof(size_t) + sizeof(char *)));
+    if(array->keys == NULL) return false;
 
     array->keys[array->count - 1] = estrdup(key);
+    return true;
 }
 
 // Функция для освобождения памяти, выделенной под массив ключей
