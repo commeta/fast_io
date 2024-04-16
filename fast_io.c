@@ -284,6 +284,10 @@ PHP_FUNCTION(find_value_by_key) {
                 if(found_count + 12 > dynamic_count) {
                     dynamic_count += ini_buffer_size;
                     found_value = (char *)erealloc(found_value, dynamic_count + 1);
+                    if(found_value == NULL) {
+                        php_error_docref(NULL, E_WARNING, "Out of memory");
+                        break;
+                    }
                 }
             }
 
@@ -319,6 +323,12 @@ PHP_FUNCTION(find_value_by_key) {
         if (current_size == dynamic_buffer_size) {
             dynamic_buffer_size *= 2; // Удваиваем размер буфера
             dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+            if(dynamic_buffer == NULL) {
+                php_error_docref(NULL, E_WARNING, "Out of memory");
+                efree(found_value);
+                found_value = NULL;
+                break;
+            }
         }
     }
 
