@@ -125,7 +125,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_hide_key_value_pair, 0, 2, IS_LO
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_get_index_keys, 1, 1, IS_ARRAY, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_get_index_keys, 1, 1, IS_ARRAY, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
@@ -1171,14 +1171,12 @@ PHP_FUNCTION(get_index_keys) {
     if (fd == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
-        RETURN_LONG(-1);
     }
 
     if (lock_file(fd, LOCK_EX) == -1) { // Блокировка файла на запись
         close(fd);
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         RETURN_FALSE;
-        RETURN_LONG(-2);
     }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
@@ -1205,9 +1203,7 @@ PHP_FUNCTION(get_index_keys) {
 
             if(mode == 0){
                 char *spacePos = strchr(lineStart, ' ');
-                if (spacePos) {
-                    *spacePos = '\0';
-                }
+                if (spacePos) *spacePos = '\0';
                 add_key(&keys, lineStart);
             }
 
@@ -1228,34 +1224,35 @@ PHP_FUNCTION(get_index_keys) {
 
         // Проверяем, нужно ли расширить буфер
         if (current_size == dynamic_buffer_size) {
-            dynamic_buffer_size *= 2; // Удваиваем размер буфера
+            dynamic_buffer_size += ini_buffer_size; // Удваиваем размер буфера
             dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
         }
     }
 
     close(fd); // Это также разблокирует файл
     efree(dynamic_buffer);
+    
     array_init(return_value);
-
-    if(mode == 1){
-        for (size_t i = 0; i < keys_values.count; i++) {
-            zval key_value_arr;
-            array_init(&key_value_arr);
-            add_index_long(&key_value_arr, 1, keys_values.values[i][0]);
-            add_index_long(&key_value_arr, 2, keys_values.values[i][1]);       
-            add_next_index_zval(return_value, &key_value_arr);
-        }
-        
-        free_key_value_array(&keys_values);
-    } 
 
     if(mode == 0){
         for (size_t i = 0; i < keys.count; i++) {
             add_next_index_string(return_value, keys.keys[i]);
         }
-
-        free_key_array(&keys);
     }
+
+    if(mode == 1){
+        for (size_t i = 0; i < keys_values.count; i++) {
+            zval key_value_arr;
+            array_init(&key_value_arr);
+
+            add_index_long(&key_value_arr, 0, keys_values.values[i][0]);
+            add_index_long(&key_value_arr, 1, keys_values.values[i][1]);       
+            add_next_index_zval(return_value, &key_value_arr);
+        }
+    } 
+
+    free_key_value_array(&keys_values);
+    free_key_array(&keys);
 }
 
 
