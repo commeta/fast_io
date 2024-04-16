@@ -50,23 +50,28 @@ int lock_file(int fd, int lock_type) {
     return fcntl(fd, F_SETLKW, &fl);
 }
 
-// Структура для хранения динамического массива ключей
+
+// Структура для хранения динамического массива ключей и их значений
 typedef struct {
     char **keys;
+    int (*values)[2];
     size_t count;
-} KeyArray;
+} KeyValueArray;
 
-// Функция для добавления ключа в массив ключей
-void add_key(KeyArray *array, const char *key) {
+void add_key_value(KeyValueArray *array, const char *key, int value[2]) {
     array->count++;
-    array->keys = realloc(array->keys, array->count * sizeof(char *));
-    array->keys[array->count - 1] = strdup(key);
+    array->keys = erealloc(array->keys, array->count * sizeof(char *));
+    array->values = erealloc(array->values, array->count * sizeof(int[2]));
+    
+    array->keys[array->count - 1] = estrdup(key);
+    array->values[array->count - 1][0] = value[0];
+    array->values[array->count - 1][1] = value[1];
 }
 
-// Функция для освобождения памяти, выделенной под массив ключей
-void free_key_array(KeyArray *array) {
+void free_key_value_array(KeyValueArray *array) {
     for (size_t i = 0; i < array->count; i++) {
-        free(array->keys[i]);
+        efree(array->keys[i]);
     }
-    free(array->keys);
+    efree(array->keys);
+    efree(array->values);
 }
