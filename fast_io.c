@@ -1247,7 +1247,9 @@ PHP_FUNCTION(get_index_keys) {
         }
         
         free_key_value_array(&keys_values);
-    } else {
+    } 
+
+    if(mode == 0){
         for (size_t i = 0; i < keys.count; i++) {
             add_next_index_string(return_value, keys.keys[i]);
         }
