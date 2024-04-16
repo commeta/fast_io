@@ -74,13 +74,16 @@ void free_key_value_array(KeyValueArray *array) {
 typedef struct {
     char **keys;
     size_t count;
+    size_t keys_size;
 } KeyArray;
 
 
 // Функция для добавления ключа в массив ключей
-void add_key(KeyArray *array, const char *key) {
+void add_key(KeyArray *array, char *key) {
     array->count++;
-    array->keys = erealloc(array->keys, array->count * sizeof(char *));
+    array->keys_size += strlen(key) + 1;
+    array->keys = erealloc(array->keys, array->keys_size + array->count * (sizeof(size_t[2]) + sizeof(char *)));
+
     array->keys[array->count - 1] = estrdup(key);
 }
 
