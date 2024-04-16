@@ -125,8 +125,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_hide_key_value_pair, 0, 2, IS_LO
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_get_index_keys, 0, 1, IS_ARRAY, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_get_index_keys, 1, 1, IS_ARRAY, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_update_key_value_pair, 0, 3, IS_LONG, 0)
@@ -367,7 +368,6 @@ PHP_FUNCTION(indexed_find_value_by_key) {
     int index_fd = open(index_filename, O_RDONLY);
     int data_fd = open(filename, O_RDONLY);
 
-    
     if (index_fd == -1) {
         close(data_fd);
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
@@ -1161,8 +1161,9 @@ PHP_FUNCTION(hide_key_value_pair) {
 PHP_FUNCTION(get_index_keys) {
     char *filename;
     size_t filename_len;
+    zend_long mode = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &filename, &filename_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|l", &filename, &filename_len, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1184,7 +1185,10 @@ PHP_FUNCTION(get_index_keys) {
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     ssize_t bytesRead;
-    KeyValueArray keys = {0};
+
+    KeyValueArray keys_values = {0};
+    KeyArray keys = {0};
+
     off_t writeOffset = 0; // Смещение для записи обновленных данных
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
 
@@ -1202,10 +1206,15 @@ PHP_FUNCTION(get_index_keys) {
             char *spacePos = strchr(lineStart, ' ');
             if (spacePos) {
                 *spacePos = '\0';
-                int value[2];
-                value[0] = writeOffset;
-                value[1] = lineLength;
-                add_key_value(&keys, lineStart, value);
+
+                if(mode == 1){
+                    int value[2];
+                    value[0] = writeOffset;
+                    value[1] = lineLength;
+                    add_key_value(&keys_values, value);
+                } else {
+                    add_key(&keys, lineStart);
+                }
             }
 
             writeOffset += lineLength; // Обновляем смещение
@@ -1227,16 +1236,23 @@ PHP_FUNCTION(get_index_keys) {
     efree(dynamic_buffer);
     array_init(return_value);
 
-    for (size_t i = 0; i < keys.count; i++) {
-        zval key_value_arr;
-        array_init(&key_value_arr);
-        add_index_string(&key_value_arr, 0, keys.keys[i]);
-        add_index_long(&key_value_arr, 1, keys.values[i][0]);
-        add_index_long(&key_value_arr, 2, keys.values[i][1]);
-        add_next_index_zval(return_value, &key_value_arr);
+    if(mode == 1){
+        for (size_t i = 0; i < keys_values.count; i++) {
+            zval key_value_arr;
+            array_init(&key_value_arr);
+            add_index_long(&key_value_arr, 1, keys_values.values[i][0]);
+            add_index_long(&key_value_arr, 2, keys_values.values[i][1]);       
+            add_next_index_zval(return_value, &key_value_arr);
+        }
+        
+        free_key_value_array(&keys_values);
+    } else {
+        for (size_t i = 0; i < keys.count; i++) {
+            add_next_index_string(return_value, keys.keys[i]);
+        }
+
+        free_key_array(&keys);
     }
-    
-    free_key_value_array(&keys);
 }
 
 
