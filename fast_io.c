@@ -205,7 +205,7 @@ PHP_FUNCTION(find_value_by_key) {
     size_t filename_len, index_key_len;
     zend_long search_state = 0;
     zend_long start = 0;
-    zend_long length = 10;
+    zend_long length = 100;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|lll", &filename, &filename_len, &index_key, &index_key_len, &search_state, &start, &length) == FAILURE) {
         RETURN_FALSE; // Неправильные параметры вызова функции
