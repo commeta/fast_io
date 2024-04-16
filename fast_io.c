@@ -239,6 +239,22 @@ PHP_FUNCTION(find_value_by_key) {
         found_value = (char *)emalloc(dynamic_count);
     }
 
+    pcre2_code *re;
+    PCRE2_SIZE erroffset;
+    int errorcode;
+
+    if(search_state == 4 || search_state == 5){
+        re = pcre2_compile((PCRE2_SPTR)index_key, PCRE2_ZERO_TERMINATED, 0, &errorcode, &erroffset, NULL);
+        if (re == NULL) {
+            close(fd);
+            PCRE2_UCHAR message[256];
+            pcre2_get_error_message(errorcode, message, sizeof(message));
+            php_error_docref(NULL, E_WARNING, "PCRE2 compilation failed at offset %d: %s", (int)erroffset, message);
+            RETURN_FALSE;
+        }
+    }
+
+
     while ((bytesRead = read(fd, dynamic_buffer + current_size, ini_buffer_size)) > 0) {
         current_size += bytesRead;
         dynamic_buffer[current_size] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
@@ -266,25 +282,36 @@ PHP_FUNCTION(find_value_by_key) {
             if (search_state == 3 || search_state == 5) {
                 found_val++;
 
-                if(found_count + 11 > dynamic_count) {
+                if(found_count + 13 > dynamic_count) {
                     dynamic_count += ini_buffer_size;
                     found_value = (char *)erealloc(found_value, dynamic_count);
                 }
             }
 
-            if (
-                (
-                    search_state == 3 || search_state == 5
-                ) 
-                && 
-                strstr(lineStart, index_key) != NULL
-            ) {
+            if (search_state == 3 && strstr(lineStart, index_key) != NULL) {
                 found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
             }
 
-            if (search_state == 4 && find_substrings(lineStart, index_key) != false) {
-                found_value = estrndup(lineStart, lineEnd - lineStart);
-                break;
+            if(search_state == 4 || search_state == 5){
+                PCRE2_SPTR subject = (PCRE2_SPTR)lineStart;
+                PCRE2_SIZE subject_length = strlen(lineStart);
+
+                pcre2_match_data *match_data;
+                match_data = pcre2_match_data_create_from_pattern(re, NULL);
+
+                int rc = pcre2_match(re, subject, subject_length, 0, 0, match_data, NULL);
+                pcre2_match_data_free(match_data);
+
+                if (rc > 0) {
+                    if (search_state == 4) {
+                        found_value = estrndup(lineStart, lineEnd - lineStart);
+                        break;
+                    }
+
+                    if (search_state == 5) {
+                        found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
+                    }
+                }
             }
 
             lineStart = lineEnd + 1; // Переходим к следующей строке
