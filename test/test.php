@@ -117,6 +117,7 @@ for($i=0; $i <=500; $i++){
 
 
 
+
 print_r([
 	'detect_align_size',
 	detect_align_size(__DIR__ . '/fast_io1.dat'),
@@ -182,15 +183,16 @@ print_r([
 ]);
 
 
+
 print_r([
 	'find_value_by_key',
 	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_360'),
 	find_value_by_key(__DIR__ . '/fast_io1.dat', 'апдейт', 1),
 	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index', 2),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index', 3),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+1', 4),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+1', 5),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+_2', 4),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+_2', 6),
 ]);
+
 
 
 
