@@ -80,7 +80,7 @@ typedef struct {
 // Функция для добавления ключа в массив ключей
 void add_key(KeyArray *array, char *key) {
     array->count++;
-    array->keys = erealloc(array->keys, array->count * (sizeof(size_t[1]) + sizeof(char *)));
+    array->keys = erealloc(array->keys, array->count * (sizeof(size_t) + sizeof(char *)));
 
     array->keys[array->count - 1] = estrdup(key);
 }
