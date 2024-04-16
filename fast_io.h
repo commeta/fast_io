@@ -22,7 +22,7 @@
  * 
  */
 
-// В файле php_fast_io.h
+
 extern zend_module_entry fast_io_module_entry;
 #define phpext_fast_io_ptr &fast_io_module_entry
 
@@ -53,25 +53,42 @@ int lock_file(int fd, int lock_type) {
 
 // Структура для хранения динамического массива ключей и их значений
 typedef struct {
-    char **keys;
     int (*values)[2];
     size_t count;
 } KeyValueArray;
 
-void add_key_value(KeyValueArray *array, const char *key, int value[2]) {
+void add_key_value(KeyValueArray *array, int value[2]) {
     array->count++;
-    array->keys = erealloc(array->keys, array->count * sizeof(char *));
     array->values = erealloc(array->values, array->count * sizeof(int[2]));
     
-    array->keys[array->count - 1] = estrdup(key);
     array->values[array->count - 1][0] = value[0];
     array->values[array->count - 1][1] = value[1];
 }
 
 void free_key_value_array(KeyValueArray *array) {
+    efree(array->values);
+}
+
+
+// Структура для хранения динамического массива ключей
+typedef struct {
+    char **keys;
+    size_t count;
+} KeyArray;
+
+
+// Функция для добавления ключа в массив ключей
+void add_key(KeyArray *array, const char *key) {
+    array->count++;
+    array->keys = erealloc(array->keys, array->count * sizeof(char *));
+    array->keys[array->count - 1] = estrdup(key);
+}
+
+// Функция для освобождения памяти, выделенной под массив ключей
+void free_key_array(KeyArray *array) {
     for (size_t i = 0; i < array->count; i++) {
         efree(array->keys[i]);
     }
     efree(array->keys);
-    efree(array->values);
 }
+
