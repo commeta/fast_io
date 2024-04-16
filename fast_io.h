@@ -40,9 +40,6 @@ ZEND_END_MODULE_GLOBALS(fast_io)
 #define FAST_IO_G(v) (fast_io_globals.v)
 #endif
 
-
-
-
 // Вспомогательная функция для блокировки файла
 int lock_file(int fd, int lock_type) {
     struct flock fl;
@@ -72,31 +69,4 @@ void free_key_array(KeyArray *array) {
         free(array->keys[i]);
     }
     free(array->keys);
-}
-
-
-static bool find_substrings(const char *input_string, const char *pattern) {
-    pcre2_code *re;
-    PCRE2_SIZE erroffset;
-    int errorcode;
-    re = pcre2_compile((PCRE2_SPTR)pattern, PCRE2_ZERO_TERMINATED, 0, &errorcode, &erroffset, NULL);
-    if (re == NULL) {
-        return false;
-    }
-
-    PCRE2_SPTR subject = (PCRE2_SPTR)input_string;
-    PCRE2_SIZE subject_length = strlen(input_string);
-
-    pcre2_match_data *match_data;
-    match_data = pcre2_match_data_create_from_pattern(re, NULL);
-
-    int rc = pcre2_match(re, subject, subject_length, 0, 0, match_data, NULL);
-
-    if (rc <= 0) {
-        pcre2_match_data_free(match_data);
-        return false;
-    }
-
-    pcre2_match_data_free(match_data);
-    return true;
 }
