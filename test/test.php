@@ -24,6 +24,10 @@
  */
 
 ini_set('fast_io.buffer_size', 4096);
+//date_default_timezone_set ( 'Europe/Moscow' );
+//setlocale (LC_ALL, "ru_RU.UTF-8");
+//setlocale (LC_NUMERIC, "C");
+
 
 // Stress test
 function memory_get_process_usage_kernel(){
@@ -105,9 +109,9 @@ foreach(glob('fast_io*.tmp') as $file) {
 $r_total= memory_get_process_usage_kernel();
 
 
-for($i=0; $i <=400; $i++){
+for($i=0; $i <=500; $i++){
 	print_r(
-		insert_key_value(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i . ' ' . str_pad('', 8192, '1234567890'), 8192)
+		insert_key_value(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i . ' ' . str_pad('', 8, '1234567890'), 8192)
 	);
 }
 
@@ -151,10 +155,14 @@ print_r([
 ]);
 
 
+
 print_r([
 	'get_index_keys',
-	get_index_keys(__DIR__ . '/fast_io1.dat')
+	count(get_index_keys(__DIR__ . '/fast_io1.dat', 0)),
+	count(get_index_keys(__DIR__ . '/fast_io1.dat', 1)),
 ]);
+
+
 
 print_r([
 	'delete_key_value_pair',
@@ -169,10 +177,19 @@ print_r([
 
 
 print_r([
+	'update_key_value',
+	update_key_value(__DIR__ . '/fast_io1.dat', 'update апдейт', 10, 8192),
+]);
+
+
+print_r([
 	'find_value_by_key',
-	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_340'),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_350'),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_360')
+	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_360'),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', 'апдейт', 1),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index', 2),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index', 3),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+1', 4),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+1', 5),
 ]);
 
 
