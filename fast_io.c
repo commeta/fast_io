@@ -1214,14 +1214,22 @@ PHP_FUNCTION(get_index_keys) {
             if(mode == 0){
                 char *spacePos = strchr(lineStart, ' ');
                 if (spacePos) *spacePos = '\0';
-                add_key(&keys, lineStart);
+                if(add_key(&keys, lineStart) == false){
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    mode = -1;
+                    break;
+                }
             }
 
             if(mode == 1){
                 int value[2];
                 value[0] = writeOffset;
                 value[1] = lineLength;
-                add_key_value(&keys_values, value);
+                if(add_key_value(&keys_values, value) == false){
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    mode = -1;
+                    break;
+                }
             }
             
             writeOffset += lineLength; // Обновляем смещение
@@ -1241,16 +1249,16 @@ PHP_FUNCTION(get_index_keys) {
 
     close(fd); // Это также разблокирует файл
     efree(dynamic_buffer);
-    
-    array_init(return_value);
 
     if(mode == 0){
+        array_init(return_value);
         for (size_t i = 0; i < keys.count; i++) {
             add_next_index_string(return_value, keys.keys[i]);
         }
     }
 
     if(mode == 1){
+        array_init(return_value);
         for (size_t i = 0; i < keys_values.count; i++) {
             zval key_value_arr;
             array_init(&key_value_arr);
@@ -1263,6 +1271,7 @@ PHP_FUNCTION(get_index_keys) {
 
     free_key_value_array(&keys_values);
     free_key_array(&keys);
+    if(mode == -1) RETURN_FALSE;
 }
 
 
