@@ -86,6 +86,8 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_value_by_key, 1, 2, IS_STRI
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, search_state, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, start, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, length, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_indexed_find_value_by_key, 0, 2, IS_STRING, 1)
@@ -202,8 +204,10 @@ PHP_FUNCTION(find_value_by_key) {
     char *filename, *index_key;
     size_t filename_len, index_key_len;
     zend_long search_state = 0;
+    zend_long start = 0;
+    zend_long length = 10;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &filename, &filename_len, &index_key, &index_key_len, &search_state) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|lll", &filename, &filename_len, &index_key, &index_key_len, &search_state, &start, &length) == FAILURE) {
         RETURN_FALSE; // Неправильные параметры вызова функции
     }
 
@@ -228,7 +232,9 @@ PHP_FUNCTION(find_value_by_key) {
     zend_long found_val = 0;
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
 
-    int found_count = 0;
+    zend_long found_count = 0;
+    zend_long found_start = 0;
+    zend_long found_length = 0;
     zend_long dynamic_count = ini_buffer_size;
 
     pcre2_code *re;
@@ -292,7 +298,11 @@ PHP_FUNCTION(find_value_by_key) {
             }
 
             if (search_state == 3 && strstr(lineStart, index_key) != NULL) {
-                found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
+                if(start <= found_start) {
+                    found_length++;
+                    found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
+                }
+                found_start++;
             }
 
             if(search_state == 4 || search_state == 5){
@@ -305,7 +315,11 @@ PHP_FUNCTION(find_value_by_key) {
                     }
 
                     if (search_state == 5) {
-                        found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
+                        if(start <= found_start) {
+                            found_length++;
+                            found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
+                        }
+                        found_start++;
                     }
                 }
             }
@@ -314,11 +328,13 @@ PHP_FUNCTION(find_value_by_key) {
                 int rc = pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL);
                 if (rc > 0) found_val++;
             }
-            
+
+            if(found_length > 0 && length <= found_length) break;
 
             lineStart = lineEnd + 1; // Переходим к следующей строке
         }
 
+        if(found_length > 0 && length <= found_length) break;
         if (found_value != NULL && search_state != 3) break;
 
         // Перемещаем непрочитанную часть в начало буфера и обновляем current_size
