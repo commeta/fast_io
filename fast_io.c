@@ -86,8 +86,6 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_value_by_key, 1, 2, IS_STRI
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, search_state, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, start, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, length, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_indexed_find_value_by_key, 0, 2, IS_STRING, 1)
@@ -199,15 +197,16 @@ ZEND_GET_MODULE(fast_io)
 #endif
 
 
+
+
+
 // Функция поиска значения по ключу с чтением файла порциями
 PHP_FUNCTION(find_value_by_key) {
     char *filename, *index_key;
     size_t filename_len, index_key_len;
     zend_long search_state = 0;
-    zend_long start = 0;
-    zend_long length = 100;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|lll", &filename, &filename_len, &index_key, &index_key_len, &search_state, &start, &length) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &filename, &filename_len, &index_key, &index_key_len, &search_state) == FAILURE) {
         RETURN_FALSE; // Неправильные параметры вызова функции
     }
 
@@ -233,8 +232,6 @@ PHP_FUNCTION(find_value_by_key) {
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
 
     zend_long found_count = 0;
-    zend_long found_start = 0;
-    zend_long found_length = 0;
     zend_long dynamic_count = ini_buffer_size;
 
     pcre2_code *re;
@@ -284,42 +281,13 @@ PHP_FUNCTION(find_value_by_key) {
                 found_val++;
             }
 
-            if (search_state == 3 || search_state == 5) {
-                found_val++;
-
-                if(found_count + 12 > dynamic_count) {
-                    dynamic_count += ini_buffer_size;
-                    found_value = (char *)erealloc(found_value, dynamic_count + 1);
-                    if(found_value == NULL) {
-                        php_error_docref(NULL, E_WARNING, "Out of memory");
-                        break;
-                    }
-                }
-            }
-
-            if (search_state == 3 && strstr(lineStart, index_key) != NULL) {
-                if(start <= found_start) {
-                    found_length++;
-                    found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
-                }
-                found_start++;
-            }
-
-            if(search_state == 4 || search_state == 5){
+            if(search_state == 4){
                 int rc = pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL);
 
                 if (rc > 0) {
                     if (search_state == 4) {
                         found_value = estrndup(lineStart, lineEnd - lineStart);
                         break;
-                    }
-
-                    if (search_state == 5) {
-                        if(start <= found_start) {
-                            found_length++;
-                            found_count += snprintf(found_value + found_count, 11, "%ld,", found_val);
-                        }
-                        found_start++;
                     }
                 }
             }
@@ -329,12 +297,9 @@ PHP_FUNCTION(find_value_by_key) {
                 if (rc > 0) found_val++;
             }
 
-            if(found_length > 0 && length <= found_length) break;
-
             lineStart = lineEnd + 1; // Переходим к следующей строке
         }
 
-        if(found_length > 0 && length <= found_length) break;
         if (found_value != NULL && search_state != 3) break;
 
         // Перемещаем непрочитанную часть в начало буфера и обновляем current_size
@@ -348,7 +313,6 @@ PHP_FUNCTION(find_value_by_key) {
             if(dynamic_buffer == NULL) {
                 php_error_docref(NULL, E_WARNING, "Out of memory");
                 efree(found_value);
-                found_value = NULL;
                 break;
             }
         }
@@ -356,7 +320,6 @@ PHP_FUNCTION(find_value_by_key) {
 
     if(
         search_state == 4 || 
-        search_state == 5 || 
         search_state == 6
     ) pcre2_match_data_free(match_data);
 
@@ -381,18 +344,10 @@ PHP_FUNCTION(find_value_by_key) {
             else break;
         }
 
-        if (
-            (
-                search_state == 3 || search_state == 5
-            ) &&
-            found_value[strlen(found_value) - 1] == ','
-        ) found_value[strlen(found_value) - 1] = '\0';
-
         RETVAL_STRING(found_value);
         efree(found_value);
     }
 }
-
 
 
 PHP_FUNCTION(indexed_find_value_by_key) {
