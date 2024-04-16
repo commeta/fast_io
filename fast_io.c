@@ -235,13 +235,15 @@ PHP_FUNCTION(find_value_by_key) {
     int found_count = 0;
     zend_long dynamic_count = ini_buffer_size;
 
-    if(search_state == 3 || search_state == 5){
-        found_value = (char *)emalloc(dynamic_count);
-    }
 
     pcre2_code *re;
     PCRE2_SIZE erroffset;
     int errorcode;
+    pcre2_match_data *match_data;
+
+    if(search_state == 3 || search_state == 5){
+        found_value = (char *)emalloc(dynamic_count);
+    }
 
     if(search_state == 4 || search_state == 5){
         re = pcre2_compile((PCRE2_SPTR)index_key, PCRE2_ZERO_TERMINATED, 0, &errorcode, &erroffset, NULL);
@@ -252,6 +254,8 @@ PHP_FUNCTION(find_value_by_key) {
             php_error_docref(NULL, E_WARNING, "PCRE2 compilation failed at offset %d: %s", (int)erroffset, message);
             RETURN_FALSE;
         }
+
+        match_data = pcre2_match_data_create_from_pattern(re, NULL);
     }
 
 
@@ -282,7 +286,7 @@ PHP_FUNCTION(find_value_by_key) {
             if (search_state == 3 || search_state == 5) {
                 found_val++;
 
-                if(found_count + 13 > dynamic_count) {
+                if(found_count + 12 > dynamic_count) {
                     dynamic_count += ini_buffer_size;
                     found_value = (char *)erealloc(found_value, dynamic_count);
                 }
@@ -293,14 +297,7 @@ PHP_FUNCTION(find_value_by_key) {
             }
 
             if(search_state == 4 || search_state == 5){
-                PCRE2_SPTR subject = (PCRE2_SPTR)lineStart;
-                PCRE2_SIZE subject_length = strlen(lineStart);
-
-                pcre2_match_data *match_data;
-                match_data = pcre2_match_data_create_from_pattern(re, NULL);
-
-                int rc = pcre2_match(re, subject, subject_length, 0, 0, match_data, NULL);
-                pcre2_match_data_free(match_data);
+                int rc = pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL);
 
                 if (rc > 0) {
                     if (search_state == 4) {
@@ -330,6 +327,8 @@ PHP_FUNCTION(find_value_by_key) {
         }
     }
 
+    if(search_state == 4 || search_state == 5) pcre2_match_data_free(match_data);
+
     if(search_state == 2){
         found_value = emalloc(12);
         snprintf(found_value, 11, "%ld", found_val);
@@ -348,7 +347,10 @@ PHP_FUNCTION(find_value_by_key) {
             else break;
         }
 
-        if (search_state == 3 || search_state == 5) found_value[strlen(found_value) - 1] = '\0';
+        if (
+            (search_state == 3 || search_state == 5) &&
+            found_value[strlen(found_value) - 1] == ','
+        ) found_value[strlen(found_value) - 1] = '\0';
 
         RETVAL_STRING(found_value);
         efree(found_value);
