@@ -240,7 +240,7 @@ PHP_FUNCTION(find_value_by_key) {
         found_value = (char *)emalloc(dynamic_count);
     }
 
-    if(search_state == 4 || search_state == 5){
+    if(search_state == 4 || search_state == 5 || search_state == 6){
         re = pcre2_compile((PCRE2_SPTR)index_key, PCRE2_ZERO_TERMINATED, 0, &errorcode, &erroffset, NULL);
         if (re == NULL) {
             close(fd);
@@ -310,6 +310,12 @@ PHP_FUNCTION(find_value_by_key) {
                 }
             }
 
+            if (search_state == 6) {
+                int rc = pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL);
+                if (rc > 0) found_val++;
+            }
+            
+
             lineStart = lineEnd + 1; // Переходим к следующей строке
         }
 
@@ -332,9 +338,16 @@ PHP_FUNCTION(find_value_by_key) {
         }
     }
 
-    if(search_state == 4 || search_state == 5) pcre2_match_data_free(match_data);
+    if(
+        search_state == 4 || 
+        search_state == 5 || 
+        search_state == 6
+    ) pcre2_match_data_free(match_data);
 
-    if(search_state == 2){
+    if(
+        search_state == 2 || 
+        search_state == 6
+    ){
         found_value = emalloc(12);
         snprintf(found_value, 11, "%ld", found_val);
     }
@@ -353,7 +366,9 @@ PHP_FUNCTION(find_value_by_key) {
         }
 
         if (
-            (search_state == 3 || search_state == 5) &&
+            (
+                search_state == 3 || search_state == 5
+            ) &&
             found_value[strlen(found_value) - 1] == ','
         ) found_value[strlen(found_value) - 1] = '\0';
 
