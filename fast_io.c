@@ -1203,20 +1203,21 @@ PHP_FUNCTION(get_index_keys) {
             *lineEnd = '\0'; // Завершаем строку нуль-терминатором
             ssize_t lineLength = lineEnd - lineStart + 1;
 
-            char *spacePos = strchr(lineStart, ' ');
-            if (spacePos) {
-                *spacePos = '\0';
-
-                if(mode == 1){
-                    int value[2];
-                    value[0] = writeOffset;
-                    value[1] = lineLength;
-                    add_key_value(&keys_values, value);
-                } else {
-                    add_key(&keys, lineStart);
+            if(mode == 0){
+                char *spacePos = strchr(lineStart, ' ');
+                if (spacePos) {
+                    *spacePos = '\0';
                 }
+                add_key(&keys, lineStart);
             }
 
+            if(mode == 1){
+                int value[2];
+                value[0] = writeOffset;
+                value[1] = lineLength;
+                add_key_value(&keys_values, value);
+            }
+            
             writeOffset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1; // Переходим к следующей строке
         }
