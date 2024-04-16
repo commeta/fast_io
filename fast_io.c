@@ -196,11 +196,6 @@ ZEND_GET_MODULE(fast_io)
 #endif
 
 
-
-
-
-
-
 // Функция поиска значения по ключу с чтением файла порциями
 PHP_FUNCTION(find_value_by_key) {
     char *filename, *index_key;
@@ -234,7 +229,6 @@ PHP_FUNCTION(find_value_by_key) {
 
     int found_count = 0;
     zend_long dynamic_count = ini_buffer_size;
-
 
     pcre2_code *re;
     PCRE2_SIZE erroffset;
@@ -288,7 +282,7 @@ PHP_FUNCTION(find_value_by_key) {
 
                 if(found_count + 12 > dynamic_count) {
                     dynamic_count += ini_buffer_size;
-                    found_value = (char *)erealloc(found_value, dynamic_count);
+                    found_value = (char *)erealloc(found_value, dynamic_count + 1);
                 }
             }
 
@@ -1162,6 +1156,7 @@ PHP_FUNCTION(hide_key_value_pair) {
 
 
 
+
 /* Реализация функции */
 PHP_FUNCTION(get_index_keys) {
     char *filename;
@@ -1171,65 +1166,78 @@ PHP_FUNCTION(get_index_keys) {
         RETURN_FALSE;
     }
 
-    KeyArray keys = {0};
-
-    int fd = open(filename, O_RDONLY);
+    int fd = open(filename, O_RDWR);
     if (fd == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
+        RETURN_LONG(-1);
     }
 
-    if (lock_file(fd, LOCK_EX) == -1) { // Блокировка файла на чтение
+    if (lock_file(fd, LOCK_EX) == -1) { // Блокировка файла на запись
         close(fd);
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         RETURN_FALSE;
+        RETURN_LONG(-2);
     }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
-
-    char *buffer = (char *)emalloc(ini_buffer_size + 1);
+    zend_long dynamic_buffer_size = ini_buffer_size;
+    char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     ssize_t bytesRead;
-    size_t leftover_length = 0;
+    KeyValueArray keys = {0};
+    off_t writeOffset = 0; // Смещение для записи обновленных данных
+    size_t current_size = 0; // Текущий размер данных в динамическом буфере
 
-    while ((bytesRead = read(fd, buffer + leftover_length, ini_buffer_size - leftover_length)) > 0 || leftover_length > 0) {
-        bytesRead += leftover_length;
-        buffer[bytesRead] = '\0';
-        char *lineStart = buffer;
+    while ((bytesRead = read(fd, dynamic_buffer + current_size, ini_buffer_size)) > 0) {
+        current_size += bytesRead;
+        dynamic_buffer[current_size] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
+
+        char *lineStart = dynamic_buffer;
         char *lineEnd;
 
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
-            *lineEnd = '\0';
+            *lineEnd = '\0'; // Завершаем строку нуль-терминатором
+            ssize_t lineLength = lineEnd - lineStart + 1;
+
             char *spacePos = strchr(lineStart, ' ');
             if (spacePos) {
                 *spacePos = '\0';
-                add_key(&keys, lineStart);
+                int value[2];
+                value[0] = writeOffset;
+                value[1] = lineLength;
+                add_key_value(&keys, lineStart, value);
             }
-            lineStart = lineEnd + 1;
+
+            writeOffset += lineLength; // Обновляем смещение
+            lineStart = lineEnd + 1; // Переходим к следующей строке
         }
 
-        leftover_length = bytesRead - (lineStart - buffer);
-        if (leftover_length > 0 && lineStart != buffer) {
-            memmove(buffer, lineStart, leftover_length); // Перемещаем оставшиеся данные в начало буфера
-        } else if (leftover_length == ini_buffer_size) {
-            // Если остаток равен размеру буфера, нужно его увеличить
-            ini_buffer_size *= 2;
-            buffer = (char *)erealloc(buffer, ini_buffer_size + 1);
-        } else {
-            leftover_length = 0; // Если строка обработана полностью
+        // Перемещаем непрочитанную часть в начало буфера и обновляем current_size
+        current_size -= (lineStart - dynamic_buffer);
+        memmove(dynamic_buffer, lineStart, current_size);
+
+        // Проверяем, нужно ли расширить буфер
+        if (current_size == dynamic_buffer_size) {
+            dynamic_buffer_size *= 2; // Удваиваем размер буфера
+            dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
         }
     }
 
-    close(fd);
-    efree(buffer);
-
+    close(fd); // Это также разблокирует файл
+    efree(dynamic_buffer);
     array_init(return_value);
+
     for (size_t i = 0; i < keys.count; i++) {
-        add_next_index_string(return_value, keys.keys[i]);
+        zval key_value_arr;
+        array_init(&key_value_arr);
+        add_index_string(&key_value_arr, 0, keys.keys[i]);
+        add_index_long(&key_value_arr, 1, keys.values[i][0]);
+        add_index_long(&key_value_arr, 2, keys.values[i][1]);
+        add_next_index_zval(return_value, &key_value_arr);
     }
-
-    free_key_array(&keys);
+    
+    free_key_value_array(&keys);
 }
-
 
 
 // Функция обновления пары ключ-значение
