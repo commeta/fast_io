@@ -85,7 +85,7 @@ PHP_FUNCTION(detect_align_size);
 
 
 /* Запись аргументов функций */
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_array_by_key, 1, 2, IS_ARRAY, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_array_by_key, 1, 2, IS_ARRAY, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, search_state, IS_LONG, 0)
@@ -227,7 +227,7 @@ PHP_FUNCTION(find_array_by_key) {
     }
 
     // Попытка установить блокирующую блокировку на запись
-    if (flock(fileno(fp), LOCK_EX) == -1) {
+    if (flock(fileno(fp), LOCK_EX) < 0) {
         php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
         fclose(fp);
         RETURN_FALSE;
@@ -245,9 +245,11 @@ PHP_FUNCTION(find_array_by_key) {
 
     zend_long found_count = 0;
     zend_long add_count = 0;
+    zend_long line_count = 0;
     zend_long dynamic_count = ini_buffer_size;
 
     bool found_match = false;
+    char *found_value = NULL;
 
     pcre2_code *re;
     pcre2_match_data *match_data; 
@@ -271,7 +273,8 @@ PHP_FUNCTION(find_array_by_key) {
         match_data = pcre2_match_data_create_from_pattern(re, NULL);
     }
 
-    while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size - current_size, fp)) > 0) {
+
+    while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
         dynamic_buffer[current_size] = '\0';
 
@@ -280,6 +283,48 @@ PHP_FUNCTION(find_array_by_key) {
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
             ssize_t lineLength = lineEnd - lineStart + 1;
             *lineEnd = '\0';
+            line_count++;
+
+            if(search_state == 0 && strstr(lineStart, index_key) != NULL){
+                found_count++;
+
+                if(search_start < found_count){
+                    add_count++;
+                    
+                    size_t len = strlen(lineStart);
+                    for (int i = len - 1; i >= 0; --i) {
+                        if(lineStart[i] == ' ' || lineStart[i] == '\n') lineStart[i] = '\0';
+                        else break;
+                    }
+
+                    if(add_key(&keys, lineStart) == false){
+                        php_error_docref(NULL, E_WARNING, "Out of memory");
+                        found_match = true;
+                        break;
+                    }
+                }
+            }
+
+            if(search_state == 1 && strstr(lineStart, index_key) != NULL){
+                found_count++;
+
+                if(search_start < found_count){
+                    add_count++;
+                    found_value = (char *)emalloc(24);
+                    
+                    snprintf(found_value, 23, "%ld,%ld", line_count, searchOffset);
+                    if(add_key(&keys, found_value) == false){
+                        php_error_docref(NULL, E_WARNING, "Out of memory");
+                        found_match = true;
+                        break;
+                    }
+                    efree(found_value);
+                }
+            }
+
+            if(search_state == 2 && strstr(lineStart, index_key) != NULL){
+                found_count++;
+            }
 
 
             if(search_state == 10 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
@@ -302,26 +347,27 @@ PHP_FUNCTION(find_array_by_key) {
                 }
             }
 
-
-            if(search_state == 0 && strstr(lineStart, index_key) != NULL && lineStart[index_key_len] == ' '){
+            if(search_state == 11 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
                 found_count++;
 
                 if(search_start < found_count){
                     add_count++;
+                    found_value = (char *)emalloc(24);
                     
-                    size_t len = strlen(lineStart);
-                    for (int i = len - 1; i >= 0; --i) {
-                        if(lineStart[i] == ' ' || lineStart[i] == '\n') lineStart[i] = '\0';
-                        else break;
-                    }
-
-                    if(add_key(&keys, lineStart) == false){
+                    snprintf(found_value, 23, "%ld,%ld", line_count, searchOffset);
+                    if(add_key(&keys, found_value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         found_match = true;
                         break;
                     }
+                    efree(found_value);
                 }
             }
+
+            if(search_state == 12 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
+                found_count++;
+            }
+
 
             searchOffset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
@@ -351,6 +397,16 @@ PHP_FUNCTION(find_array_by_key) {
 
     if (search_state > 9 && re != NULL) pcre2_code_free(re);
     if (search_state > 9 && match_data != NULL) pcre2_match_data_free(match_data);
+
+    if(search_state == 2 || search_state == 12){
+        found_value = (char *)emalloc(12);
+                    
+        snprintf(found_value, 11, "%ld", found_count);
+        if(add_key(&keys, found_value) == false){
+            php_error_docref(NULL, E_WARNING, "Out of memory");
+        }
+        efree(found_value);
+    }
 
     efree(dynamic_buffer);
     fclose(fp);
