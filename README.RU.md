@@ -19,7 +19,8 @@ Fast_IO - это высокопроизводительное расширени
 - [indexed_write_key_value_pair](/docs/indexed_write_key_value_pair.md) - Запись пары ключ-значение в текстовый файл данных и соответствующий индексный файл.
 - [indexed_find_value_by_key](/docs/indexed_find_value_by_key.md) - Поиск значения по ключу с использованием индексного файла.
 - [hide_key_value_pair](/docs/hide_key_value_pair.md) - Скрытие ключей в файлах данных.
-- [find_value_by_key](/docs/find_value_by_key.md) - Поиск значения по ключу в файле данных.
+- [find_value_by_key](/docs/find_value_by_key.md) - Поиск значения по ключу в файле данных, возвращает строку.
+- [find_array_by_key](/docs/find_array_by_key.md) - Поиск значения по ключу в файле данных, возвращает массив.
 - [delete_key_value_pair](/docs/delete_key_value_pair.md) - Удаление пары ключ-значение из файла данных.
 - [get_index_keys](/docs/get_index_keys.md) - Извлечение уникальных ключей из текстового файла.
 - [update_key_value_pair](/docs/update_key_value_pair.md) - Обновление значения по заданному ключу.
@@ -127,6 +128,7 @@ pop_key_value_pair: 0.20079398155212 (0.00002008)
 - insert_key_value Очень низкое потребление, запись строки в конец файла.
 - indexed_write_key_value_pair Низкое потребление, запись строки в конец файла индекса и блока в конец файла данных.
 - find_value_by_key Среднее потребление, чтение всего файла.
+- find_array_by_key Среднее потребление, чтение всего файла.
 - detect_align_size Среднее потребление, чтение всего файла.
 - get_index_keys Среднее потребление, чтение всего файла.
 - hide_key_value_pair Среднее потребление, чтение всего файла, запись строки в файл.
