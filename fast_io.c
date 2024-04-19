@@ -311,7 +311,7 @@ PHP_FUNCTION(find_array_by_key) {
                 if(search_start < found_count){
                     add_count++;
 
-                    snprintf(found_value, 23, "%ld,%ld", line_count, searchOffset);
+                    snprintf(found_value, 23, "%ld", line_count);
                     if(add_key(&keys, found_value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         found_match = true;
@@ -322,7 +322,24 @@ PHP_FUNCTION(find_array_by_key) {
 
             if(search_state == 2 && strstr(lineStart, index_key) != NULL){
                 found_count++;
+
+                if(search_start < found_count){
+                    add_count++;
+
+                    snprintf(found_value, 23, "%ld", searchOffset);
+                    if(add_key(&keys, found_value) == false){
+                        php_error_docref(NULL, E_WARNING, "Out of memory");
+                        found_match = true;
+                        break;
+                    }
+                }
             }
+
+            if(search_state == 3 && strstr(lineStart, index_key) != NULL){
+                found_count++;
+            }
+
+
 
 
             if(search_state == 10 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
@@ -351,7 +368,7 @@ PHP_FUNCTION(find_array_by_key) {
                 if(search_start < found_count){
                     add_count++;
                     
-                    snprintf(found_value, 23, "%ld,%ld", line_count, searchOffset);
+                    snprintf(found_value, 23, "%ld", line_count);
                     if(add_key(&keys, found_value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         found_match = true;
@@ -361,6 +378,21 @@ PHP_FUNCTION(find_array_by_key) {
             }
 
             if(search_state == 12 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
+                found_count++;
+
+                if(search_start < found_count){
+                    add_count++;
+                    
+                    snprintf(found_value, 23, "%ld", searchOffset);
+                    if(add_key(&keys, found_value) == false){
+                        php_error_docref(NULL, E_WARNING, "Out of memory");
+                        found_match = true;
+                        break;
+                    }
+                }
+            }
+
+            if(search_state == 13 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
                 found_count++;
             }
 
@@ -394,7 +426,7 @@ PHP_FUNCTION(find_array_by_key) {
     if (search_state > 9 && re != NULL) pcre2_code_free(re);
     if (search_state > 9 && match_data != NULL) pcre2_match_data_free(match_data);
 
-    if(search_state == 2 || search_state == 12){                    
+    if(search_state == 3 || search_state == 13){                    
         snprintf(found_value, 11, "%ld", found_count);
         if(add_key(&keys, found_value) == false){
             php_error_docref(NULL, E_WARNING, "Out of memory");
