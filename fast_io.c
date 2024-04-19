@@ -214,7 +214,7 @@ PHP_FUNCTION(find_array_by_key) {
     size_t filename_len, index_key_len;
     zend_long search_state = 0;
     zend_long search_start = 0;
-    zend_long search_length = 10;
+    zend_long search_length = 1;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|lll", &filename, &filename_len, &index_key, &index_key_len, &search_state, &search_start, &search_length) == FAILURE) {
         RETURN_FALSE; // Неправильные параметры вызова функции
