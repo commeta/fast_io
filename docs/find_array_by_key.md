@@ -8,7 +8,7 @@
 
 ## Синтаксис
 
-mixed find_array_by_key(string $filename, string $index_key[, int search_state = 0] )
+mixed find_array_by_key(string $filename, string $index_key[, int search_state = 0][, int search_start = 0][, int search_length = 1] )
 
 
 ### Параметры
