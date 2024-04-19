@@ -153,10 +153,11 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_insert_key_value, 0, 3, IS_LONG,
     ZEND_ARG_TYPE_INFO(0, index_align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_select_key_value, 0, 3, IS_STRING, 1)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_select_key_value, 1, 3, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_row, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, index_align, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_update_key_value, 0, 3, IS_LONG, 0)
@@ -255,7 +256,7 @@ PHP_FUNCTION(find_array_by_key) {
 
     KeyArray keys = {0};
 
-    if(search_state > 9 ){
+    if(search_state > 9){
         PCRE2_SIZE erroffset;
         int errorcode;
         re = pcre2_compile((PCRE2_SPTR)index_key, PCRE2_ZERO_TERMINATED, 0, &errorcode, &erroffset, NULL);
@@ -338,9 +339,6 @@ PHP_FUNCTION(find_array_by_key) {
                 found_count++;
             }
 
-
-
-
             if(search_state == 10 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
                 found_count++;
 
@@ -410,8 +408,10 @@ PHP_FUNCTION(find_array_by_key) {
         current_size -= (lineStart - dynamic_buffer);
         memmove(dynamic_buffer, lineStart, current_size);
 
-        if (current_size + ini_buffer_size > dynamic_buffer_size) {
-            dynamic_buffer_size *= 2; // Удваиваем размер буфера
+        if (current_size == dynamic_buffer_size) {
+        //if (current_size + ini_buffer_size > dynamic_buffer_size) {
+            //dynamic_buffer_size += ini_buffer_size;
+            dynamic_buffer_size *= 2;
             dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!dynamic_buffer) {
                 php_error_docref(NULL, E_WARNING, "Out of memory");
@@ -419,6 +419,8 @@ PHP_FUNCTION(find_array_by_key) {
             }
         }
     }
+
+    efree(dynamic_buffer);
 
     if (search_state > 9 && re != NULL) pcre2_code_free(re);
     if (search_state > 9 && match_data != NULL) pcre2_match_data_free(match_data);
@@ -430,10 +432,8 @@ PHP_FUNCTION(find_array_by_key) {
         }
     }
 
-    efree(found_value);
-
-    efree(dynamic_buffer);
     fclose(fp);
+    efree(found_value);
 
     array_init(return_value);
     for (size_t i = 0; i < keys.count; i++) {
@@ -479,21 +479,24 @@ PHP_FUNCTION(find_value_by_key) {
     zend_long dynamic_count = ini_buffer_size;
 
     pcre2_code *re;
-    PCRE2_SIZE erroffset;
-    int errorcode;
     pcre2_match_data *match_data;
 
     if(search_state == 3 || search_state == 5){
         found_value = (char *)emalloc(dynamic_count);
     }
 
+
     if(search_state == 3 || search_state == 4){
+        PCRE2_SIZE erroffset;
+        int errorcode;
         re = pcre2_compile((PCRE2_SPTR)index_key, PCRE2_ZERO_TERMINATED, 0, &errorcode, &erroffset, NULL);
+
         if (re == NULL) {
-            close(fd);
             PCRE2_UCHAR message[256];
             pcre2_get_error_message(errorcode, message, sizeof(message));
             php_error_docref(NULL, E_WARNING, "PCRE2 compilation failed at offset %d: %s", (int)erroffset, message);
+            close(fd);
+            efree(dynamic_buffer);
             RETURN_FALSE;
         }
 
@@ -556,10 +559,11 @@ PHP_FUNCTION(find_value_by_key) {
         }
     }
 
-    if(
-        search_state == 3 || 
-        search_state == 4
-    ) pcre2_match_data_free(match_data);
+    if(search_state == 3 || search_state == 4){
+        if (re != NULL) pcre2_code_free(re);
+        if (match_data != NULL) pcre2_match_data_free(match_data);
+    }
+
 
     if(
         search_state == 2 || 
@@ -1684,53 +1688,64 @@ PHP_FUNCTION(select_key_value) {
     size_t filename_len;
     zend_long index_row;
     zend_long index_align;
+    zend_long mode = 0;
 
     // Парсинг переданных аргументов
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sll", &filename, &filename_len, &index_row, &index_align) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sll|l", &filename, &filename_len, &index_row, &index_align, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
-    int fd = open(filename, O_RDONLY);
-    if (fd == -1) {
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
     }
 
-    // Блокировка файла для чтения
-    if (lock_file(fd, LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        close(fd);
+    // Попытка установить блокирующую блокировку на запись
+    if (flock(fileno(fp), LOCK_EX) < 0) {
+        php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+        fclose(fp);
         RETURN_FALSE;
     }
 
-    // Учет символа перевода строки при вычислении смещения
-    off_t offset = index_row * (index_align + 1); // +1 для '\n'
-    if (lseek(fd, offset, SEEK_SET) == -1) {
+    ssize_t bytesRead;
+    off_t offset = (mode == 0) ? index_row * (index_align + 1) : index_row;
+
+    if(fseek(fp, offset , SEEK_SET) < 0){
         php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
-        close(fd);
+        fclose(fp);
         RETURN_FALSE;
     }
 
     // Увеличиваем размер буфера на 1 для возможного символа перевода строки
     char *buffer = (char *)emalloc(index_align + 2); // +1 для '\0' и +1 для '\n'
-    ssize_t read_bytes = read(fd, buffer, index_align + 1); // Чтение строки вместе с '\n'
-    if (read_bytes == -1) {
+
+    bytesRead = fread(buffer, 1, index_align + 1, fp);
+    if(bytesRead < 0){
         php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
         efree(buffer);
-        close(fd);
+        fclose(fp);
         RETURN_FALSE;
     }
 
     // Убедимся, что строка нуль-терминирована
-    buffer[read_bytes] = '\0';
+    buffer[bytesRead] = '\0';
+
+    if (mode == 1) {
+        char *lineEnd = strchr(buffer, '\n');
+        if (lineEnd != NULL) {
+            *lineEnd = '\0'; // Заменяем перевод строки на нуль-терминатор
+        }
+    }
 
     // Обрезка пробелов справа и символа перевода строки
-    for (int i = read_bytes - 1; i >= 0; --i) {
+    size_t len = strlen(buffer);
+    for (int i = len - 1; i >= 0; --i) {
         if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
         else break;
     }
 
-    close(fd);
+    fclose(fp);
 
     // Возврат строки в PHP
     RETVAL_STRING(buffer);
