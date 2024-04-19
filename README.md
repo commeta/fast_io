@@ -1,4 +1,4 @@
-# Fast_IO Extension for PHP 8
+# Fast_IO Extension for PHP 8 (BETA)
 
 [Описание на русском](README.RU.md)
 
