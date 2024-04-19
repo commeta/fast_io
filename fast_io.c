@@ -411,17 +411,14 @@ PHP_FUNCTION(find_array_by_key) {
         current_size -= (lineStart - dynamic_buffer);
         memmove(dynamic_buffer, lineStart, current_size);
 
-
         if (current_size + ini_buffer_size > dynamic_buffer_size) {
             dynamic_buffer_size *= 2; // Удваиваем размер буфера
             dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!dynamic_buffer) {
                 php_error_docref(NULL, E_WARNING, "Out of memory");
-                found_match = true;
                 break;
             }
         }
-
     }
 
     if (search_state > 9 && re != NULL) pcre2_code_free(re);
