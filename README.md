@@ -25,7 +25,8 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - [indexed_write_key_value_pair](/docs/indexed_write_key_value_pair.md): Writes a key-value pair to a text data file and its corresponding index file.
 - [indexed_find_value_by_key](/docs/indexed_find_value_by_key.md): Searches for a value by key in a large text file using an index file.
 - [hide_key_value_pair](/docs/hide_key_value_pair.md): Hides keys in files storing data in key-value format.
-- [find_value_by_key](/docs/find_value_by_key.md): Searches for a value by key in a data file.
+- [find_value_by_key](/docs/find_value_by_key.md): Searches for a value by key in a data file, return string.
+- [find_array_by_key](/docs/find_array_by_key.md): Searches for a value by key in a data file, return array.
 - [delete_key_value_pair](/docs/delete_key_value_pair.md): Deletes a key-value pair from a data file.
 - [get_index_keys](/docs/get_index_keys.md): Extracts unique keys from a text file.
 - [update_key_value_pair](/docs/update_key_value_pair.md): Updates a value by the given key.
@@ -131,6 +132,7 @@ The table of function call costs in ascending order:
 - insert_key_value Very low consumption, writing a line at the end of the file.
 - indexed_write_key_value_pair Low consumption, writing a line at the end of the index file and a block at the end of the data file.
 - find_value_by_key Medium consumption, reading the entire file.
+- find_array_by_key Medium consumption, reading the entire file.
 - detect_align_size Medium consumption, reading the entire file.
 - get_index_keys Medium consumption, reading the entire file.
 - hide_key_value_pair Medium consumption, reading the entire file, writing a line to the file.
