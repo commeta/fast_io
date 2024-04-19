@@ -242,12 +242,11 @@ PHP_FUNCTION(find_array_by_key) {
 
     zend_long found_val = 0;
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
-    off_t searchOffset = 0; // Смещение строки поиска
+    off_t search_offset = 0; // Смещение строки поиска
 
     zend_long found_count = 0;
     zend_long add_count = 0;
     zend_long line_count = 0;
-    zend_long dynamic_count = ini_buffer_size;
 
     bool found_match = false;
 
@@ -326,7 +325,7 @@ PHP_FUNCTION(find_array_by_key) {
                 if(search_start < found_count){
                     add_count++;
 
-                    snprintf(found_value, 23, "%ld", searchOffset);
+                    snprintf(found_value, 23, "%ld", search_offset);
                     if(add_key(&keys, found_value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         found_match = true;
@@ -383,7 +382,7 @@ PHP_FUNCTION(find_array_by_key) {
                 if(search_start < found_count){
                     add_count++;
                     
-                    snprintf(found_value, 23, "%ld", searchOffset);
+                    snprintf(found_value, 23, "%ld", search_offset);
                     if(add_key(&keys, found_value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         found_match = true;
@@ -397,7 +396,7 @@ PHP_FUNCTION(find_array_by_key) {
             }
 
 
-            searchOffset += lineLength; // Обновляем смещение
+            search_offset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
 
             if(add_count >= search_length){
