@@ -292,7 +292,7 @@ PHP_FUNCTION(find_array_by_key) {
                     
                     size_t len = strlen(lineStart);
                     for (int i = len - 1; i >= 0; --i) {
-                        if(lineStart[i] == ' ' || lineStart[i] == '\n') lineStart[i] = '\0';
+                        if(lineStart[i] == ' ') lineStart[i] = '\0';
                         else break;
                     }
 
@@ -349,7 +349,7 @@ PHP_FUNCTION(find_array_by_key) {
 
                     size_t len = strlen(lineStart);
                     for (int i = len - 1; i >= 0; --i) {
-                        if(lineStart[i] == ' ' || lineStart[i] == '\n') lineStart[i] = '\0';
+                        if(lineStart[i] == ' ') lineStart[i] = '\0';
                         else break;
                     }
 
