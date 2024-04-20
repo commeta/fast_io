@@ -118,16 +118,19 @@ for($i=0; $i <=500; $i++){
 
 print_r([
 	find_value_by_key(__DIR__ . '/fast_io1.dat', '\\w+_1', 10),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_3', 0)
+	find_value_by_key(__DIR__ . '/fast_io1.dat1', 'index_500', 0)
+]);
+
+print_r([
+	find_array_by_key(__DIR__ . '/fast_io1.dat', '\\w+', 20, 2, 5),
+	find_array_by_key(__DIR__ . '/fast_io1.dat', 'index_3', 1),
+	find_matches_pcre2('\\w+_', select_key_value(__DIR__ . '/fast_io1.dat', 16386, 191, 1))
+	
 ]);
 
 
 print_r([
-	find_array_by_key(__DIR__ . '/fast_io1.dat', '\\w+_1', 12, 0, 2),
-	find_array_by_key(__DIR__ . '/fast_io1.dat', 'index_3', 2, 0, 2)
-]);
-print_r([
-	select_key_value(__DIR__ . '/fast_io1.dat', 16386, 8192, 1),
+	select_key_value(__DIR__ . '/fast_io1.dat', 16386, 12, 1),
 	select_key_value(__DIR__ . '/fast_io1.dat', 1, 8192, 0),
 ]);
 
@@ -137,7 +140,6 @@ print_r([
 	'detect_align_size',
 	detect_align_size(__DIR__ . '/fast_io1.dat'),
 ]);
-
 
 print_r([
 	'select_key_value',
@@ -189,8 +191,9 @@ print_r([
 
 print_r([
 	'hide_key_value_pair',
-	hide_key_value_pair(__DIR__ . '/fast_io1.dat', 'index_350')
+	hide_key_value_pair(__DIR__ . '/fast_io1.dat', 'index_6')
 ]);
+
 
 
 print_r([
@@ -203,12 +206,11 @@ print_r([
 print_r([
 	'find_value_by_key',
 	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_360'),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', 'апдейт', 1),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index', 2),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+_1', 3),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+_1', 4),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', 'апдейт', 0),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index', 0),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+_1', 10),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+_1', 10),
 ]);
-
 
 
 
@@ -269,7 +271,7 @@ delete_key_value_pair(__DIR__ . '/fast_io3.dat');
 
 
 print_r(__DIR__ . '/fast_io4.dat' . "\n");
-for($i=0; $i <=10; $i++){
+for($i=0; $i <=110; $i++){
 	indexed_write_key_value_pair(__DIR__ . '/fast_io4.dat', 'index_' . $i, 'data_indexed_write_key_value_pair_' . $i . "\n");
 
 	print_r($i . ', ');
@@ -280,6 +282,13 @@ print_r([
 	trim(indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_10'))
 ]);
 
+print_r([
+	'indexed_find_value_by_key',
+	indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_100')
+]);
+
+
+
 delete_key_value_pair(__DIR__ . '/fast_io4.dat.index', 'index_8');
 
 print_r([
@@ -287,7 +296,10 @@ print_r([
 	indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_8')
 ]);
 
+
 sleep(10);
+
+
 
 
 $start= microtime(true);
