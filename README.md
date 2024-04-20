@@ -79,7 +79,7 @@ ini_set('fast_io.buffer_size', 8192); // 8 KB
 - Specify the buffer size based on the size of the data chunk; the default value of 4096 is sufficient for working with strings not larger than 4096 bytes.
 - With a large buffer size, unnecessary file reads are possible, for example, during a full-text search, when the value can be found at the beginning of the file, and it will be read by the size of the buffer.
 - The buffer value must be a multiple of the 4096 byte cache memory page.
-- In string search operations, a dynamic dynamic_buffer buffer is created.
+- In string search operations, a dynamic_buffer is created.
 
 dynamic_buffer is used to store parts of a file that are read into memory to search for a specific key or perform a mapping with a regular expression. dynamic_buffer is based on the following principles:
 
