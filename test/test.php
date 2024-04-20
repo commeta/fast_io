@@ -1,6 +1,6 @@
 <?php
 /*
- * Fast_IO (pre-release) Extension for PHP 8
+ * Fast_IO (pre-release beta) Extension for PHP 8
  * https://github.com/commeta/fast_io
  * 
  * Copyright 2024 commeta <dcs-spb@ya.ru>
@@ -116,6 +116,21 @@ for($i=0; $i <=500; $i++){
 }
 
 
+print_r([
+	find_value_by_key(__DIR__ . '/fast_io1.dat', '\\w+_1', 10),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_3', 0)
+]);
+
+
+print_r([
+	find_array_by_key(__DIR__ . '/fast_io1.dat', '\\w+_1', 12, 0, 2),
+	find_array_by_key(__DIR__ . '/fast_io1.dat', 'index_3', 2, 0, 2)
+]);
+print_r([
+	select_key_value(__DIR__ . '/fast_io1.dat', 16386, 8192, 1),
+	select_key_value(__DIR__ . '/fast_io1.dat', 1, 8192, 0),
+]);
+
 
 
 print_r([
@@ -141,6 +156,7 @@ print_r([
 	'pop_key_value_pair',
 	pop_key_value_pair(__DIR__ . '/fast_io1.dat', 8192),
 ]);
+
 
 
 
@@ -189,8 +205,8 @@ print_r([
 	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_360'),
 	find_value_by_key(__DIR__ . '/fast_io1.dat', 'апдейт', 1),
 	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index', 2),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+_2', 4),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+_2', 6),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+_1', 3),
+	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+_1', 4),
 ]);
 
 
