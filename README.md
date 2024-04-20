@@ -79,11 +79,22 @@ ini_set('fast_io.buffer_size', 8192); // 8 KB
 - Specify the buffer size based on the size of the data chunk; the default value of 4096 is sufficient for working with strings not larger than 4096 bytes.
 - With a large buffer size, unnecessary file reads are possible, for example, during a full-text search, when the value can be found at the beginning of the file, and it will be read by the size of the buffer.
 - The buffer value must be a multiple of the 4096 byte cache memory page.
+- In string search operations, a dynamic dynamic_buffer buffer is created.
+
+dynamic_buffer is used to store parts of a file that are read into memory to search for a specific key or perform a mapping with a regular expression. dynamic_buffer is based on the following principles:
+
+### How dynamic_buffer Works
+
+1. **Initialization and Size**: The buffer is initialized with the initial size defined by the value fast_io.buffer_size.
+
+2. **Reading from a File**: Data is read from the file in blocks of size fast_io.buffer_size and added to dynamic_buffer. In string search mode, if the string does not fit into the current buffer size, dynamic_buffer increases by the size of fast_io.buffer_size at each iteration of reading from the file.
+
+3. **Size Increase**: dynamic_buffer size increases by ini_buffer_size. The increase occurs using the erealloc function, which tries to change the size of the already allocated memory, while preserving existing data.
+
 
 ## Conclusion
 
 Fast_IO represents a significant advancement in PHP data file management, offering unparalleled speed, efficiency, and reliability for handling large volumes of key-value pairs. Its comprehensive feature set makes it an ideal choice for developers seeking to optimize their data-driven applications.
-
 
 ---
 
