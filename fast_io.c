@@ -417,6 +417,84 @@ PHP_FUNCTION(find_array_by_key) {
                 found_count++;
             }
 
+
+
+
+            if(search_state == 20 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){
+                found_count++;
+
+                if(search_start < found_count){
+                    add_count++;
+// попробовать добавить вначале в массив
+
+
+
+
+                    //zval matches;
+                    //find_matches_in_string(&matches, &index_key, &lineStart);
+                    
+                    // Добавляем массив совпадений в возвращаемый массив
+                    //add_next_index_zval(return_value, &matches);
+
+
+
+/*
+                    MatchResult result;
+                    if (find_matches(index_key, lineStart, &result) > 0) {
+                        // Инициализация return_value как пустого массива
+                        zval return_matched;
+                        array_init(&return_matched);
+
+                        // Добавление найденных совпадений в массив
+                        for (size_t i = 0; i < result.count; i++) {
+                            add_next_index_string(&return_matched, result.matches[i]);
+                        }
+
+                        add_next_index_zval(return_value, &return_matched);
+
+                        // Освобождение памяти
+                        for (size_t i = 0; i < result.count; i++) {
+                            free(result.matches[i]);
+                        }
+
+                        free(result.matches);
+                    }
+*/
+                    
+
+
+
+
+
+/*
+                    int rc;
+                    PCRE2_SIZE *ovector;
+                    size_t start_offset = 0;
+
+                    zval return_matched; // Объявляем переменную типа zval для хранения массива совпадений
+                    array_init(&return_matched); // Инициализируем массив совпадений
+
+
+                    while ((rc = pcre2_match(re, lineStart, lineLength, start_offset, 0, match_data, NULL)) > 0) {
+                        ovector = pcre2_get_ovector_pointer(match_data);
+                        
+                        for (int i = 0; i < rc; i++) {
+                            long start = (long)ovector[2*i];
+                            long end = (long)ovector[2*i+1];
+                            add_next_index_stringl(&return_matched, (char *)lineStart + start, end - start);    
+                        }
+                        
+                        start_offset = ovector[1]; // Обновляем позицию начала поиска для следующего совпадения
+                    }
+
+                    //add_next_index_zval(return_value, &return_matched);
+                    ZVAL_COPY_VALUE(return_value, &return_matched);
+*/
+
+
+                }
+            }
+
             search_offset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
 
@@ -460,6 +538,12 @@ PHP_FUNCTION(find_array_by_key) {
 
     fclose(fp);
     
+    if(search_state > 19){
+        free_key_array(&keys);
+        free_key_value_array(&keys_values);
+        return;
+    }
+
     if(
         search_state == 0 || 
         search_state == 10
@@ -614,43 +698,47 @@ PHP_FUNCTION(find_value_by_key) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 PHP_FUNCTION(indexed_find_value_by_key) {
     char *filename, *index_key;
     size_t filename_len, index_key_len;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &filename, &filename_len, &index_key, &index_key_len) == FAILURE) {
-        RETURN_FALSE; // Неправильные параметры вызова функции
-    }
-
-    char index_filename[filename_len + 7];
-    snprintf(index_filename, filename_len + 7, "%s.index", filename);
-
-    FILE *data_fp = fopen(filename, "r");
-    FILE *index_fp = fopen(index_filename, "r");
-
-    if (!data_fp) {
-        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
-        fclose(index_fp);
         RETURN_FALSE;
     }
 
+    char index_filename[filename_len + 7];
+    snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
+
+    FILE *data_fp = fopen(filename, "r");
+    if (!data_fp) {
+        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
+        RETURN_FALSE;
+    }
+
+    FILE *index_fp = fopen(index_filename, "r");
     if (!index_fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
         fclose(data_fp);
         RETURN_FALSE;
     }
 
-    // Блокировка файла для записи
-    if (flock(fileno(data_fp), LOCK_EX) == -1) {
+    if (flock(fileno(data_fp), LOCK_EX) == -1 || flock(fileno(index_fp), LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        fclose(data_fp); // Это также разблокирует файл
-        fclose(index_fp);
-        RETURN_FALSE;
-    }
-    // Блокировка файла для записи
-    if (flock(fileno(index_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        fclose(data_fp); // Это также разблокирует файл
+        fclose(data_fp);
         fclose(index_fp);
         RETURN_FALSE;
     }
@@ -658,38 +746,32 @@ PHP_FUNCTION(indexed_find_value_by_key) {
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+    if (!dynamic_buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(data_fp);
+        fclose(index_fp);
+        RETURN_FALSE;
+    }
 
     ssize_t bytesRead;
-    size_t current_size = 0; // Текущий размер данных в динамическом буфере
+    size_t current_size = 0;
     bool found_match = false;
     char *found_value = NULL;
-    bool isEOF;
 
-    while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, index_fp)) > 0) {
+    while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size - current_size, index_fp)) > 0) {
         current_size += bytesRead;
-        // Проверяем, достигли ли мы конца файла (EOF)
-        isEOF = feof(index_fp);
-        
-        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
-            // Если это EOF и последний символ не является переводом строки,
-            // добавляем перевод строки для упрощения обработки
-            dynamic_buffer[current_size ] = '\n';
-            current_size++;
-        }
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
         char *lineEnd;
-        while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
-            ssize_t lineLength = lineEnd - lineStart + 1;
-            *lineEnd = '\0';
 
+        while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
+            *lineEnd = '\0';
             if (strstr(lineStart, index_key) != NULL) {
-                found_value = estrdup(lineStart + index_key_len + 1); // Пропускаем ключ и пробел
+                found_value = estrdup(lineStart + index_key_len + 1);
                 found_match = true;
                 break;
             }
-
             lineStart = lineEnd + 1;
         }
 
@@ -698,74 +780,72 @@ PHP_FUNCTION(indexed_find_value_by_key) {
         current_size -= (lineStart - dynamic_buffer);
         memmove(dynamic_buffer, lineStart, current_size);
 
-        if (!isEOF) {
-            current_size -= (lineStart - dynamic_buffer);
-            memmove(dynamic_buffer, lineStart, current_size);
-
-            if (current_size + ini_buffer_size > dynamic_buffer_size) {
-                dynamic_buffer_size += ini_buffer_size;
-                dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!dynamic_buffer) {
-                    php_error_docref(NULL, E_WARNING, "Out of memory");
-                    break;
-                }
+        if (current_size + ini_buffer_size > dynamic_buffer_size) {
+            dynamic_buffer_size += ini_buffer_size;
+            char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+            if (!temp_buffer) {
+                php_error_docref(NULL, E_WARNING, "Out of memory");
+                efree(dynamic_buffer);
+                fclose(data_fp);
+                fclose(index_fp);
+                RETURN_FALSE;
             }
+            dynamic_buffer = temp_buffer;
         }
     }
 
     efree(dynamic_buffer);
+    fclose(index_fp);
 
-    if (found_value == NULL) {
+    if (!found_match) {
+        fclose(data_fp);
         RETURN_FALSE;
-    } else {
-        // Находим позицию двоеточия в строке
-        char *colon_ptr = strchr(found_value, ':');
-        if (!colon_ptr) {
-            fclose(data_fp);
-            fclose(index_fp);
-            efree(found_value);
-            RETURN_FALSE;
-        }
+    }
 
-        // Конвертируем данные до двоеточия в long
-        *colon_ptr = '\0'; // временно заменяем двоеточие на нулевой символ для корректной работы atol
-        long offset = atol(found_value);
-
-        // Конвертируем данные после двоеточия в size_t через strtoul для большей корректности
-        size_t size = (size_t)strtoul(colon_ptr + 1, NULL, 10);
-
-        if (!size || !offset) {
-            fclose(data_fp);
-            fclose(index_fp);
-            efree(found_value);
-            RETURN_FALSE;
-        }
-
+    char *colon_ptr = strchr(found_value, ':');
+    if (!colon_ptr) {
         efree(found_value);
+        fclose(data_fp);
+        RETURN_FALSE;
+    }
 
-        if(fseek(data_fp, offset , SEEK_SET) < 0){
+    *colon_ptr = '\0';
+    long offset = atol(found_value);
+    size_t size = (size_t)strtoul(colon_ptr + 1, NULL, 10);
+    efree(found_value);
+
+    if (size > 0) {
+        if (fseek(data_fp, offset, SEEK_SET) < 0) {
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
+            fclose(data_fp);
             RETURN_FALSE;
         }
-        char *dataBuffer = emalloc(size);
+
+        char *dataBuffer = emalloc(size + 1);
+        if (!dataBuffer) {
+            php_error_docref(NULL, E_WARNING, "Outof memory");
+            fclose(data_fp);
+            RETURN_FALSE;
+        }
 
         bytesRead = fread(dataBuffer, 1, size, data_fp);
-        if(bytesRead < 0) {
-            fclose(data_fp);
-            fclose(index_fp);
+        if (bytesRead < size) {
             efree(dataBuffer);
+            fclose(data_fp);
             php_error_docref(NULL, E_WARNING, "Failed to read data block.");
             RETURN_FALSE;
         }
 
-        dataBuffer[size] = '\0'; // Добавляем нуль-терминатор
-
-        fclose(data_fp);
-        fclose(index_fp);
+        dataBuffer[size] = '\0';
         RETVAL_STRING(dataBuffer);
         efree(dataBuffer);
+    } else {
+        RETURN_FALSE;
     }
+
+    fclose(data_fp);
 }
+
 
 
 /* Реализация функции */
