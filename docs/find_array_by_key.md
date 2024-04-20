@@ -17,7 +17,7 @@ mixed find_array_by_key(string $filename, string $index_key[, int search_state =
 - **index_key** - Ключ, по которому осуществляется поиск значения.
 - **search_state** (int, optional) - Режим поиска.
 - **search_start** (int, optional) - Стартовая строка начала выборки.
-- **search_length** (int, optional) - Длина массива выборки.
+- **search_limit** (int, optional) - Ограничение массива выборки.
 
 
 #### Режимы поиска
