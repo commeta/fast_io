@@ -294,7 +294,7 @@ PHP_FUNCTION(find_array_by_key) {
         if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
             // Если это EOF и последний символ не является переводом строки,
             // добавляем перевод строки для упрощения обработки
-            dynamic_buffer[current_size ] = '\n';
+            dynamic_buffer[current_size] = '\n';
             current_size++;
         }
         
@@ -622,7 +622,7 @@ PHP_FUNCTION(indexed_find_value_by_key) {
         RETURN_FALSE; // Неправильные параметры вызова функции
     }
 
-    char *index_filename = emalloc(filename_len + 7); // Дополнительные символы для ".index" и терминирующего нуля
+    char index_filename[filename_len + 7];
     snprintf(index_filename, filename_len + 7, "%s.index", filename);
 
     FILE *data_fp = fopen(filename, "r");
@@ -631,14 +631,12 @@ PHP_FUNCTION(indexed_find_value_by_key) {
     if (!data_fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         fclose(index_fp);
-        efree(index_filename);
         RETURN_FALSE;
     }
 
     if (!index_fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
         fclose(data_fp);
-        efree(index_filename);
         RETURN_FALSE;
     }
 
@@ -647,7 +645,6 @@ PHP_FUNCTION(indexed_find_value_by_key) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         fclose(data_fp); // Это также разблокирует файл
         fclose(index_fp);
-        efree(index_filename);
         RETURN_FALSE;
     }
     // Блокировка файла для записи
@@ -655,7 +652,6 @@ PHP_FUNCTION(indexed_find_value_by_key) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         fclose(data_fp); // Это также разблокирует файл
         fclose(index_fp);
-        efree(index_filename);
         RETURN_FALSE;
     }
 
@@ -718,7 +714,6 @@ PHP_FUNCTION(indexed_find_value_by_key) {
     }
 
     efree(dynamic_buffer);
-    efree(index_filename);
 
     if (found_value == NULL) {
         RETURN_FALSE;
@@ -820,7 +815,7 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
         RETURN_FALSE;
     }
 
-    char *index_filename = emalloc(filename_len + 7); // Дополнительные символы для ".index" и терминирующего нуля
+    char index_filename[filename_len + 7];
     snprintf(index_filename, filename_len + 7, "%s.index", filename);
 
     FILE *data_fp = fopen(filename, "ab+");
@@ -829,14 +824,12 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
     if (!data_fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         if (index_fp) fclose(index_fp);
-        efree(index_filename);
         RETURN_LONG(-1);
     }
 
     if (!index_fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
         fclose(data_fp);
-        efree(index_filename);
         RETURN_LONG(-1);
     }
 
@@ -844,12 +837,14 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
     if (flock(fileno(data_fp), LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         fclose(data_fp); // Это также разблокирует файл
+        fclose(index_fp); 
         RETURN_LONG(-2);
     }
     // Блокировка файла для записи
     if (flock(fileno(index_fp), LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         fclose(index_fp); // Это также разблокирует файл
+        fclose(data_fp);
         RETURN_LONG(-2);
     }
 
@@ -863,7 +858,6 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
         fclose(data_fp);
         fclose(index_fp);
-        efree(index_filename);
         RETURN_LONG(-3);
     }
 
@@ -873,7 +867,6 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
     // Закрытие файлов
     fclose(data_fp);
     fclose(index_fp);
-    efree(index_filename);
     RETURN_LONG(1);
 }
 
@@ -1176,8 +1169,6 @@ PHP_FUNCTION(rebuild_data_file) { // рефакторинг
 
 
 
-
-
 /* Функция для извлечения и удаления последней строки из файла */
 PHP_FUNCTION(pop_key_value_pair) { // рефакторинг
     char *filename;
@@ -1366,25 +1357,8 @@ PHP_FUNCTION(pop_key_value_pair) { // рефакторинг
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* Реализация функции */
-PHP_FUNCTION(hide_key_value_pair) { // рефакторинг
+PHP_FUNCTION(hide_key_value_pair) {
     char *filename, *index_key;
     size_t filename_len, index_key_len;
 
@@ -1392,88 +1366,105 @@ PHP_FUNCTION(hide_key_value_pair) { // рефакторинг
         RETURN_FALSE;
     }
 
-    int fd = open(filename, O_RDWR);
-    if (fd == -1) {
+    FILE *fp = fopen(filename, "r+");
+    if (fp == NULL) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
-        RETURN_FALSE;
         RETURN_LONG(-1);
     }
 
-    if (lock_file(fd, LOCK_EX) == -1) { // Блокировка файла на запись
-        close(fd);
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        RETURN_FALSE;
+    // Попытка установить блокирующую блокировку на запись
+    if (flock(fileno(fp), LOCK_EX) < 0) {
+        php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+        fclose(fp);
         RETURN_LONG(-2);
     }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+
     ssize_t bytesRead;
-    bool found_value = false;
-
-    off_t writeOffset = 0; // Смещение для записи обновленных данных
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
+    bool found_match = false;
 
-    while ((bytesRead = read(fd, dynamic_buffer + current_size, ini_buffer_size)) > 0) {
+    bool isEOF;
+    off_t writeOffset = 0; // Смещение для записи обновленных данных
+
+    while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
-        dynamic_buffer[current_size] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
+        // Проверяем, достигли ли мы конца файла (EOF)
+        isEOF = feof(fp);
+        
+        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
+            // Если это EOF и последний символ не является переводом строки,
+            // добавляем перевод строки для упрощения обработки
+            dynamic_buffer[current_size ] = '\n';
+            current_size++;
+        }
+        
+        dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
         char *lineEnd;
-
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
-            *lineEnd = '\0'; // Завершаем строку нуль-терминатором
             ssize_t lineLength = lineEnd - lineStart + 1;
+            *lineEnd = '\0';
 
-            if (strstr(lineStart, index_key) != NULL && lineStart[index_key_len] == ' ') {
+            if (strstr(lineStart, index_key) != NULL) {
                 // Найдено совпадение ключа, подготавливаем замену
                 char *replacement = emalloc(index_key_len + 1);
                 memset(replacement, 127, index_key_len); // Заполнение символами DEL
                 replacement[index_key_len] = ' '; // Сохраняем пробел после ключа
                 
                 // Перемещаемся к началу найденной строки и записываем замену
-                lseek(fd, writeOffset, SEEK_SET);
-                if(write(fd, replacement, index_key_len + 1) == -1) {
+                fseek(fp, writeOffset , SEEK_SET);
+
+                if (fwrite(replacement, 1, index_key_len + 1, fp) < 0) {
                     efree(replacement);
                     efree(dynamic_buffer);
-                    close(fd);
                     php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
+                    fclose(fp);
                     RETURN_LONG(-3);
                 }
 
                 efree(replacement);
-                found_value = true;
+                found_match = true;
                 break;
             }
 
-            writeOffset += lineLength; // Обновляем смещение для записи
-            lineStart = lineEnd + 1; // Переходим к следующей строке
+            writeOffset += lineLength; // Обновляем смещение
+            lineStart = lineEnd + 1;
         }
 
-        if (found_value) break;
+        if (found_match) break;
 
-        // Перемещаем непрочитанную часть в начало буфера и обновляем current_size
-        current_size -= (lineStart - dynamic_buffer);
-        memmove(dynamic_buffer, lineStart, current_size);
+        if (!isEOF) {
+            current_size -= (lineStart - dynamic_buffer);
+            memmove(dynamic_buffer, lineStart, current_size);
 
-        // Проверяем, нужно ли расширить буфер
-        if (current_size == dynamic_buffer_size) {
-            dynamic_buffer_size *= 2; // Удваиваем размер буфера
-            dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+            if (current_size + ini_buffer_size > dynamic_buffer_size) {
+                dynamic_buffer_size += ini_buffer_size;
+                dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+                if (!dynamic_buffer) {
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    break;
+                }
+            }
         }
     }
 
-    close(fd); // Это также разблокирует файл
     efree(dynamic_buffer);
-    RETURN_LONG(1);
+    fclose(fp);
+
+    if(found_match) RETURN_LONG(1);
+    RETURN_LONG(0);
 }
 
 
 
 
 /* Реализация функции */
-PHP_FUNCTION(get_index_keys) { // рефакторинг
+PHP_FUNCTION(get_index_keys) {
     char *filename;
     size_t filename_len;
     zend_long mode = 0;
@@ -1482,46 +1473,61 @@ PHP_FUNCTION(get_index_keys) { // рефакторинг
         RETURN_FALSE;
     }
 
-    int fd = open(filename, O_RDWR);
-    if (fd == -1) {
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
     }
 
-    if (lock_file(fd, LOCK_EX) == -1) { // Блокировка файла на запись
-        close(fd);
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
+    // Попытка установить блокирующую блокировку на запись
+    if (flock(fileno(fp), LOCK_EX) < 0) {
+        php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+        fclose(fp);
         RETURN_FALSE;
     }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+
     ssize_t bytesRead;
+    size_t current_size = 0; // Текущий размер данных в динамическом буфере
+    bool found_match = false;
+
+    bool isEOF;
 
     KeyValueArray keys_values = {0};
     KeyArray keys = {0};
 
     off_t writeOffset = 0; // Смещение для записи обновленных данных
-    size_t current_size = 0; // Текущий размер данных в динамическом буфере
 
-    while ((bytesRead = read(fd, dynamic_buffer + current_size, ini_buffer_size)) > 0) {
+
+    while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
-        dynamic_buffer[current_size] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
+        // Проверяем, достигли ли мы конца файла (EOF)
+        isEOF = feof(fp);
+        
+        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
+            // Если это EOF и последний символ не является переводом строки,
+            // добавляем перевод строки для упрощения обработки
+            dynamic_buffer[current_size ] = '\n';
+            current_size++;
+        }
+        
+        dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
         char *lineEnd;
-
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
-            *lineEnd = '\0'; // Завершаем строку нуль-терминатором
             ssize_t lineLength = lineEnd - lineStart + 1;
+            *lineEnd = '\0';
 
             if(mode == 0){
                 char *spacePos = strchr(lineStart, ' ');
                 if (spacePos) *spacePos = '\0';
                 if(add_key(&keys, lineStart) == false){
                     php_error_docref(NULL, E_WARNING, "Out of memory");
-                    mode = -1;
+                    found_match = true;
                     break;
                 }
             }
@@ -1532,28 +1538,34 @@ PHP_FUNCTION(get_index_keys) { // рефакторинг
                 value[1] = lineLength;
                 if(add_key_value(&keys_values, value) == false){
                     php_error_docref(NULL, E_WARNING, "Out of memory");
-                    mode = -1;
+                    found_match = true;
                     break;
                 }
             }
-            
+
             writeOffset += lineLength; // Обновляем смещение
-            lineStart = lineEnd + 1; // Переходим к следующей строке
+            lineStart = lineEnd + 1;
         }
 
-        // Перемещаем непрочитанную часть в начало буфера и обновляем current_size
-        current_size -= (lineStart - dynamic_buffer);
-        memmove(dynamic_buffer, lineStart, current_size);
+        if (found_match) break;
 
-        // Проверяем, нужно ли расширить буфер
-        if (current_size == dynamic_buffer_size) {
-            dynamic_buffer_size += ini_buffer_size; // Удваиваем размер буфера
-            dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+        if (!isEOF) {
+            current_size -= (lineStart - dynamic_buffer);
+            memmove(dynamic_buffer, lineStart, current_size);
+
+            if (current_size + ini_buffer_size > dynamic_buffer_size) {
+                dynamic_buffer_size += ini_buffer_size;
+                dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+                if (!dynamic_buffer) {
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    break;
+                }
+            }
         }
     }
 
-    close(fd); // Это также разблокирует файл
     efree(dynamic_buffer);
+    fclose(fp);
 
     if(mode == 0){
         array_init(return_value);
@@ -1578,6 +1590,7 @@ PHP_FUNCTION(get_index_keys) { // рефакторинг
     free_key_array(&keys);
     if(mode == -1) RETURN_FALSE;
 }
+
 
 
 // Функция обновления пары ключ-значение
@@ -1748,7 +1761,6 @@ PHP_FUNCTION(insert_key_value) {
         RETURN_LONG(-4);
     }
     
-    //fflush(fp); // Сброс буфера вывода
     fclose(fp); // Это также разблокирует файл
 
     // Возврат номера добавленной строки
@@ -1828,6 +1840,9 @@ PHP_FUNCTION(select_key_value) {
 }
 
 
+
+
+
 PHP_FUNCTION(update_key_value) {
     char *filename;
     size_t filename_len;
@@ -1884,7 +1899,9 @@ PHP_FUNCTION(update_key_value) {
 }
 
 
-PHP_FUNCTION(detect_align_size) { // рефакторинг
+
+
+PHP_FUNCTION(detect_align_size) {
     char *filename;
     size_t filename_len;
 
@@ -1892,15 +1909,16 @@ PHP_FUNCTION(detect_align_size) { // рефакторинг
         RETURN_FALSE;
     }
 
-    int fd = open(filename, O_RDONLY);
-    if (fd == -1) {
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
     }
 
-    if (lock_file(fd, LOCK_EX) == -1) { // Блокировка файла
-        close(fd);
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
+    // Попытка установить блокирующую блокировку на запись
+    if (flock(fileno(fp), LOCK_EX) < 0) {
+        php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+        fclose(fp);
         RETURN_FALSE;
     }
 
@@ -1910,7 +1928,7 @@ PHP_FUNCTION(detect_align_size) { // рефакторинг
     ssize_t bytes_read;
     long max_length = 0, current_length = 0;
 
-    while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
+    while ((bytes_read = fread(buffer, 1, ini_buffer_size, fp)) > 0) {
         for (ssize_t i = 0; i < bytes_read; ++i) {
             if (buffer[i] == '\n') { // Конец текущей строки
                 if (current_length > max_length) {
@@ -1923,8 +1941,8 @@ PHP_FUNCTION(detect_align_size) { // рефакторинг
         }
     }
 
-    close(fd);
     efree(buffer);
+    fclose(fp);
 
     // Возвращаем максимальную длину строки. Если строка оканчивается в конце файла без '\n', её длина уже учтена.
     RETURN_LONG(max_length);
