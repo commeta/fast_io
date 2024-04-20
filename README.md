@@ -51,7 +51,7 @@ For more information on how to install, configure, and use Fast_IO in your PHP 8
 
 ## Parameters
 
-buffer_size is a configuration parameter that determines the buffer size for read and write operations. Specifying the optimal buffer size can significantly improve performance when working with large volumes of data.
+buffer_size is a configuration parameter that determines the buffer size for read operations. Specifying the optimal buffer size can significantly improve performance when working with large volumes of data.
 
 #### Setting via php.ini
 
@@ -91,13 +91,13 @@ dynamic_buffer is used to store parts of a file that are read into memory to sea
 
 3. **Size Increase**: dynamic_buffer size increases by ini_buffer_size. The increase occurs using the erealloc function, which tries to change the size of the already allocated memory, while preserving existing data.
 
-### Using the System Buffer
+### Using the system buffer
 
 When you work with file operations, such as reading from a file using buffer functions, a system buffer is utilized. This buffer serves as an intermediary storage for data between the physical file on the disk and the computer's RAM. The system buffer allows for optimization of input/output by minimizing the number of disk accesses, which significantly enhances the performance of read and write operations.
 
 During operation, the system buffer is used for the temporary storage of data read from a file before it is placed into the user buffer (dynamic_buffer). This enables efficient reading of data in large blocks, reducing the number of disk accesses.
 
-### Advantages of Using the System Buffer
+### Advantages of using the System Buffer
 
 1. Efficiency: Reading data in large blocks and their temporary storage in the system buffer reduces the load on the disk system and enhances the overall performance of input/output operations.
 
