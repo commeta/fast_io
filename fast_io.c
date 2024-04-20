@@ -90,7 +90,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_array_by_key, 1, 2, IS_ARRA
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, search_state, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, search_start, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, search_length, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, search_limit, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_value_by_key, 1, 2, IS_STRING, 1)
@@ -215,9 +215,9 @@ PHP_FUNCTION(find_array_by_key) {
     size_t filename_len, index_key_len;
     zend_long search_state = 0;
     zend_long search_start = 0;
-    zend_long search_length = 1;
+    zend_long search_limit = 1;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|lll", &filename, &filename_len, &index_key, &index_key_len, &search_state, &search_start, &search_length) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|lll", &filename, &filename_len, &index_key, &index_key_len, &search_state, &search_start, &search_limit) == FAILURE) {
         RETURN_FALSE; // Неправильные параметры вызова функции
     }
 
@@ -237,11 +237,8 @@ PHP_FUNCTION(find_array_by_key) {
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
-    char *found_value = (char *)emalloc(24);
 
     ssize_t bytesRead;
-
-    zend_long found_val = 0;
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
     off_t search_offset = 0; // Смещение строки поиска
 
@@ -255,6 +252,9 @@ PHP_FUNCTION(find_array_by_key) {
     pcre2_match_data *match_data; 
 
     KeyArray keys = {0};
+    KeyValueArray keys_values = {0};
+
+    int value[2];
 
     if(search_state > 9){
         PCRE2_SIZE erroffset;
@@ -291,8 +291,7 @@ PHP_FUNCTION(find_array_by_key) {
                 if(search_start < found_count){
                     add_count++;
                     
-                    size_t len = strlen(lineStart);
-                    for (int i = len - 1; i >= 0; --i) {
+                    for (int i = lineLength - 2; i >= 0; --i) {
                         if(lineStart[i] == ' ') lineStart[i] = '\0';
                         else break;
                     }
@@ -311,8 +310,9 @@ PHP_FUNCTION(find_array_by_key) {
                 if(search_start < found_count){
                     add_count++;
 
-                    snprintf(found_value, 23, "%ld", line_count);
-                    if(add_key(&keys, found_value) == false){
+                    value[0] = line_count;
+                    value[1] = lineLength - 1;
+                    if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         found_match = true;
                         break;
@@ -326,8 +326,9 @@ PHP_FUNCTION(find_array_by_key) {
                 if(search_start < found_count){
                     add_count++;
 
-                    snprintf(found_value, 23, "%ld", search_offset);
-                    if(add_key(&keys, found_value) == false){
+                    value[0] = search_offset;
+                    value[1] = lineLength - 1;
+                    if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         found_match = true;
                         break;
@@ -339,14 +340,13 @@ PHP_FUNCTION(find_array_by_key) {
                 found_count++;
             }
 
-            if(search_state == 10 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
+            if(search_state == 10 && pcre2_match(re, lineStart, lineLength - 1, 0, 0, match_data, NULL) > 0){
                 found_count++;
 
                 if(search_start < found_count){
                     add_count++;
 
-                    size_t len = strlen(lineStart);
-                    for (int i = len - 1; i >= 0; --i) {
+                    for (int i = lineLength - 2; i >= 0; --i) {
                         if(lineStart[i] == ' ') lineStart[i] = '\0';
                         else break;
                     }
@@ -359,14 +359,15 @@ PHP_FUNCTION(find_array_by_key) {
                 }
             }
 
-            if(search_state == 11 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
+            if(search_state == 11 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){
                 found_count++;
 
                 if(search_start < found_count){
                     add_count++;
                     
-                    snprintf(found_value, 23, "%ld", line_count);
-                    if(add_key(&keys, found_value) == false){
+                    value[0] = line_count;
+                    value[1] = lineLength - 1;
+                    if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         found_match = true;
                         break;
@@ -374,14 +375,15 @@ PHP_FUNCTION(find_array_by_key) {
                 }
             }
 
-            if(search_state == 12 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
+            if(search_state == 12 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){
                 found_count++;
 
                 if(search_start < found_count){
                     add_count++;
-                    
-                    snprintf(found_value, 23, "%ld", search_offset);
-                    if(add_key(&keys, found_value) == false){
+
+                    value[0] = search_offset;
+                    value[1] = lineLength - 1;
+                    if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         found_match = true;
                         break;
@@ -389,15 +391,14 @@ PHP_FUNCTION(find_array_by_key) {
                 }
             }
 
-            if(search_state == 13 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
+            if(search_state == 13 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){
                 found_count++;
             }
-
 
             search_offset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
 
-            if(add_count >= search_length){
+            if(add_count >= search_limit){
                 found_match = true;
                 break;
             }
@@ -408,10 +409,8 @@ PHP_FUNCTION(find_array_by_key) {
         current_size -= (lineStart - dynamic_buffer);
         memmove(dynamic_buffer, lineStart, current_size);
 
-        if (current_size == dynamic_buffer_size) {
-        //if (current_size + ini_buffer_size > dynamic_buffer_size) {
-            //dynamic_buffer_size += ini_buffer_size;
-            dynamic_buffer_size *= 2;
+        if (current_size + ini_buffer_size > dynamic_buffer_size) {
+            dynamic_buffer_size += ini_buffer_size;
             dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!dynamic_buffer) {
                 php_error_docref(NULL, E_WARNING, "Out of memory");
@@ -425,26 +424,42 @@ PHP_FUNCTION(find_array_by_key) {
     if (search_state > 9 && re != NULL) pcre2_code_free(re);
     if (search_state > 9 && match_data != NULL) pcre2_match_data_free(match_data);
 
-    if(search_state == 3 || search_state == 13){                    
-        snprintf(found_value, 11, "%ld", found_count);
-        if(add_key(&keys, found_value) == false){
+    if(search_state == 3 || search_state == 13){      
+        value[0] = found_count;
+        value[1] = line_count;
+
+        if(add_key_value(&keys_values, value) == false){
             php_error_docref(NULL, E_WARNING, "Out of memory");
         }
     }
 
     fclose(fp);
-    efree(found_value);
-
     array_init(return_value);
-    for (size_t i = 0; i < keys.count; i++) {
-        add_next_index_string(return_value, keys.keys[i]);
+
+    if(
+        search_state == 0 || 
+        search_state == 10
+    ){
+        for (size_t i = 0; i < keys.count; i++) {
+            add_next_index_string(return_value, keys.keys[i]);
+        }
+    } else {
+        for (size_t i = 0; i < keys_values.count; i++) {
+            zval key_value_arr;
+            array_init(&key_value_arr);
+
+            add_index_long(&key_value_arr, 0, keys_values.values[i][0]);
+            add_index_long(&key_value_arr, 1, keys_values.values[i][1]);       
+            add_next_index_zval(return_value, &key_value_arr);
+        }
     }
 
     free_key_array(&keys);
+    free_key_value_array(&keys_values);
 }
 
 
-// Функция поиска значения по ключу с чтением файла порциями
+
 PHP_FUNCTION(find_value_by_key) {
     char *filename, *index_key;
     size_t filename_len, index_key_len;
@@ -454,39 +469,33 @@ PHP_FUNCTION(find_value_by_key) {
         RETURN_FALSE; // Неправильные параметры вызова функции
     }
 
-    int fd = open(filename, O_RDONLY);
-    if (fd == -1) {
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_FALSE;
     }
 
     // Попытка установить блокирующую блокировку на запись
-    if (lock_file(fd, LOCK_EX) == -1) {
+    if (flock(fileno(fp), LOCK_EX) < 0) {
         php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
-        close(fd);
+        fclose(fp);
         RETURN_FALSE;
     }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
-    ssize_t bytesRead;
-    char *found_value = NULL;
-    zend_long found_val = 0;
-    size_t current_size = 0; // Текущий размер данных в динамическом буфере
 
-    zend_long found_count = 0;
-    zend_long dynamic_count = ini_buffer_size;
+    ssize_t bytesRead;
+    size_t current_size = 0; // Текущий размер данных в динамическом буфере
+    bool found_match = false;
 
     pcre2_code *re;
     pcre2_match_data *match_data;
 
-    if(search_state == 3 || search_state == 5){
-        found_value = (char *)emalloc(dynamic_count);
-    }
+    char *found_value = NULL;
 
-
-    if(search_state == 3 || search_state == 4){
+    if(search_state > 9){
         PCRE2_SIZE erroffset;
         int errorcode;
         re = pcre2_compile((PCRE2_SPTR)index_key, PCRE2_ZERO_TERMINATED, 0, &errorcode, &erroffset, NULL);
@@ -495,7 +504,7 @@ PHP_FUNCTION(find_value_by_key) {
             PCRE2_UCHAR message[256];
             pcre2_get_error_message(errorcode, message, sizeof(message));
             php_error_docref(NULL, E_WARNING, "PCRE2 compilation failed at offset %d: %s", (int)erroffset, message);
-            close(fd);
+            fclose(fp);
             efree(dynamic_buffer);
             RETURN_FALSE;
         }
@@ -504,77 +513,52 @@ PHP_FUNCTION(find_value_by_key) {
     }
 
 
-    while ((bytesRead = read(fd, dynamic_buffer + current_size, ini_buffer_size)) > 0) {
+    while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
-        dynamic_buffer[current_size] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
+        dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
         char *lineEnd;
-
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
-            *lineEnd = '\0'; // Завершаем строку нуль-терминатором
+            ssize_t lineLength = lineEnd - lineStart + 1;
+            *lineEnd = '\0';
 
-            if (search_state == 0 && strstr(lineStart, index_key) != NULL && lineStart[index_key_len] == ' ') {
-                found_value = estrndup(lineStart + index_key_len + 1, lineEnd - (lineStart + index_key_len + 1));
+            if(search_state == 0 && strstr(lineStart, index_key) != NULL){
+                found_value = estrndup(lineStart, lineLength - 2);
+                found_match = true;
                 break;
             }
 
-            if (search_state == 1 && strstr(lineStart, index_key) != NULL) {
-                found_value = estrndup(lineStart, lineEnd - lineStart);
+            if(search_state == 10 && pcre2_match(re, lineStart, lineLength - 1, 0, 0, match_data, NULL) > 0){
+                found_value = estrndup(lineStart, lineLength - 2);
+                found_match = true;
                 break;
             }
 
-            if (search_state == 2 && strstr(lineStart, index_key) != NULL) {
-                found_val++;
-            }
-
-            if(search_state == 3 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
-                found_value = estrndup(lineStart, lineEnd - lineStart);
-                break;
-            }
-
-            if (search_state == 4 && pcre2_match(re, lineStart, strlen(lineStart), 0, 0, match_data, NULL) > 0){
-                found_val++;
-            }
-
-            lineStart = lineEnd + 1; // Переходим к следующей строке
+            lineStart = lineEnd + 1;
         }
 
-        if (found_value != NULL) break;
+        if (found_match) break;
 
-        // Перемещаем непрочитанную часть в начало буфера и обновляем current_size
         current_size -= (lineStart - dynamic_buffer);
         memmove(dynamic_buffer, lineStart, current_size);
 
-        // Проверяем, нужно ли расширить буфер
-        if (current_size == dynamic_buffer_size) {
-            dynamic_buffer_size *= 2; // Удваиваем размер буфера
-
+        if (current_size + ini_buffer_size > dynamic_buffer_size) {
+            dynamic_buffer_size += ini_buffer_size;
             dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-            if(dynamic_buffer == NULL) {
+            if (!dynamic_buffer) {
                 php_error_docref(NULL, E_WARNING, "Out of memory");
-                efree(found_value);
                 break;
             }
         }
     }
 
-    if(search_state == 3 || search_state == 4){
-        if (re != NULL) pcre2_code_free(re);
-        if (match_data != NULL) pcre2_match_data_free(match_data);
-    }
-
-
-    if(
-        search_state == 2 || 
-        search_state == 4
-    ){
-        found_value = emalloc(12);
-        snprintf(found_value, 11, "%ld", found_val);
-    }
-
     efree(dynamic_buffer);
-    close(fd);
+
+    if (search_state > 9 && re != NULL) pcre2_code_free(re);
+    if (search_state > 9 && match_data != NULL) pcre2_match_data_free(match_data);
+
+    fclose(fp);
 
     if (found_value == NULL) {
         RETURN_FALSE;
