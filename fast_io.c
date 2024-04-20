@@ -1605,6 +1605,7 @@ PHP_FUNCTION(update_key_value_pair) {
 }
 
 
+
 PHP_FUNCTION(insert_key_value) {
     char *filename;
     size_t filename_len;
@@ -1617,27 +1618,22 @@ PHP_FUNCTION(insert_key_value) {
         RETURN_FALSE;
     }
 
-    int fd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0666);
-    if (fd == -1) {
+    FILE *fp = fopen(filename, "ab+"); // Открытие файла для добавления и чтения; бинарный режим
+    if (!fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_LONG(-1);
     }
 
     // Блокировка файла для записи
-    if (lock_file(fd, LOCK_EX) == -1) {
+    if (flock(fileno(fp), LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        close(fd);
+        fclose(fp);
         RETURN_LONG(-2);
     }
 
-    // Получение размера файла для определения номера строки
-    struct stat st;
-    if (fstat(fd, &st) != 0) {
-        php_error_docref(NULL, E_WARNING, "Unable to get file size: %s", filename);
-        close(fd);
-        RETURN_LONG(-3);
-    }
-    off_t file_size = st.st_size;
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
     long line_number = file_size / (index_align + 1); // Учет символа перевода строки
 
     // Подготовка строки к записи с учетом выравнивания
@@ -1645,25 +1641,27 @@ PHP_FUNCTION(insert_key_value) {
     memset(buffer, ' ', index_align); // Заполнение пробелами
     buffer[index_align] = '\n'; // Добавление перевода строки
     buffer[index_align + 1] = '\0';
-    
+
     // Копирование index_key в буфер с учетом выравнивания
     strncpy(buffer, index_key, index_align < index_key_len ? index_align : index_key_len);
 
     // Запись в файл
-    ssize_t written = write(fd, buffer, index_align + 1); // +1 для записи '\n'
+    size_t written = fwrite(buffer, sizeof(char), index_align + 1, fp); // +1 для записи '\n'
     efree(buffer);
-    close(fd); // Это также разблокирует файл
-
+    
     if (written != index_align + 1) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
-        close(fd);
+        fclose(fp);
         RETURN_LONG(-4);
     }
-    close(fd);
+    
+    fflush(fp); // Сброс буфера вывода
+    fclose(fp); // Это также разблокирует файл
 
     // Возврат номера добавленной строки
     RETURN_LONG(line_number + 1); // Нумерация строк начинается с 1
 }
+
 
 
 
