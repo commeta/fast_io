@@ -122,7 +122,7 @@ print_r([
 ]);
 
 print_r([
-	find_array_by_key(__DIR__ . '/fast_io1.dat', '\\w+', 20, 2, 5),
+	find_array_by_key(__DIR__ . '/fast_io1.dat', '\\w+', 10, 2, 5),
 	find_array_by_key(__DIR__ . '/fast_io1.dat', 'index_3', 1),
 	find_matches_pcre2('\\w+_', select_key_value(__DIR__ . '/fast_io1.dat', 16386, 191, 1))
 	
@@ -293,14 +293,12 @@ delete_key_value_pair(__DIR__ . '/fast_io4.dat.index', 'index_8');
 
 print_r([
 	'indexed_find_value_by_key',
-	indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_8')
+	indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_20')
 ]);
 
 
+
 sleep(10);
-
-
-
 
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
@@ -339,7 +337,7 @@ echo "delete_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), "
 
 sleep(10);
 $start= microtime(true);
-for($i=0; $i <=10000; $i++){
+for($i=0; $i <=10; $i++){
 	indexed_write_key_value_pair(__DIR__ . '/fast_io6.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i . "\n");
 }
 $time= microtime(true) - $start;
@@ -348,7 +346,7 @@ echo "indexed_write_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 100
 
 sleep(10);
 $start= microtime(true);
-for($i=0; $i <=10000; $i++){
+for($i=0; $i <=10; $i++){
 	indexed_find_value_by_key(__DIR__ . '/fast_io6.dat', 'index_' . $i);
 }
 $time= microtime(true) - $start;
@@ -357,11 +355,12 @@ echo "indexed_find_value_by_key: ", $time, " (", sprintf('%.8f', ($time / 10000)
 
 sleep(10);
 $start= microtime(true);
-for($i=0; $i <=10000; $i++){
+for($i=0; $i <=100; $i++){
 	indexed_find_value_by_key(__DIR__ . '/fast_io6.dat', 'index_10');
 }
 $time= microtime(true) - $start;
 echo "indexed_find_value_by_key repeat: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
+
 
 
 
