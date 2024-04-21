@@ -34,10 +34,12 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 
 $lock= fopen($data_file_lock, "c+");
 
-
+$is_locked = false; // Признак удержания блокировки параллельным процессом
 if(flock($lock, LOCK_EX | LOCK_NB)) { 
 	// Это условие сработает без ожидания снятия блокировки, если параллельный процесс удерживает блокировку 
-	
+	$is_locked = false;
+} else {
+	$is_locked = true;
 }
 
     
@@ -81,6 +83,7 @@ if(flock($lock, LOCK_EX)) {
 
        
 fclose($lock); // Тоже снимает блокировку  
+
 ```
 
 Результат
