@@ -2,7 +2,7 @@
 
 Стресс тест test.php запускался в однопользовательском режиме, без использования механизма блокировок!
 
-В самом простом случае для реализации транзакции вам достаточно использовать блокировку на уровне файла пример: ipc-example.php
+Для реализации транзакции вам достаточно использовать блокировку на уровне файла пример: ipc-example.php
 
 mysql-adapter использует [greenlion/PHP-SQL-Parser](https://github.com/greenlion/PHP-SQL-Parser), но подойдет любой другой [SQL / SQLI tokenizer parser analyzer](https://github.com/client9/libinjection)
 
