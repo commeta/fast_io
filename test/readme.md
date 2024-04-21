@@ -1,5 +1,29 @@
 # Test
 
+Стресс тест запускался в однопользовательском режиме, без использования механизма блокировок!
+
+в самом простом случае вам достаточно использовать блокировку на уровне файла
+```
+$data_file = __DIR__ . '/data_file.dat';
+if(!file_exists($data_file . '.lock')) touch($data_file . '.lock');
+$lock= fopen($data_file . '.lock', "r+");
+    
+if(flock($lock, LOCK_EX)) {
+   if(file_exists($data_file) && filesize($data_file) > 0){
+      $last_id = filesize($data_file) / ($index_align + 1);
+      $last_id ++;
+   }
+                    
+   $last_id = insert_key_value($data_file, $column_list[0] . "_" . $last_id . ' ' . $insert_values, $index_align);
+
+   // Снимает блокировку
+   flock($lock, LOCK_UN);
+}
+
+// Тоже снимает блокировку         
+fclose($lock);
+```
+
 ## Результаты стресс теста:
 
 ```
