@@ -34,7 +34,7 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 				print_r([
 					time(),
 					$total_time,
-					sys_getloadavg(),
+					$avg,
 					$statArray
 				], true)
 			);
