@@ -415,7 +415,6 @@ PHP_FUNCTION(find_array_by_key) {
             if(search_state == 13 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){
                 found_count++;
             }
-
             search_offset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
 
@@ -1756,7 +1755,7 @@ PHP_FUNCTION(insert_key_value) {
     fclose(fp); // Это также разблокирует файл
 
     // Возврат номера добавленной строки
-    RETURN_LONG(line_number + 1); // Нумерация строк начинается с 1
+    RETURN_LONG(line_number); // Нумерация строк начинается с 0
 }
 
 
