@@ -12,12 +12,11 @@ $lock= fopen($data_file . '.lock', "r+");
 if(flock($lock, LOCK_EX)) { // В этом месте функция ждет в очереди, пока параллельные процессы снимут блокировку
    if(file_exists($data_file) && filesize($data_file) > 0){
       $last_line_number = filesize($data_file) / ($align + 1);
-      $last_line_number ++;
    }
     
-   $last_line_number = insert_key_value($data_file, 'insert_key_value', $align); // Добавить строку в файл с выравниванием
+   $new_line_number = insert_key_value($data_file, 'insert_key_value', $align); // Добавить строку в файл с выравниванием
 
-   $last_offset = write_key_value_pair($data_file . '.dat', 'write_key_value_pair'); // Добавить строку в файл без выравнивания
+   $offset = write_key_value_pair($data_file . '.dat', 'write_key_value_pair'); // Добавить строку в файл без выравнивания
 
 
 
