@@ -791,7 +791,7 @@ PHP_FUNCTION(write_key_value_pair) {
     }
 
     fclose(fp); // Закрытие файла также разблокирует его
-    RETURN_LONG(fileSize + 2);
+    RETURN_LONG(fileSize);
 }
 
 
@@ -857,7 +857,7 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
     // Закрытие файлов
     fclose(data_fp);
     fclose(index_fp);
-    RETURN_LONG(offset + 1);
+    RETURN_LONG(offset);
 }
 
 
