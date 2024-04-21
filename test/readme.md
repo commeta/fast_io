@@ -8,12 +8,12 @@ $data_file = __DIR__ . '/data_file.dat';
 if(!file_exists($data_file . '.lock')) touch($data_file . '.lock');
 $lock= fopen($data_file . '.lock', "r+");
     
-if(flock($lock, LOCK_EX)) {
+if(flock($lock, LOCK_EX)) { // В этом месте функция ждет в очереди, пока параллельные процессы снимут блокировку
    if(file_exists($data_file) && filesize($data_file) > 0){
       $last_line_number = filesize($data_file) / ($index_align + 1);
       $last_line_number ++;
    }
-                    
+    
    $last_line_number = insert_key_value($data_file, 'insert_key_value', 32);
 
    $last_offset = write_key_value_pair($data_file . '.dat', 'write_key_value_pair');
