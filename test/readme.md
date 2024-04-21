@@ -61,7 +61,7 @@ CWD         : /home/commeta/project/kernel/fast_io
 Extra dirs  : 
 VALGRIND    : Not used
 =====================================================================
-TIME START 2024-04-21 02:58:41
+TIME START 2024-04-21 03:09:49
 =====================================================================
 No tests were run.
 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139140141142143144145146147148149150151152153154155156157158159160161162163164165166167168169170171172173174175176177178179180181182183184185186187188189190191192193194195196197198199200201202203204205206207208209210211212213214215216217218219220221222223224225226227228229230231232233234235236237238239240241242243244245246247248249250251252253254255256257258259260261262263264265266267268269270271272273274275276277278279280281282283284285286287288289290291292293294295296297298299300301302303304305306307308309310311312313314315316317318319320321322323324325326327328329330331332333334335336337338339340341342343344345346347348349350351352353354355356357358359360361362363364365366367368369370371372373374375376377378379380381382383384385386387388389390391392393394395396397398399400401402403404405406407408409410411412413414415416417418419420421422423424425426427428429430431432433434435436437438439440441442443444445446447448449450451452453454455456457458459460461462463464465466467468469470471472473474475476477478479480481482483484485486487488489490491492493494495496497498499500501Array
@@ -163,7 +163,7 @@ Array
     [4] => index_11 insert_key_value_11 12345678
     [5] => index_11 insert_key_value_11 12345678
 )
-1, 29, 57, 85, 113, 141, 169, 197, 225, 253, 281, 310, 339, 368, 397, 426, 455, 484, 513, 542, 571, Array
+0, 28, 56, 84, 112, 140, 168, 196, 224, 252, 280, 309, 338, 367, 396, 425, 454, 483, 512, 541, 570, Array
 (
     [0] => rebuild_data_file
     [1] => 1
@@ -188,47 +188,47 @@ Array
 /home/commeta/project/kernel/fast_io/fast_io3.dat
 Array
 (
-    [0] => 1
+    [0] => 0
 )
 Array
 (
-    [0] => 37
+    [0] => 36
 )
 Array
 (
-    [0] => 73
+    [0] => 72
 )
 Array
 (
-    [0] => 109
+    [0] => 108
 )
 Array
 (
-    [0] => 145
+    [0] => 144
 )
 Array
 (
-    [0] => 181
+    [0] => 180
 )
 Array
 (
-    [0] => 217
+    [0] => 216
 )
 Array
 (
-    [0] => 253
+    [0] => 252
 )
 Array
 (
-    [0] => 289
+    [0] => 288
 )
 Array
 (
-    [0] => 325
+    [0] => 324
 )
 Array
 (
-    [0] => 361
+    [0] => 360
 )
 Array
 (
@@ -251,7 +251,7 @@ Array
     [1] => 1
 )
 /home/commeta/project/kernel/fast_io/fast_io4.dat
-0 offset:1, 1 offset:37, 2 offset:73, 3 offset:109, 4 offset:145, 5 offset:181, 6 offset:217, 7 offset:253, 8 offset:289, 9 offset:325, 10 offset:361, 11 offset:398, 12 offset:435, 13 offset:472, 14 offset:509, 15 offset:546, 16 offset:583, 17 offset:620, 18 offset:657, 19 offset:694, 20 offset:731, 21 offset:768, 22 offset:805, 23 offset:842, 24 offset:879, 25 offset:916, 26 offset:953, 27 offset:990, 28 offset:1027, 29 offset:1064, 30 offset:1101, 31 offset:1138, 32 offset:1175, 33 offset:1212, 34 offset:1249, 35 offset:1286, 36 offset:1323, 37 offset:1360, 38 offset:1397, 39 offset:1434, 40 offset:1471, 41 offset:1508, 42 offset:1545, 43 offset:1582, 44 offset:1619, 45 offset:1656, 46 offset:1693, 47 offset:1730, 48 offset:1767, 49 offset:1804, 50 offset:1841, 51 offset:1878, 52 offset:1915, 53 offset:1952, 54 offset:1989, 55 offset:2026, 56 offset:2063, 57 offset:2100, 58 offset:2137, 59 offset:2174, 60 offset:2211, 61 offset:2248, 62 offset:2285, 63 offset:2322, 64 offset:2359, 65 offset:2396, 66 offset:2433, 67 offset:2470, 68 offset:2507, 69 offset:2544, 70 offset:2581, 71 offset:2618, 72 offset:2655, 73 offset:2692, 74 offset:2729, 75 offset:2766, 76 offset:2803, 77 offset:2840, 78 offset:2877, 79 offset:2914, 80 offset:2951, 81 offset:2988, 82 offset:3025, 83 offset:3062, 84 offset:3099, 85 offset:3136, 86 offset:3173, 87 offset:3210, 88 offset:3247, 89 offset:3284, 90 offset:3321, 91 offset:3358, 92 offset:3395, 93 offset:3432, 94 offset:3469, 95 offset:3506, 96 offset:3543, 97 offset:3580, 98 offset:3617, 99 offset:3654, 100 offset:3691, 101 offset:3729, 102 offset:3767, 103 offset:3805, 104 offset:3843, 105 offset:3881, 106 offset:3919, 107 offset:3957, 108 offset:3995, 109 offset:4033, 110 offset:4071, Array
+0 offset:0, 1 offset:36, 2 offset:72, 3 offset:108, 4 offset:144, 5 offset:180, 6 offset:216, 7 offset:252, 8 offset:288, 9 offset:324, 10 offset:360, 11 offset:397, 12 offset:434, 13 offset:471, 14 offset:508, 15 offset:545, 16 offset:582, 17 offset:619, 18 offset:656, 19 offset:693, 20 offset:730, 21 offset:767, 22 offset:804, 23 offset:841, 24 offset:878, 25 offset:915, 26 offset:952, 27 offset:989, 28 offset:1026, 29 offset:1063, 30 offset:1100, 31 offset:1137, 32 offset:1174, 33 offset:1211, 34 offset:1248, 35 offset:1285, 36 offset:1322, 37 offset:1359, 38 offset:1396, 39 offset:1433, 40 offset:1470, 41 offset:1507, 42 offset:1544, 43 offset:1581, 44 offset:1618, 45 offset:1655, 46 offset:1692, 47 offset:1729, 48 offset:1766, 49 offset:1803, 50 offset:1840, 51 offset:1877, 52 offset:1914, 53 offset:1951, 54 offset:1988, 55 offset:2025, 56 offset:2062, 57 offset:2099, 58 offset:2136, 59 offset:2173, 60 offset:2210, 61 offset:2247, 62 offset:2284, 63 offset:2321, 64 offset:2358, 65 offset:2395, 66 offset:2432, 67 offset:2469, 68 offset:2506, 69 offset:2543, 70 offset:2580, 71 offset:2617, 72 offset:2654, 73 offset:2691, 74 offset:2728, 75 offset:2765, 76 offset:2802, 77 offset:2839, 78 offset:2876, 79 offset:2913, 80 offset:2950, 81 offset:2987, 82 offset:3024, 83 offset:3061, 84 offset:3098, 85 offset:3135, 86 offset:3172, 87 offset:3209, 88 offset:3246, 89 offset:3283, 90 offset:3320, 91 offset:3357, 92 offset:3394, 93 offset:3431, 94 offset:3468, 95 offset:3505, 96 offset:3542, 97 offset:3579, 98 offset:3616, 99 offset:3653, 100 offset:3690, 101 offset:3728, 102 offset:3766, 103 offset:3804, 104 offset:3842, 105 offset:3880, 106 offset:3918, 107 offset:3956, 108 offset:3994, 109 offset:4032, 110 offset:4070, Array
 (
     [0] => indexed_find_value_by_key
     [1] => data_indexed_write_key_value_pair_10
@@ -268,30 +268,30 @@ Array
     [1] => data_indexed_write_key_value_pair_20
 
 )
-write_key_value_pair: 0.15005207061768 (0.00001501)
-find_value_by_key: 3.3552169799805 (0.00033552)
-find_value_by_key repeat: 0.070140838623047 (0.00000701)
-delete_key_value_pair: 3.7821300029755 (0.00037821)
-indexed_write_key_value_pair: 0.27245593070984 (0.00002725)
-indexed_find_value_by_key: 2.6449208259583 (0.00026449)
-indexed_find_value_by_key repeat: 0.14556407928467 (0.00001456)
-pop_key_value_pair: 0.3146641254425 (0.00003147)
+write_key_value_pair: 0.12476110458374 (0.00001248)
+find_value_by_key: 3.1536099910736 (0.00031536)
+find_value_by_key repeat: 0.069421052932739 (0.00000694)
+delete_key_value_pair: 4.0489981174469 (0.00040490)
+indexed_write_key_value_pair: 0.2558388710022 (0.00002558)
+indexed_find_value_by_key: 2.936863899231 (0.00029369)
+indexed_find_value_by_key repeat: 0.14635014533997 (0.00001464)
+pop_key_value_pair: 0.33754801750183 (0.00003375)
 Array
 (
     [0] => memory_get_process_usage_kernel in Kilo Bytes
-    [1] => 28276
-    [2] => 60916
-    [3] => 32640
+    [1] => 28532
+    [2] => 61300
+    [3] => 32768
     [4] => get_process_io_stats
     [5] => Array
         (
             [rchar] => 3828463965
-            [wchar] => 392485728
+            [wchar] => 392485727
             [syscr] => 994623
             [syscw] => 146215
             [read_bytes] => 0
             [write_bytes] => 431951872
-            [cancelled_write_bytes] => 4976640
+            [cancelled_write_bytes] => 4554752
         )
 
 )
