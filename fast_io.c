@@ -105,10 +105,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_indexed_find_value_by_key, 0, 2,
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_write_key_value_pair, 0, 3, IS_LONG, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_write_key_value_pair, 0, 2, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, index_val, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, index_key_val, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_indexed_write_key_value_pair, 0, 3, IS_LONG, 0)
@@ -460,12 +459,6 @@ PHP_FUNCTION(find_array_by_key) {
 
     fclose(fp);
     
-    if(search_state > 19){
-        free_key_array(&keys);
-        free_key_value_array(&keys_values);
-        return;
-    }
-
     if(
         search_state == 0 || 
         search_state == 10
@@ -759,11 +752,11 @@ PHP_FUNCTION(indexed_find_value_by_key) {
 
 /* Реализация функции */
 PHP_FUNCTION(write_key_value_pair) {
-    char *filename, *index_key, *index_val;
-    size_t filename_len, index_key_len, index_val_len;
+    char *filename, *index_key_val;
+    size_t filename_len, index_key_val_len;
 
     // Парсинг аргументов, переданных в функцию
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss", &filename, &filename_len, &index_key, &index_key_len, &index_val, &index_val_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &filename, &filename_len, &index_key_val, &index_key_val_len) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -782,15 +775,17 @@ PHP_FUNCTION(write_key_value_pair) {
         RETURN_LONG(-2);
     }
 
+    long fileSize = ftell(fp);
+
     // Запись пары ключ-значение в файл
-    if (fprintf(fp, "%s %s\n", index_key, index_val) < 0) {
+    if (fprintf(fp, "%s\n", index_key_val) < 0) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
         fclose(fp); // Это также разблокирует файл
         RETURN_LONG(-3);
     }
 
     fclose(fp); // Закрытие файла также разблокирует его
-    RETURN_LONG(1);
+    RETURN_LONG(fileSize + 1);
 }
 
 
@@ -856,7 +851,7 @@ PHP_FUNCTION(indexed_write_key_value_pair) {
     // Закрытие файлов
     fclose(data_fp);
     fclose(index_fp);
-    RETURN_LONG(1);
+    RETURN_LONG(offset + 1);
 }
 
 
@@ -1168,7 +1163,7 @@ PHP_FUNCTION(pop_key_value_pair) {
         RETURN_FALSE;
     }
 
-    FILE *fp = fopen(filename, "r+b"); 
+    FILE *fp = fopen(filename, "r+"); 
     if (!fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_LONG(-1);
@@ -1274,7 +1269,6 @@ PHP_FUNCTION(pop_key_value_pair) {
                 }
             }
         }
-
 
         if (!found_line_start && bytesRead > 0 && result_str != NULL && pos == 0) {
             size_t result_str_len = ZSTR_LEN(result_str);
