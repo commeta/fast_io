@@ -16,17 +16,11 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 	$last_process_id = intval(file_get_contents($data_file_lock));
 	$statFile = "/proc/$last_process_id/stat";
 
-	if (file_exists($statFile)) {
+	if (file_exists($statFile)) {// Процесс с PID $last_process_id существует
 		$statData = file_get_contents($statFile);
 	
 		// Разбиваем данные файла на массив
 		$statArray = explode(" ", $statData);
-	
-		// Время в тиках, прошедшее с момента запуска процесса
-		$utime = $statArray[13];
-		$stime = $statArray[14];
-		
-		// Процесс с PID $last_process_id существует и запущен уже $utime $stime
 	}
 }
 
@@ -57,7 +51,6 @@ if(flock($lock, LOCK_EX)) {
 
 	$new_line_number = insert_key_value($data_file, 'insert_key_value_' . $last_line_number, $align); // Добавить строку в файл с выравниванием
 	$str = select_key_value($data_file, $new_line_number, $align); // Получить строку из файла по номеру строки
-	print_r([$last_line_number, $new_line_number, $str]);
 
 
 
@@ -67,11 +60,8 @@ if(flock($lock, LOCK_EX)) {
 		$last_offset = filesize($data_file . '.dat');
 	}
 
-	$str = "write_key_value_pair_" . $last_offset;
-	$new_offset = write_key_value_pair($data_file . '.dat', $str); // Добавить строку в файл без выравнивания
-
+	$new_offset = write_key_value_pair($data_file . '.dat', "write_key_value_pair_" . $last_offset); // Добавить строку в файл без выравнивания
 	$new_str = select_key_value($data_file . '.dat', $new_offset, mb_strlen($str), 1); // Получить строку из файла по смещению
-	print_r([$last_offset, $new_offset, $new_str]);
 
 
 	// Выход
@@ -79,10 +69,11 @@ if(flock($lock, LOCK_EX)) {
 	flock($lock, LOCK_UN); // Снимает блокировку
 }
 
-       
 fclose($lock); // Тоже снимает блокировку  
 
 
+print_r([$last_line_number, $new_line_number, $str]);
+print_r([$last_offset, $new_offset, $new_str]);
 ```
 
 Результат
