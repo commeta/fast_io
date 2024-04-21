@@ -215,8 +215,13 @@ print_r([
 
 
 for($i=0; $i <=20; $i++){
-	indexed_write_key_value_pair(__DIR__ . '/fast_io2.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i . "\n");
+	print_r(
+		indexed_write_key_value_pair(__DIR__ . '/fast_io2.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i . "\n") . ", "
+	);
 }
+
+
+
 for($i=0; $i <=10; $i++){
 	hide_key_value_pair(__DIR__ . '/fast_io2.dat.index', 'index_' . $i);
 }
@@ -235,8 +240,9 @@ print_r([
 
 print_r(__DIR__ . '/fast_io3.dat' . "\n");
 for($i=0; $i <=10; $i++){
-	write_key_value_pair(__DIR__ . '/fast_io3.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i);
-	print_r($i . ', ');
+	print_r([
+		write_key_value_pair(__DIR__ . '/fast_io3.dat', 'index_' . $i . ' data_write_key_value_pair_' . $i)
+	]);
 }
 
 
@@ -272,10 +278,11 @@ delete_key_value_pair(__DIR__ . '/fast_io3.dat');
 
 print_r(__DIR__ . '/fast_io4.dat' . "\n");
 for($i=0; $i <=110; $i++){
-	indexed_write_key_value_pair(__DIR__ . '/fast_io4.dat', 'index_' . $i, 'data_indexed_write_key_value_pair_' . $i . "\n");
+	$offset = indexed_write_key_value_pair(__DIR__ . '/fast_io4.dat', 'index_' . $i, 'data_indexed_write_key_value_pair_' . $i . "\n");
 
-	print_r($i . ', ');
+	print_r($i . ' offset:' . $offset . ', ');
 }
+
 
 print_r([
 	'indexed_find_value_by_key',
@@ -302,7 +309,7 @@ sleep(10);
 
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
-	write_key_value_pair(__DIR__ . '/fast_io5.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i);
+	write_key_value_pair(__DIR__ . '/fast_io5.dat', 'index_' . $i . ' data_write_key_value_pair_' . $i);
 }
 $time= microtime(true) - $start;
 echo "write_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
@@ -367,7 +374,7 @@ echo "indexed_find_value_by_key repeat: ", $time, " (", sprintf('%.8f', ($time /
 
 sleep(10);
 for($i=0; $i <=10000; $i++){
-	write_key_value_pair(__DIR__ . '/fast_io7.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i);
+	write_key_value_pair(__DIR__ . '/fast_io7.dat', 'index_' . $i . ' data_write_key_value_pair_' . $i);
 }
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
