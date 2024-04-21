@@ -5,19 +5,21 @@
 в самом простом случае вам достаточно использовать блокировку на уровне файла
 ```
 $data_file = __DIR__ . '/data_file.dat';
-$index_align = 32;
+$align = 32;
 if(!file_exists($data_file . '.lock')) touch($data_file . '.lock');
 $lock= fopen($data_file . '.lock', "r+");
     
 if(flock($lock, LOCK_EX)) { // В этом месте функция ждет в очереди, пока параллельные процессы снимут блокировку
    if(file_exists($data_file) && filesize($data_file) > 0){
-      $last_line_number = filesize($data_file) / ($index_align + 1);
+      $last_line_number = filesize($data_file) / ($align + 1);
       $last_line_number ++;
    }
     
-   $last_line_number = insert_key_value($data_file, 'insert_key_value', $index_align);
+   $last_line_number = insert_key_value($data_file, 'insert_key_value', $align); // Добавить строку в файл с выравниванием
 
-   $last_offset = write_key_value_pair($data_file . '.dat', 'write_key_value_pair');
+   $last_offset = write_key_value_pair($data_file . '.dat', 'write_key_value_pair'); // Добавить строку в файл без выравнивания
+
+
 
    // Снимает блокировку
    flock($lock, LOCK_UN);
