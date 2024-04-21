@@ -417,84 +417,6 @@ PHP_FUNCTION(find_array_by_key) {
                 found_count++;
             }
 
-
-
-
-            if(search_state == 20 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){
-                found_count++;
-
-                if(search_start < found_count){
-                    add_count++;
-// попробовать добавить вначале в массив
-
-
-
-
-                    //zval matches;
-                    //find_matches_in_string(&matches, &index_key, &lineStart);
-                    
-                    // Добавляем массив совпадений в возвращаемый массив
-                    //add_next_index_zval(return_value, &matches);
-
-
-
-/*
-                    MatchResult result;
-                    if (find_matches(index_key, lineStart, &result) > 0) {
-                        // Инициализация return_value как пустого массива
-                        zval return_matched;
-                        array_init(&return_matched);
-
-                        // Добавление найденных совпадений в массив
-                        for (size_t i = 0; i < result.count; i++) {
-                            add_next_index_string(&return_matched, result.matches[i]);
-                        }
-
-                        add_next_index_zval(return_value, &return_matched);
-
-                        // Освобождение памяти
-                        for (size_t i = 0; i < result.count; i++) {
-                            free(result.matches[i]);
-                        }
-
-                        free(result.matches);
-                    }
-*/
-                    
-
-
-
-
-
-/*
-                    int rc;
-                    PCRE2_SIZE *ovector;
-                    size_t start_offset = 0;
-
-                    zval return_matched; // Объявляем переменную типа zval для хранения массива совпадений
-                    array_init(&return_matched); // Инициализируем массив совпадений
-
-
-                    while ((rc = pcre2_match(re, lineStart, lineLength, start_offset, 0, match_data, NULL)) > 0) {
-                        ovector = pcre2_get_ovector_pointer(match_data);
-                        
-                        for (int i = 0; i < rc; i++) {
-                            long start = (long)ovector[2*i];
-                            long end = (long)ovector[2*i+1];
-                            add_next_index_stringl(&return_matched, (char *)lineStart + start, end - start);    
-                        }
-                        
-                        start_offset = ovector[1]; // Обновляем позицию начала поиска для следующего совпадения
-                    }
-
-                    //add_next_index_zval(return_value, &return_matched);
-                    ZVAL_COPY_VALUE(return_value, &return_matched);
-*/
-
-
-                }
-            }
-
             search_offset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
 
@@ -695,19 +617,6 @@ PHP_FUNCTION(find_value_by_key) {
         efree(found_value);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1250,7 +1159,7 @@ PHP_FUNCTION(rebuild_data_file) { // рефакторинг
 
 
 /* Функция для извлечения и удаления последней строки из файла */
-PHP_FUNCTION(pop_key_value_pair) { // рефакторинг
+PHP_FUNCTION(pop_key_value_pair) {
     char *filename;
     size_t filename_len;
     zend_long index_align = -1; // Значение по умолчанию для необязательного аргумента
@@ -1259,22 +1168,26 @@ PHP_FUNCTION(pop_key_value_pair) { // рефакторинг
         RETURN_FALSE;
     }
 
-    int fd = open(filename, O_RDWR);
-    if (fd == -1) {
+    FILE *fp = fopen(filename, "r+b"); 
+    if (!fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
-        RETURN_FALSE;
+        RETURN_LONG(-1);
     }
 
-    if (lock_file(fd, LOCK_EX) == -1) {
-        close(fd);
+    // Блокировка файла для записи
+    if (flock(fileno(fp), LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        RETURN_FALSE;
+        fclose(fp);
+        RETURN_LONG(-2);
     }
 
-    off_t fileSize = lseek(fd, 0, SEEK_END);
-    if (fileSize == -1) {
-        close(fd);
-        php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(fp, 0, SEEK_END);
+
+    // Получаем текущее смещение в файле данных
+    off_t fileSize = ftell(fp);
+    if (fileSize <= 0) {
+        fclose(fp);
         RETURN_FALSE;
     }
 
@@ -1283,37 +1196,37 @@ PHP_FUNCTION(pop_key_value_pair) { // рефакторинг
 
     if (index_align != -1) {
         pos -= index_align + 1;
-        lseek(fd, pos, SEEK_SET);
+        fseek(fp, pos , SEEK_SET);
 
         // Увеличиваем размер буфера на 1 для возможного символа перевода строки
         char *buffer = (char *)emalloc(index_align + 1); // +1 для '\0'
+        bytesRead = fread(buffer, 1, index_align, fp);
 
-        ssize_t read_bytes = read(fd, buffer, index_align); // Чтение строки
-        if (read_bytes == -1) {
+        if (bytesRead < 0) {
             php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
             efree(buffer);
-            close(fd);
+            fclose(fp);
             RETURN_FALSE;
         }
 
         // Убедимся, что строка нуль-терминирована
-        buffer[read_bytes] = '\0';
+        buffer[bytesRead] = '\0';
 
         // Обрезка пробелов справа и символа перевода строки
-        for (int i = read_bytes - 1; i >= 0; --i) {
+        for (int i = bytesRead - 1; i >= 0; --i) {
             if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
             else break;
         }
 
         // Усекаем файл
-        if(ftruncate(fd, pos)) {
+        if(ftruncate(fileno(fp), pos)) {
             efree(buffer);
-            close(fd);
+            fclose(fp);
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
             RETURN_FALSE;
         }
         
-        close(fd);
+        fclose(fp);
 
         // Возврат строки в PHP
         RETVAL_STRING(buffer);
@@ -1332,17 +1245,16 @@ PHP_FUNCTION(pop_key_value_pair) { // рефакторинг
         pos -= ini_buffer_size;
         pos = pos < 0 ? 0 : pos;
 
-        lseek(fd, pos, SEEK_SET);
-        bytesRead = read(fd, buffer, ini_buffer_size);
+        fseek(fp, pos , SEEK_SET);
+        bytesRead = fread(buffer, 1, ini_buffer_size, fp);
 
-        if (bytesRead <= 0) {
+        if (bytesRead < 0) {
             php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
-            close(fd);
+            fclose(fp);
             efree(buffer);
             if (result_str) zend_string_release(result_str);
             RETURN_FALSE;
         }
-
 
         for (ssize_t i = bytesRead - 1; i >= 0; --i) {
             if (
@@ -1405,8 +1317,8 @@ PHP_FUNCTION(pop_key_value_pair) { // рефакторинг
         off_t new_file_size = fileSize - len;
         if(new_file_size < 0) new_file_size = 0;
 
-        if(ftruncate(fd, new_file_size)) {
-            close(fd);
+        if(ftruncate(fileno(fp), new_file_size)) {
+            fclose(fp);
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
             RETURN_FALSE;
         }
@@ -1430,7 +1342,7 @@ PHP_FUNCTION(pop_key_value_pair) { // рефакторинг
         RETVAL_FALSE;
     }
 
-    close(fd);
+    fclose(fp);
 }
 
 
@@ -1992,14 +1904,14 @@ PHP_FUNCTION(detect_align_size) {
     FILE *fp = fopen(filename, "r");
     if (fp == NULL) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
-        RETURN_FALSE;
+        RETURN_LONG(-1);
     }
 
     // Попытка установить блокирующую блокировку на запись
     if (flock(fileno(fp), LOCK_EX) < 0) {
         php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
         fclose(fp);
-        RETURN_FALSE;
+        RETURN_LONG(-2);
     }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
