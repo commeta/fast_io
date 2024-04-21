@@ -6,9 +6,7 @@
 ```
 <?php
 $data_file = __DIR__ . '/fast_io.dat';
-$data_file_lock = $data_file . '.lock';
 $align = 64; // line_number - длина 12 байт, 52 байта под данные.
-
 
 
 // Данные с выравниванием
