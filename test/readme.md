@@ -4,29 +4,56 @@
 
 в самом простом случае вам достаточно использовать блокировку на уровне файла
 ```
-$data_file = __DIR__ . '/data_file.dat';
-$align = 32;
+<?php
+$data_file = __DIR__ . '/fast2_io.dat';
+$align = 64;
 if(!file_exists($data_file . '.lock')) touch($data_file . '.lock');
 $lock= fopen($data_file . '.lock', "r+");
     
 if(flock($lock, LOCK_EX)) { // В этом месте функция ждет в очереди, пока параллельные процессы снимут блокировку
-   if(file_exists($data_file) && filesize($data_file) > 0){
-      $last_line_number = filesize($data_file) / ($align + 1);
-   }
+	$last_line_number = 0;
+	if(file_exists($data_file) && filesize($data_file) > 0){
+		$last_line_number = filesize($data_file) / ($align + 1);
+	}
+
     
-   $new_line_number = insert_key_value($data_file, 'insert_key_value', $align); // Добавить строку в файл с выравниванием
+	$new_line_number = insert_key_value($data_file, 'insert_key_value', $align); // Добавить строку в файл с выравниванием
+	$str = select_key_value($data_file, $new_line_number, $align); // Получить строку из файла по номеру строки
+	print_r([$last_line_number, $new_line_number, $str]);
 
-   $offset = write_key_value_pair($data_file . '.dat', 'write_key_value_pair'); // Добавить строку в файл без выравнивания
 
+	$str = "write_key_value_pair";
+	$offset = write_key_value_pair($data_file . '.dat', $str); // Добавить строку в файл без выравнивания
 
+	$new_str = select_key_value($data_file . '.dat', $offset, strlen($str), 1); // Получить строку из файла по смещению
+	print_r([$offset, $new_str]);
 
-   // Снимает блокировку
-   flock($lock, LOCK_UN);
+	// Снимает блокировку
+	flock($lock, LOCK_UN);
 }
 
 // Тоже снимает блокировку         
 fclose($lock);
+unlink($data_file . '.lock');
 ```
+
+Результат
+```
+Array
+(
+    [0] => 0
+    [1] => 0
+    [2] => insert_key_value
+)
+Array
+(
+    [0] => 0
+    [1] => write_key_value_pair
+)
+
+```
+
+
 
 mysql-adapter использует [greenlion/PHP-SQL-Parser](https://github.com/greenlion/PHP-SQL-Parser), но подойдет любой другой [SQL / SQLI tokenizer parser analyzer](https://github.com/client9/libinjection)
 
