@@ -14,7 +14,7 @@ if(flock($lock, LOCK_EX)) {
       $last_line_number ++;
    }
                     
-   $last_line_number = insert_key_value($data_file, 'insert_key_value', $index_align);
+   $last_line_number = insert_key_value($data_file, 'insert_key_value', 32);
 
    $last_offset = write_key_value_pair($data_file . '.dat', 'write_key_value_pair');
 
