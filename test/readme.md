@@ -5,8 +5,8 @@
 в самом простом случае вам достаточно использовать блокировку на уровне файла
 ```
 <?php
-$data_file = __DIR__ . '/fast2_io.dat';
-$align = 64;
+$data_file = __DIR__ . '/fast_io.dat';
+$align = 64; // line_number - длина 12 байт, 52 байта под данные.
 if(!file_exists($data_file . '.lock')) touch($data_file . '.lock');
 $lock= fopen($data_file . '.lock', "r+");
     
@@ -17,16 +17,21 @@ if(flock($lock, LOCK_EX)) { // В этом месте функция ждет в
 	}
 
     
-	$new_line_number = insert_key_value($data_file, 'insert_key_value', $align); // Добавить строку в файл с выравниванием
+	$new_line_number = insert_key_value($data_file, 'insert_key_value_' . $last_line_number, $align); // Добавить строку в файл с выравниванием
 	$str = select_key_value($data_file, $new_line_number, $align); // Получить строку из файла по номеру строки
 	print_r([$last_line_number, $new_line_number, $str]);
 
 
-	$str = "write_key_value_pair";
-	$offset = write_key_value_pair($data_file . '.dat', $str); // Добавить строку в файл без выравнивания
+	$last_offset = 0;
+	if(file_exists($data_file . '.dat') && filesize($data_file) > 0){
+		$last_offset = filesize($data_file . '.dat');
+	}
 
-	$new_str = select_key_value($data_file . '.dat', $offset, strlen($str), 1); // Получить строку из файла по смещению
-	print_r([$offset, $new_str]);
+	$str = "write_key_value_pair_" . $last_offset;
+	$new_offset = write_key_value_pair($data_file . '.dat', $str); // Добавить строку в файл без выравнивания
+
+	$new_str = select_key_value($data_file . '.dat', $new_offset, mb_strlen($str), 1); // Получить строку из файла по смещению
+	print_r([$last_offset, $new_offset, $new_str]);
 
 	// Снимает блокировку
 	flock($lock, LOCK_UN);
@@ -35,6 +40,7 @@ if(flock($lock, LOCK_EX)) { // В этом месте функция ждет в
 // Тоже снимает блокировку         
 fclose($lock);
 unlink($data_file . '.lock');
+
 ```
 
 Результат
@@ -43,16 +49,32 @@ Array
 (
     [0] => 0
     [1] => 0
-    [2] => insert_key_value
+    [2] => insert_key_value_0
 )
 Array
 (
     [0] => 0
-    [1] => write_key_value_pair
+    [1] => 0
+    [2] => write_key_value_pair_0
+)
+```
+
+второй запуск
+```
+Array
+(
+    [0] => 1
+    [1] => 1
+    [2] => insert_key_value_1
+)
+Array
+(
+    [0] => 23
+    [1] => 23
+    [2] => write_key_value_pair_23
 )
 
 ```
-
 
 
 mysql-adapter использует [greenlion/PHP-SQL-Parser](https://github.com/greenlion/PHP-SQL-Parser), но подойдет любой другой [SQL / SQLI tokenizer parser analyzer](https://github.com/client9/libinjection)
