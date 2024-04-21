@@ -26,7 +26,7 @@ if(flock($lock, LOCK_EX)) { // В этом месте функция ждет в
 fclose($lock);
 ```
 
-mysql-adapter использует greenlion/PHP-SQL-Parser, но подойдет любой другой, [SQL / SQLI tokenizer parser analyzer](https://github.com/client9/libinjection)
+mysql-adapter использует [greenlion/PHP-SQL-Parser](https://github.com/greenlion/PHP-SQL-Parser), но подойдет любой другой, [SQL / SQLI tokenizer parser analyzer](https://github.com/client9/libinjection)
 
 
 ## Результаты стресс теста:
