@@ -32,17 +32,17 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 			$avg = sys_getloadavg();
 			$log_file = $data_file . '.race_condition.log';
 			if(filectime($log_file) + 120 < time()) {
-                file_put_contents(
-                    $log_file,
-                    print_r([
-                        time(),
-                        $total_time,
-                        $avg,
-                        $statArray
-                    ], true),
-                    FILE_APPEND
-                );
-            }
+	                	file_put_contents(
+	                    		$log_file,
+	                    		print_r([
+	                        		time(),
+	                        		$total_time,
+	                        		$avg,
+	                        		$statArray
+	                    		], true),
+	                    		FILE_APPEND
+	                	);
+	            	}
 
 		}
 	}
