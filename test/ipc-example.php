@@ -29,7 +29,17 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 			}
 		
 			$avg = sys_getloadavg();
-			if($avg[0] > 1 && $total_time > 20) exec("kill $last_process_id"); // Убить процесс
+			file_put_contents(
+				$data_file . 'race_condition.log',
+				print_r([
+					time(),
+					$total_time,
+					sys_getloadavg(),
+					$statArray
+				], true)
+			);
+
+			//if($avg[0] > 1 && $total_time > 20) exec("kill $last_process_id"); // Убить процесс
 		}
 	}
 }
