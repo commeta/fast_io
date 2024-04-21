@@ -459,6 +459,12 @@ PHP_FUNCTION(find_array_by_key) {
 
     fclose(fp);
     
+    if(search_state > 19){
+        free_key_array(&keys);
+        free_key_value_array(&keys_values);
+        return;
+    }
+
     if(
         search_state == 0 || 
         search_state == 10
@@ -785,7 +791,7 @@ PHP_FUNCTION(write_key_value_pair) {
     }
 
     fclose(fp); // Закрытие файла также разблокирует его
-    RETURN_LONG(fileSize + 1);
+    RETURN_LONG(fileSize + 2);
 }
 
 
@@ -1270,7 +1276,7 @@ PHP_FUNCTION(pop_key_value_pair) {
             }
         }
 
-        if (!found_line_start && bytesRead > 0 && result_str != NULL && pos == 0) {
+        if (!found_line_start && bytesRead > 0 && result_str != NULL && pos == 0) { // рефакторинг
             size_t result_str_len = ZSTR_LEN(result_str);
             zend_string *new_result_str = NULL;
 
