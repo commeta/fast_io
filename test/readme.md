@@ -5,6 +5,7 @@
 в самом простом случае вам достаточно использовать блокировку на уровне файла
 ```
 $data_file = __DIR__ . '/data_file.dat';
+$index_align = 32;
 if(!file_exists($data_file . '.lock')) touch($data_file . '.lock');
 $lock= fopen($data_file . '.lock', "r+");
     
@@ -14,7 +15,7 @@ if(flock($lock, LOCK_EX)) { // В этом месте функция ждет в
       $last_line_number ++;
    }
     
-   $last_line_number = insert_key_value($data_file, 'insert_key_value', 32);
+   $last_line_number = insert_key_value($data_file, 'insert_key_value', $index_align);
 
    $last_offset = write_key_value_pair($data_file . '.dat', 'write_key_value_pair');
 
