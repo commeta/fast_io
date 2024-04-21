@@ -25,7 +25,7 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 		$utime = $statArray[13];
 		$stime = $statArray[14];
 		
-		// Процесс с PID $pid существует и запущен уже $utime $stime
+		// Процесс с PID $last_process_id существует и запущен уже $utime $stime
 	} else {
 		unlink($data_file_lock);
 	}	
