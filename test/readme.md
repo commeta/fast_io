@@ -5,6 +5,7 @@
 в самом простом случае вам достаточно использовать блокировку на уровне файла
 ```
 <?php
+
 $data_file = __DIR__ . '/fast_io.dat';
 $data_file_lock = $data_file . '.lock';
 $align = 64; // line_number - длина 12 байт, 52 байта под данные.
@@ -34,12 +35,11 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 
 $lock= fopen($data_file_lock, "c+");
 
-$is_locked = false; // Признак удержания блокировки параллельным процессом
 if(flock($lock, LOCK_EX | LOCK_NB)) { 
 	// Это условие сработает без ожидания снятия блокировки, если параллельный процесс удерживает блокировку 
 	$is_locked = false;
 } else {
-	$is_locked = true;
+	$is_locked = true; // Признак удержания блокировки параллельным процессом
 }
 
     
@@ -83,6 +83,7 @@ if(flock($lock, LOCK_EX)) {
 
        
 fclose($lock); // Тоже снимает блокировку  
+
 
 ```
 
