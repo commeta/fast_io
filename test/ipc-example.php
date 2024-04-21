@@ -36,7 +36,8 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 					$total_time,
 					$avg,
 					$statArray
-				], true)
+				], true),
+				FILE_APPEND
 			);
 
 			//if($avg[0] > 1 && $total_time > 20) exec("kill $last_process_id"); // Убить процесс
