@@ -6,10 +6,45 @@
 ```
 <?php
 $data_file = __DIR__ . '/fast_io.dat';
+$data_file_lock = $data_file . '.lock';
 $align = 64; // line_number - длина 12 байт, 52 байта под данные.
-$lock= fopen($data_file . '.lock', "c+");
+
+
+if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реализация IPC
+	// Это условие сработает если параллельный процесс удерживает блокировку или вышел аварийно.
+	$last_process_id = intval(file_get_contents($data_file_lock));
+	$statFile = "/proc/$last_process_id/stat";
+
+	if (file_exists($statFile)) {
+		$statData = file_get_contents($statFile);
+	
+		// Разбиваем данные файла на массив
+		$statArray = explode(" ", $statData);
+	
+		// Время в тиках, прошедшее с момента запуска процесса
+		$utime = $statArray[13];
+		$stime = $statArray[14];
+		
+		// Процесс с PID $pid существует и запущен уже $utime $stime
+	} else {
+		unlink($data_file_lock);
+	}	
+}
+
+
+$lock= fopen($data_file_lock, "c+");
+
+
+if(flock($lock, LOCK_EX | LOCK_NB)) { 
+	// Это условие сработает без ожидания снятия блокировки, если параллельный процесс удерживает блокировку 
+	
+}
+
     
-if(flock($lock, LOCK_EX)) { // В этом месте функция ждет в очереди, пока параллельные процессы снимут блокировку
+if(flock($lock, LOCK_EX)) { 
+	// В этом месте функция ждет в очереди, пока параллельные процессы снимут блокировку
+
+	// Реализация IPC
 	ftruncate($lock, 0); // Усекаем файл
 	fwrite($lock, strval(getmypid())); // Id запущенного процесса, для реализации IPC
 	fflush($lock);
@@ -40,6 +75,7 @@ if(flock($lock, LOCK_EX)) { // В этом месте функция ждет в
 
 
 	// Выход
+	ftruncate($lock, 0);
 	flock($lock, LOCK_UN); // Снимает блокировку
 }
 
