@@ -14,7 +14,9 @@ if(flock($lock, LOCK_EX)) {
       $last_line_number ++;
    }
                     
-   $last_line_number = insert_key_value($data_file, $column_list[0] . "_" . $last_line_number . ' ' . $insert_values, $index_align);
+   $last_line_number = insert_key_value($data_file, 'insert_key_value', $index_align);
+
+   $last_offset = write_key_value_pair($data_file . '.dat', 'write_key_value_pair');
 
    // Снимает блокировку
    flock($lock, LOCK_UN);
