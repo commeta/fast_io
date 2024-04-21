@@ -30,7 +30,7 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 		
 			$avg = sys_getloadavg();
 			file_put_contents(
-				$data_file . 'race_condition.log',
+				$data_file . '.race_condition.log',
 				print_r([
 					time(),
 					$total_time,
