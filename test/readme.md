@@ -7,21 +7,25 @@
 <?php
 $data_file = __DIR__ . '/fast_io.dat';
 $align = 64; // line_number - длина 12 байт, 52 байта под данные.
-if(!file_exists($data_file . '.lock')) touch($data_file . '.lock');
-$lock= fopen($data_file . '.lock', "r+");
+$lock= fopen($data_file . '.lock', "c+");
     
 if(flock($lock, LOCK_EX)) { // В этом месте функция ждет в очереди, пока параллельные процессы снимут блокировку
+	fwrite($lock, strval(getmypid())); // Id запущенного процесса, для реализации IPC
+	fflush($lock);
+
+	// Данные с выравниванием
 	$last_line_number = 0;
 	if(file_exists($data_file) && filesize($data_file) > 0){
 		$last_line_number = filesize($data_file) / ($align + 1);
 	}
 
-    
 	$new_line_number = insert_key_value($data_file, 'insert_key_value_' . $last_line_number, $align); // Добавить строку в файл с выравниванием
 	$str = select_key_value($data_file, $new_line_number, $align); // Получить строку из файла по номеру строки
 	print_r([$last_line_number, $new_line_number, $str]);
 
 
+
+	// Даннае без выравнивания
 	$last_offset = 0;
 	if(file_exists($data_file . '.dat') && filesize($data_file) > 0){
 		$last_offset = filesize($data_file . '.dat');
@@ -33,14 +37,13 @@ if(flock($lock, LOCK_EX)) { // В этом месте функция ждет в
 	$new_str = select_key_value($data_file . '.dat', $new_offset, mb_strlen($str), 1); // Получить строку из файла по смещению
 	print_r([$last_offset, $new_offset, $new_str]);
 
-	// Снимает блокировку
-	flock($lock, LOCK_UN);
+
+	// Выход
+	ftruncate($lock, 0); // Усекаем файл
+	flock($lock, LOCK_UN); // Снимает блокировку
 }
 
-// Тоже снимает блокировку         
-fclose($lock);
-unlink($data_file . '.lock');
-
+fclose($lock); // Тоже снимает блокировку  
 ```
 
 Результат
