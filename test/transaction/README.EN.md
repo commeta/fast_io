@@ -7,7 +7,7 @@ PHP supports portable file locking with flock(), which is based on the UNIX lock
 Low-level extension functions like [Fast_IO](../../README.md) operate on the same principle, and there is a similar implementation example in [php cron requests events](https://github.com/commeta/php-cron-requests-events).
 
 
-## Example
+## example.php
 ```
 <?php
 $data_file = __DIR__ . '/fast_io.dat'; // The data file is blocked during the FAST_IO function call.
