@@ -42,7 +42,7 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - To prevent memory overflow, functions read data in portions without loading the entire file into memory.
 - The extension is developed without reliance on external frameworks or libraries, ensuring high performance and compatibility with PHP 8.
 - The cost of calling low-consumption functions in case of hitting the cache is comparable to the speed of cache memory access.
-- Uses [An algorithm for implementing a transaction in PHP using file locking](test/transaction/README.md)
+- Uses [An algorithm for implementing a transaction using file locking](test/transaction/README.md)
 
 
 ## Getting Started
