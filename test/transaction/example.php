@@ -38,7 +38,7 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 				$statArray
 			];
 
-			if(filectime($log_file) + 120 < time()) {
+			if(filectime($log_file) + $log_threshold < time()) {
 				file_put_contents($log_file, print_r($log_array, true), FILE_APPEND);
 			}
 		}
