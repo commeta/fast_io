@@ -207,6 +207,14 @@ Each function within the Fast_IO extension has been meticulously documented on s
 
 For detailed information about each function and how to use them, please refer to their respective documentation pages.
 
+
+#### Examples
+
+- [Tests](test/readme.md)
+- [Example of implementing a transaction in PHP using file locking](test/transaction/README.md)
+- [Example of an SQL adapter](test/mysql-adapter/readme.md)
+
+
 ## Getting Started
 
 Now that you have installed the Fast_IO extension, you can begin optimizing your PHP applications for better performance in file operations. Whether you're managing large datasets or require fast and reliable data access, Fast_IO provides the tools you need to succeed.
