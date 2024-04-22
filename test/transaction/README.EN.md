@@ -16,27 +16,27 @@ $log_file = $data_file . '.race_condition.log';
 $log_threshold = 120; //Do not add a log entry for 2 minutes
 
 
-if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реализация IPC, журнал
-	// Это условие сработает если параллельный процесс удерживает блокировку или вышел аварийно.
+if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // IPC implementation, journal
+	// This condition will work if the parallel process is holding a lock or has crashed.
 	$last_process_id = intval(file_get_contents($data_file_lock));
 	$statFile = "/proc/$last_process_id/stat";
 	$avg = sys_getloadavg();
 	$log_array = [];
 	
 
-	if (file_exists($statFile)) {// Процесс с PID $last_process_id существует
+	if (file_exists($statFile)) {// A process with PID $last_process_id exists
 		$statData = file_get_contents($statFile);
 	
-		// Разбиваем данные статистики ядра на массив
+		// Splitting the core statistics data into an array
 		$statArray = explode(" ", $statData);
 		
-		if (count($statArray) > 16) {// Получаем значения из массива
+		if (count($statArray) > 16) {// Getting the values from the array
 			$utime = intval($statArray[13]); // user time
 			$stime = intval($statArray[14]); // system time
-			$cutime = intval($statArray[15]); // user time дочерних процессов
-			$cstime = intval($statArray[16]); // system time дочерних процессов
+			$cutime = intval($statArray[15]); // user time of child processes
+			$cstime = intval($statArray[16]); // system time child processes
 		
-			// Вычисляем общее время
+			// Calculate the total time
 			$total_time = $utime + $stime;
 			if ($cutime > 0 || $cstime > 0) {
 				$total_time += $cutime + $cstime;
@@ -60,33 +60,33 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 $lock= fopen($data_file_lock, "c+");
 
 if(flock($lock, LOCK_EX | LOCK_NB)) { 
-	// Это условие сработает без ожидания снятия блокировки, если параллельный процесс удерживает блокировку 
+	// This condition will work without waiting for the lock to be released if a parallel process holds the lock
 	$is_locked = false;
 } else {
-	$is_locked = true; // Признак удержания блокировки параллельным процессом
+	$is_locked = true; // A sign that the lock is being held by a parallel process
 }
 
     
-if(flock($lock, LOCK_EX)) {// В этом месте функция ждет в очереди, пока параллельные процессы снимут блокировку
+if(flock($lock, LOCK_EX)) {// At this point, the function waits in the queue until parallel processes release the lock
 
-	// Реализация IPC
-	ftruncate($lock, 0); // Усекаем файл
-	fwrite($lock, strval(getmypid())); // Id запущенного процесса, для реализации IPC
+	// IPC Implementation
+	ftruncate($lock, 0); // Truncating the file
+	fwrite($lock, strval(getmypid())); // Id of the running process, for IPC implementation
 	fflush($lock);
 
 
 
 
-	// Тело транзакции, здесь идет ресурсоемкая работа с несколькими файлами.
+	// The body of the transaction, there is a resource-intensive work with several files.
 
 
 
-	// Выход
+	// Exit
 	ftruncate($lock, 0);
-	flock($lock, LOCK_UN); // Снимает блокировку
+	flock($lock, LOCK_UN); // Removes the lock
 }
 
-fclose($lock); // Тоже снимает блокировку  
+fclose($lock); // Removes the lock too
 ```
 
 ## Description
