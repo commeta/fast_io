@@ -24,7 +24,7 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 	$log_array = [];
 	
 
-	if (file_exists($statFile)) {// Процесс с PID $last_process_id существует
+	if ($last_process_id > 0 && file_exists($statFile)) {// Процесс с PID $last_process_id существует
 		$statData = file_get_contents($statFile);
 	
 		// Разбиваем данные статистики ядра на массив
@@ -46,7 +46,8 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // Реали
 				time(),
 				$total_time,
 				$avg,
-				$statArray
+				$statArray,
+				$last_process_id
 			];
 
 			if(filectime($log_file) + $log_threshold  < time()) {
