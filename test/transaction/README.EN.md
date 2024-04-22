@@ -24,7 +24,7 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // IPC implem
 	$log_array = [];
 	
 
-	if (file_exists($statFile)) {// A process with PID $last_process_id exists
+	if ($last_process_id > 0 && file_exists($statFile)) {// A process with PID $last_process_id exists
 		$statData = file_get_contents($statFile);
 	
 		// Splitting the core statistics data into an array
@@ -46,7 +46,8 @@ if(file_exists($data_file_lock) && filesize($data_file_lock) > 0){ // IPC implem
 				time(),
 				$total_time,
 				$avg,
-				$statArray
+				$statArray,
+				$last_process_id
 			];
 
 			if(filectime($log_file) + $log_threshold  < time()) {
