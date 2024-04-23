@@ -40,6 +40,8 @@ ZEND_END_MODULE_GLOBALS(fast_io)
 #define FAST_IO_G(v) (fast_io_globals.v)
 #endif
 
+#define SPECIAL_CHAR 127
+
 // Вспомогательная функция для блокировки файла
 int lock_file(int fd, int lock_type) {
     struct flock fl;
@@ -96,4 +98,3 @@ void free_key_array(KeyArray *array) {
     }
     efree(array->keys);
 }
-
