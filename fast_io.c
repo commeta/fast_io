@@ -417,7 +417,6 @@ PHP_FUNCTION(find_array_by_key) {
                 found_count++;
             }
 
-
             search_offset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
 
@@ -984,7 +983,7 @@ PHP_FUNCTION(delete_key_value_pair) {
     }
 
 
-    if(mode == 1){
+    if(mode == 0){
         fseek(data_fp, 0 , SEEK_SET);
         fseek(temp_fp, 0 , SEEK_SET);
         current_size = 0;
@@ -1008,7 +1007,7 @@ PHP_FUNCTION(delete_key_value_pair) {
     efree(dynamic_buffer);
     fclose(data_fp);
 
-    if(mode == 0){
+    if(mode == 1){
         fclose(temp_fp);
 
         // Заменяем оригинальный файл временным файлом
@@ -1475,7 +1474,7 @@ PHP_FUNCTION(hide_key_value_pair) {
     fclose(fp);
 
     if(found_match) RETURN_LONG(writeOffset);
-    RETURN_LONG(-4);
+    RETURN_LONG(0);
 }
 
 
@@ -1779,7 +1778,7 @@ PHP_FUNCTION(insert_key_value) {
     
     if (written != index_align + 1) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
-        RETURN_LONG(-4);
+        RETURN_LONG(-3);
     }
     
     // Возврат номера добавленной строки
