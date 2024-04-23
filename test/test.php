@@ -95,6 +95,9 @@ function get_process_io_stats() {
 }
 
 
+
+
+
 foreach(glob('fast_io*.dat') as $file) {
 	unlink($file);
 }
@@ -106,19 +109,21 @@ foreach(glob('fast_io*.tmp') as $file) {
 }
 
 
+
 $r_total= memory_get_process_usage_kernel();
 
 
 for($i=0; $i <=500; $i++){
 	print_r(
-		insert_key_value(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i . ' ' . str_pad('', 8, '1234567890'), 8192)
+		insert_key_value(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i . ' ' . str_pad('', 92, '1234567890'), 8192)
 	);
 }
 
 
+
 print_r([
 	find_value_by_key(__DIR__ . '/fast_io1.dat', '\\w+_1', 10),
-	find_value_by_key(__DIR__ . '/fast_io1.dat1', 'index_500', 0)
+	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_400', 0)
 ]);
 
 print_r([
@@ -161,7 +166,6 @@ print_r([
 
 
 
-
 print_r([
 	'update_key_value_pair',
 	update_key_value_pair(__DIR__ . '/fast_io1.dat', 'index_30', str_pad('update_key_value_pair', 8192, ' ') ),
@@ -182,6 +186,12 @@ print_r([
 ]);
 
 
+print_r([
+	'hide_key_value_pair',
+	hide_key_value_pair(__DIR__ . '/fast_io1.dat', 'index_6')
+]);
+
+
 
 print_r([
 	'delete_key_value_pair',
@@ -189,10 +199,6 @@ print_r([
 ]);
 
 
-print_r([
-	'hide_key_value_pair',
-	hide_key_value_pair(__DIR__ . '/fast_io1.dat', 'index_6')
-]);
 
 
 
@@ -240,9 +246,9 @@ print_r([
 
 print_r(__DIR__ . '/fast_io3.dat' . "\n");
 for($i=0; $i <=10; $i++){
-	print_r([
-		write_key_value_pair(__DIR__ . '/fast_io3.dat', 'index_' . $i . ' data_write_key_value_pair_' . $i)
-	]);
+	print_r(
+		write_key_value_pair(__DIR__ . '/fast_io3.dat', 'index_' . $i . ' data_write_key_value_pair_' . $i) . ','
+	);
 }
 
 
@@ -276,6 +282,8 @@ delete_key_value_pair(__DIR__ . '/fast_io3.dat');
 
 
 
+
+
 print_r(__DIR__ . '/fast_io4.dat' . "\n");
 for($i=0; $i <=110; $i++){
 	$offset = indexed_write_key_value_pair(__DIR__ . '/fast_io4.dat', 'index_' . $i, 'data_indexed_write_key_value_pair_' . $i . "\n");
@@ -296,7 +304,12 @@ print_r([
 
 
 
-delete_key_value_pair(__DIR__ . '/fast_io4.dat.index', 'index_8');
+print_r([
+	'delete_key_value_pair',
+	delete_key_value_pair(__DIR__ . '/fast_io4.dat.index', 'index_8')
+]);
+
+
 
 print_r([
 	'indexed_find_value_by_key',
