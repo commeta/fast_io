@@ -252,7 +252,7 @@ PHP_FUNCTION(find_array_by_key) {
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
-    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+    if(file_size < ini_buffer_size) ini_buffer_size = file_size;
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
@@ -538,7 +538,7 @@ PHP_FUNCTION(find_value_by_key) {
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
-    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+    if(file_size < ini_buffer_size) ini_buffer_size = file_size;
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
@@ -691,7 +691,7 @@ PHP_FUNCTION(indexed_find_value_by_key) {
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
-    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+    if(file_size < ini_buffer_size) ini_buffer_size = file_size;
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
@@ -947,7 +947,7 @@ PHP_FUNCTION(delete_key_value_pair) {
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
-    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+    if(file_size < ini_buffer_size) ini_buffer_size = file_size;
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
@@ -1312,7 +1312,7 @@ PHP_FUNCTION(pop_key_value_pair) {
 
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
-    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+    if(file_size < ini_buffer_size) ini_buffer_size = file_size;
 
     // Авто поиск последней строки
     char *buffer = (char *)emalloc(ini_buffer_size + 1);
@@ -1450,7 +1450,7 @@ PHP_FUNCTION(hide_key_value_pair) {
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
-    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+    if(file_size < ini_buffer_size) ini_buffer_size = file_size;
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
@@ -1567,7 +1567,7 @@ PHP_FUNCTION(get_index_keys) { // рефакторинг
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
-    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+    if(file_size < ini_buffer_size) ini_buffer_size = file_size;
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
@@ -2033,7 +2033,7 @@ PHP_FUNCTION(detect_align_size) { // Анализ таблицы
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
-    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+    if(file_size < ini_buffer_size) ini_buffer_size = file_size;
 
     char *buffer = (char *)emalloc(ini_buffer_size);
 
