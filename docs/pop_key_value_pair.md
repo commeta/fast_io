@@ -6,7 +6,7 @@
 
 ## Синтаксис
 
-mixed pop_key_value_pair(string $filename[, int $index_align = -1])
+string pop_key_value_pair(string $filename[, int $index_align = -1])
 
 
 ## Параметры
