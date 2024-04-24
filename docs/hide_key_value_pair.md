@@ -29,10 +29,10 @@ $index_key = 'secretKey';
 
 $result = hide_key_value_pair($filename, $index_key);
 
-if ($result == 0) {
-    echo "Ключ успешно скрыт.";
-} else {
+if ($result < 0) {
     echo "Ошибка при скрытии ключа: код ошибки " . $result;
+} else {
+    echo "Ключ успешно скрыт.";
 }
 ?>
 ```
