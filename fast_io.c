@@ -140,6 +140,8 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_get_index_keys, 1, 1, IS_ARRAY, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, search_start, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, search_limit, IS_LONG, 0)    
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_update_key_value_pair, 0, 3, IS_LONG, 0)
@@ -243,7 +245,15 @@ PHP_FUNCTION(find_array_by_key) {
         RETURN_FALSE;
     }
 
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
 
@@ -417,6 +427,15 @@ PHP_FUNCTION(find_array_by_key) {
                 found_count++;
             }
 
+
+            if(search_state == 20 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){ // Сделать возврат совпадений
+                found_count++;
+
+                if(search_start < found_count){
+                    add_count++;
+                }
+            }
+
             search_offset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
 
@@ -457,6 +476,13 @@ PHP_FUNCTION(find_array_by_key) {
         if(add_key_value(&keys_values, value) == false){
             php_error_docref(NULL, E_WARNING, "Out of memory");
         }
+    }
+
+    
+    if(search_state > 19){
+        free_key_array(&keys);
+        free_key_value_array(&keys_values);
+        return;
     }
 
     if(
@@ -505,7 +531,15 @@ PHP_FUNCTION(find_value_by_key) {
         RETURN_FALSE;
     }
 
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
 
@@ -650,15 +684,17 @@ PHP_FUNCTION(indexed_find_value_by_key) {
         RETURN_FALSE;
     }
 
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(index_fp, 0, SEEK_END);
+    long file_size = ftell(index_fp);
+    fseek(index_fp, 0, SEEK_SET);
+
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
-    if (!dynamic_buffer) {
-        php_error_docref(NULL, E_WARNING, "Out of memory");
-        fclose(data_fp);
-        fclose(index_fp);
-        RETURN_FALSE;
-    }
 
     ssize_t bytesRead;
     size_t current_size = 0;
@@ -780,7 +816,7 @@ PHP_FUNCTION(write_key_value_pair) {
         RETURN_LONG(-2);
     }
 
-    long fileSize = ftell(fp);
+    long file_size = ftell(fp);
 
     // Запись пары ключ-значение в файл
     if (fprintf(fp, "%s\n", index_key_val) < 0) {
@@ -791,7 +827,7 @@ PHP_FUNCTION(write_key_value_pair) {
 
     fclose(fp); // Закрытие файла также разблокирует его
 
-    RETURN_LONG(fileSize);
+    RETURN_LONG(file_size);
 }
 
 
@@ -904,11 +940,19 @@ PHP_FUNCTION(delete_key_value_pair) {
         RETURN_LONG(-2);
     }
 
-    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
-    zend_long dynamic_buffer_size = ini_buffer_size;
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(data_fp, 0, SEEK_END);
+    long file_size = ftell(data_fp);
+    fseek(data_fp, 0, SEEK_SET);
 
-    // Авто поиск последней строки
-    char *dynamic_buffer = (char *)emalloc(ini_buffer_size + 1);
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+
+    zend_long dynamic_buffer_size = ini_buffer_size;
+    char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+
+
     zend_long found_count = 0;
     ssize_t bytesRead;
     size_t current_size = 0;
@@ -1217,13 +1261,13 @@ PHP_FUNCTION(pop_key_value_pair) {
     fseek(fp, 0, SEEK_END);
 
     // Получаем текущее смещение в файле данных
-    off_t fileSize = ftell(fp);
-    if (fileSize <= 0) {
+    off_t file_size = ftell(fp);
+    if (file_size <= 0) {
         fclose(fp);
         RETURN_FALSE;
     }
 
-    off_t pos = fileSize;
+    off_t pos = file_size;
     ssize_t bytesRead;
 
     if (index_align != -1) {
@@ -1267,8 +1311,10 @@ PHP_FUNCTION(pop_key_value_pair) {
     }
 
 
-    // Авто поиск последней строки
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+
+    // Авто поиск последней строки
     char *buffer = (char *)emalloc(ini_buffer_size + 1);
     zend_string *result_str = NULL;
     int found_line_start = 0;
@@ -1293,7 +1339,7 @@ PHP_FUNCTION(pop_key_value_pair) {
                 if (!result_str) { // Найден первый перенос строки с конца
                     result_str = zend_string_alloc(bytesRead - i - 1, 0);
                     memcpy(ZSTR_VAL(result_str), buffer + i + 1, bytesRead - i - 1);
-                } else if (i != bytesRead - 1 || pos + bytesRead < fileSize) { // Найдено начало строки
+                } else if (i != bytesRead - 1 || pos + bytesRead < file_size) { // Найдено начало строки
                     size_t new_len = ZSTR_LEN(result_str) + bytesRead - i - 1;
                     result_str = zend_string_extend(result_str, new_len, 0);
                     memmove(ZSTR_VAL(result_str) + bytesRead - i - 1, ZSTR_VAL(result_str), ZSTR_LEN(result_str) - (bytesRead - i - 1));
@@ -1339,7 +1385,7 @@ PHP_FUNCTION(pop_key_value_pair) {
         char *str = ZSTR_VAL(result_str);
 
         // Усечь файл
-        off_t new_file_size = fileSize - len;
+        off_t new_file_size = file_size - len;
         if(new_file_size < 0) new_file_size = 0;
 
         if(ftruncate(fileno(fp), new_file_size)) {
@@ -1397,7 +1443,15 @@ PHP_FUNCTION(hide_key_value_pair) {
         RETURN_LONG(-2);
     }
 
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
 
@@ -1474,19 +1528,22 @@ PHP_FUNCTION(hide_key_value_pair) {
     fclose(fp);
 
     if(found_match) RETURN_LONG(writeOffset);
-    RETURN_LONG(0);
+    RETURN_LONG(-4);
 }
 
 
 
 
+
 /* Реализация функции */
-PHP_FUNCTION(get_index_keys) {
+PHP_FUNCTION(get_index_keys) { // рефакторинг
     char *filename;
     size_t filename_len;
     zend_long mode = 0;
+    zend_long search_start = 0;
+    zend_long search_limit = 1;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|l", &filename, &filename_len, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lll", &filename, &filename_len, &mode, &search_start, &search_limit) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1503,7 +1560,15 @@ PHP_FUNCTION(get_index_keys) {
         RETURN_FALSE;
     }
 
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
 
@@ -1518,6 +1583,9 @@ PHP_FUNCTION(get_index_keys) {
 
     off_t writeOffset = 0; // Смещение для записи обновленных данных
 
+    zend_long found_count = 0;
+    zend_long add_count = 0;
+    zend_long line_count = 0;
 
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
@@ -1539,30 +1607,50 @@ PHP_FUNCTION(get_index_keys) {
             ssize_t lineLength = lineEnd - lineStart + 1;
             *lineEnd = '\0';
 
-            if(mode == 0){
-                char *spacePos = strchr(lineStart, ' ');
-                if (spacePos) *spacePos = '\0';
-                if(add_key(&keys, lineStart) == false){
-                    php_error_docref(NULL, E_WARNING, "Out of memory");
-                    found_match = true;
-                    break;
+            line_count++;
+
+            if(mode == 0 && *lineStart != SPECIAL_CHAR){
+                found_count++;
+
+                if(search_start < found_count){
+                    add_count++;
+                    
+                    char *spacePos = strchr(lineStart, ' ');
+                    if (spacePos) *spacePos = '\0';
+                    if(add_key(&keys, lineStart) == false){
+                        php_error_docref(NULL, E_WARNING, "Out of memory");
+                        found_match = true;
+                        break;
+                    }
                 }
             }
 
-            if(mode == 1){
-                int value[2];
-                value[0] = writeOffset;
-                value[1] = lineLength - 1;
 
-                if(add_key_value(&keys_values, value) == false){
-                    php_error_docref(NULL, E_WARNING, "Out of memory");
-                    found_match = true;
-                    break;
+            if(mode == 1 && *lineStart != SPECIAL_CHAR){
+                found_count++;
+
+                if(search_start < found_count){
+                    add_count++;
+                    
+                    int value[2];
+                    value[0] = writeOffset;
+                    value[1] = lineLength - 1;
+
+                    if(add_key_value(&keys_values, value) == false){
+                        php_error_docref(NULL, E_WARNING, "Out of memory");
+                        found_match = true;
+                        break;
+                    }
                 }
             }
 
             writeOffset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
+
+            if(add_count >= search_limit){
+                found_match = true;
+                break;
+            }
         }
 
         if (found_match) break;
@@ -1938,7 +2026,15 @@ PHP_FUNCTION(detect_align_size) {
         RETURN_LONG(-2);
     }
 
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    if(file_size > ini_buffer_size) ini_buffer_size = file_size;
+
     char *buffer = (char *)emalloc(ini_buffer_size);
 
     ssize_t bytes_read;
