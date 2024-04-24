@@ -31,10 +31,10 @@ bool update_key_value(string $filename, string $index_key, int $index_row, int $
 
 $result = update_key_value("path/to/your/file.txt", "newValue", 3, 20);
 
-if ($result === true) {
-    echo "Запись успешно обновлена.";
-} elseif ($result < 0) {
+if ($result < 0) {
     echo "Ошибка при обновлении записи: код ошибки $result.";
+} else {
+    echo "Запись успешно обновлена.";
 }
 
 ?>
