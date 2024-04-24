@@ -115,9 +115,10 @@ $r_total= memory_get_process_usage_kernel();
 
 for($i=0; $i <=500; $i++){
 	print_r(
-		insert_key_value(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i . ' ' . str_pad('', 92, '1234567890'), 8192)
+		insert_key_value(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i . ' ' . str_pad('', 92, '1234567890'), 8192) . ', '
 	);
 }
+
 
 
 
@@ -181,9 +182,10 @@ print_r([
 
 print_r([
 	'get_index_keys',
-	count(get_index_keys(__DIR__ . '/fast_io1.dat', 0)),
-	count(get_index_keys(__DIR__ . '/fast_io1.dat', 1)),
+	get_index_keys(__DIR__ . '/fast_io1.dat', 0),
+	get_index_keys(__DIR__ . '/fast_io1.dat', 1),
 ]);
+
 
 
 print_r([
