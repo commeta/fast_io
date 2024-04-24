@@ -144,10 +144,11 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_get_index_keys, 1, 1, IS_ARRAY, 
     ZEND_ARG_TYPE_INFO(0, search_limit, IS_LONG, 0)    
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_update_key_value_pair, 0, 3, IS_LONG, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_update_key_value_pair, 1, 3, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, index_key, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, index_val, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, index_key_value, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_insert_key_value, 0, 3, IS_LONG, 0)
@@ -701,7 +702,7 @@ PHP_FUNCTION(indexed_find_value_by_key) {
     bool found_match = false;
     char *found_value = NULL;
 
-    while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size - current_size, index_fp)) > 0) { // рефакторинг
+    while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, index_fp)) > 0) {
         current_size += bytesRead;
         dynamic_buffer[current_size] = '\0';
 
@@ -1533,10 +1534,8 @@ PHP_FUNCTION(hide_key_value_pair) {
 
 
 
-
-
 /* Реализация функции */
-PHP_FUNCTION(get_index_keys) { // рефакторинг
+PHP_FUNCTION(get_index_keys) {
     char *filename;
     size_t filename_len;
     zend_long mode = 0;
@@ -1699,123 +1698,172 @@ PHP_FUNCTION(get_index_keys) { // рефакторинг
 
 
 
-
-
 // Функция обновления пары ключ-значение
-PHP_FUNCTION(update_key_value_pair) {// рефакторинг
+PHP_FUNCTION(update_key_value_pair) {
     char *filename;
     size_t filename_len;
     char *index_key;
+    char *index_key_value;
+    size_t index_key_value_len;
     size_t index_key_len;
-    char *index_value;
-    size_t index_value_len;
+    zend_long mode = 0;
+
 
     // Парсинг аргументов
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss", &filename, &filename_len, &index_key, &index_key_len, &index_value, &index_value_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss|l", &filename, &filename_len, &index_key, &index_key_len, &index_key_value, &index_key_value_len, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
-    char *temp_filename = emalloc(filename_len + 5); // Дополнительные символы для ".tmp" и нуль-терминатора
-    snprintf(temp_filename, filename_len + 5, "%s.tmp", filename);
+    char temp_filename[filename_len + 5];
+    snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
 
-    int fd = open(filename, O_RDWR);
-    if (fd == -1) {
+    FILE *data_fp = fopen(filename, "r+");
+    if (!data_fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
-        efree(temp_filename);
         RETURN_LONG(-1);
     }
 
-    int temp_fd = open(temp_filename, O_RDWR | O_CREAT | O_TRUNC, 0644);
-    if (temp_fd == -1) {
+    FILE *temp_fp = fopen(temp_filename, "w+");
+    if (!temp_fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_filename);
-        close(fd);
-        efree(temp_filename);
+        fclose(data_fp);
         RETURN_LONG(-2);
     }
 
-    // Блокировка файлов
-    if (lock_file(fd, LOCK_EX) == -1) {
+    if (flock(fileno(data_fp), LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        close(fd);
-        close(temp_fd);
+        fclose(data_fp);
+        fclose(temp_fp);
         unlink(temp_filename);
-        efree(temp_filename);
+        RETURN_LONG(-3);
+    }
+    if (flock(fileno(temp_fp), LOCK_EX) == -1) {
+        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", temp_filename);
+        fclose(data_fp);
+        fclose(temp_fp);
+        unlink(temp_filename);
         RETURN_LONG(-3);
     }
 
-    FILE *file = fdopen(fd, "r");
-    FILE *temp_file = fdopen(temp_fd, "w");
-
-    if (!file || !temp_file) {
-        php_error_docref(NULL, E_WARNING, "Failed to associate a stream with the file descriptor.");
-        if (file) fclose(file);
-        if (temp_file) fclose(temp_file);
-        close(fd);
-        close(temp_fd);
-        unlink(temp_filename);
-        efree(temp_filename);
-        RETURN_LONG(-4);
-    }
-
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(data_fp, 0, SEEK_END);
+    long file_size = ftell(data_fp);
+    fseek(data_fp, 0, SEEK_SET);
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    if(file_size < ini_buffer_size) ini_buffer_size = file_size;
+
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
-    ssize_t bytesRead;
-    bool found_value = false;
-    size_t current_size = 0; // Текущий размер данных в динамическом буфере
 
-    while ((bytesRead = read(fd, dynamic_buffer + current_size, ini_buffer_size)) > 0) {
+    zend_long found_count = 0;
+    ssize_t bytesRead;
+    size_t current_size = 0;
+
+    bool isEOF;
+
+    while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, data_fp)) > 0) {
         current_size += bytesRead;
-        dynamic_buffer[current_size] = '\0'; // Завершаем прочитанный буфер нуль-терминатором
+        // Проверяем, достигли ли мы конца файла (EOF)
+        isEOF = feof(data_fp);
+        
+        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
+            // Если это EOF и последний символ не является переводом строки,
+            // добавляем перевод строки для упрощения обработки
+            dynamic_buffer[current_size ] = '\n';
+            current_size++;
+        }
+        
+        dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
         char *lineEnd;
-
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
-            *lineEnd = '\0'; // Завершаем строку нуль-терминатором
             ssize_t lineLength = lineEnd - lineStart + 1;
+            *lineEnd = '\0';
 
-            if (strstr(lineStart, index_key) != NULL && lineStart[index_key_len] == ' ') {
-                fprintf(temp_file, "%s %s\n", index_key, index_value);
+            if (strstr(lineStart, index_key) != NULL) {
+                char *replacement = emalloc(index_key_value_len + 1);
+                snprintf(replacement, index_key_value_len + 2, "%s\n", index_key_value);
+                
+                if (fwrite(replacement, 1, index_key_value_len + 1, temp_fp) == 0) {
+                    php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
+                    fclose(data_fp);
+                    fclose(temp_fp);
+                    unlink(temp_filename);
+                    efree(dynamic_buffer);
+                    efree(replacement);
+                    RETURN_LONG(-4);
+                }
+
+                efree(replacement);
             } else {
-                fprintf(temp_file, "%s\n", lineStart);
+                *lineEnd = '\n';
+
+                if (fwrite(lineStart, 1, lineLength, temp_fp) == 0) {
+                    php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
+                    fclose(data_fp);
+                    fclose(temp_fp);
+                    unlink(temp_filename);
+                    efree(dynamic_buffer);
+                    RETURN_LONG(-4);
+                }
             }
 
-            lineStart = lineEnd + 1; // Переходим к следующей строке
+            found_count++;
+            lineStart = lineEnd + 1;
         }
 
-        if (found_value) break;
 
-        // Перемещаем непрочитанную часть в начало буфера и обновляем current_size
-        current_size -= (lineStart - dynamic_buffer);
-        memmove(dynamic_buffer, lineStart, current_size);
+        if (!isEOF) {
+            current_size -= (lineStart - dynamic_buffer);
+            memmove(dynamic_buffer, lineStart, current_size);
 
-        // Проверяем, нужно ли расширить буфер
-        if (current_size == dynamic_buffer_size) {
-            dynamic_buffer_size *= 2; // Удваиваем размер буфера
-            dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+            if (current_size + ini_buffer_size > dynamic_buffer_size) {
+                dynamic_buffer_size += ini_buffer_size;
+                dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+                if (!dynamic_buffer) {
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    break;
+                }
+            }
         }
     }
 
-    fclose(file);
-    fclose(temp_file);
-    close(fd); 
-    close(temp_fd);
 
-    // Заменяем оригинальный файл временным файлом
-    if (rename(temp_filename, filename) == -1) {
+    if(mode == 0){
+        fseek(data_fp, 0 , SEEK_SET);
+        fseek(temp_fp, 0 , SEEK_SET);
+        current_size = 0;
+
+        while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), temp_fp)) > 0) {
+            current_size += fwrite(dynamic_buffer, 1, bytesRead, data_fp);
+        }
+
+        // Усекаем файл
+        if (ftruncate(fileno(data_fp), current_size)) {
+            php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
+            fclose(data_fp);
+
+            RETURN_LONG(-5);
+        }
+
+        fclose(temp_fp);
         unlink(temp_filename);
-        efree(dynamic_buffer);
-        efree(temp_filename);
-        php_error_docref(NULL, E_WARNING, "Failed to replace the original file with the temporary file.");
-        RETURN_LONG(-5);
     }
 
     efree(dynamic_buffer);
-    efree(temp_filename);
+    fclose(data_fp);
 
-    RETURN_LONG(1); // Успешное завершение операции
+    if(mode == 1){
+        fclose(temp_fp);
+
+        // Заменяем оригинальный файл временным файлом
+        rename(temp_filename, filename);
+    }
+
+    RETURN_LONG(found_count);
 }
 
 
