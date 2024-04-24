@@ -31,20 +31,12 @@ $value = 'data_value';
 
 $result = indexed_write_key_value_pair($filename, $key, $value);
 
-switch ($result) {
-    case 1:
-        echo "Запись успешно выполнена";
-        break;
-    case -1:
-        echo "Ошибка: не удалось открыть файл";
-        break;
-    case -2:
-        echo "Ошибка: не удалось установить блокировку на файл";
-        break;
-    case -3:
-        echo "Ошибка: не удалось выполнить запись в файл данных";
-        break;
+if($result < 0){
+    echo "Произошла ошибка.";
+} else {
+    echo "Запись успешно выполнена";
 }
+
 ?>
 ```
 
