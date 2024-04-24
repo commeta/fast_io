@@ -14,7 +14,7 @@ int update_key_value_pair(string $filename, string $index_key, string $index_key
 - **filename**: Имя файла, в котором нужно обновить пару ключ-значение.
 - **index_key**: Ключ, значение которого требуется обновить.
 - **index_key_value**: Новая строка для замены.
-- **$mode**: (int, optional) - Режим дефрагментации.
+- **$mode**: (int, optional) - Режим работы.
 
 
 ## Возвращаемые значения
