@@ -5,7 +5,7 @@
 
 ## Синтаксис
 
-bool update_key_value(string $filename, string $index_key, int $index_row, int $index_align)
+int update_key_value(string $filename, string $index_key, int $index_row, int $index_align)
 
 
 ## Параметры
