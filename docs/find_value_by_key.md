@@ -9,7 +9,7 @@
 
 ## Синтаксис
 
-mixed find_value_by_key(string $filename, string $index_key[, int search_state = 0] )
+string find_value_by_key(string $filename, string $index_key[, int search_state = 0] )
 
 
 ### Параметры
