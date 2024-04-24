@@ -29,7 +29,7 @@ $key_value = 'example_key_value';
 
 $result = write_key_value_pair($filename, $key_value);
 
-if ($result == 1) {
+if ($result >= 0) {
     echo "Запись успешно выполнена";
 } elseif ($result == -1) {
     echo "Ошибка: не удалось открыть файл";
