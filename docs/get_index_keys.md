@@ -7,7 +7,7 @@
 
 ## Синтаксис
 
-mixed get_index_keys(string $filename[, int mode = 0][, int search_start = 0][, int search_length = 1] )
+array get_index_keys(string $filename[, int mode = 0][, int search_start = 0][, int search_length = 1] )
 
 
 ### Параметры
