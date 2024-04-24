@@ -167,11 +167,6 @@ print_r([
 
 
 
-print_r([
-	'update_key_value_pair',
-	update_key_value_pair(__DIR__ . '/fast_io1.dat', 'index_30', str_pad('update_key_value_pair', 8192, ' ') ),
-]);
-
 
 print_r([
 	'pop_key_value_pair',
@@ -301,7 +296,7 @@ print_r([
 
 print_r([
 	'indexed_find_value_by_key',
-	indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_100')
+	trim(indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_100'))
 ]);
 
 
@@ -315,7 +310,7 @@ print_r([
 
 print_r([
 	'indexed_find_value_by_key',
-	indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_20')
+	trim(indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_20'))
 ]);
 
 
