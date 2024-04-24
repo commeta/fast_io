@@ -922,7 +922,7 @@ PHP_FUNCTION(delete_key_value_pair) {
     if (!temp_fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_filename);
         fclose(data_fp);
-        RETURN_LONG(-1);
+        RETURN_LONG(-2);
     }
 
     if (flock(fileno(data_fp), LOCK_EX) == -1) {
@@ -930,14 +930,14 @@ PHP_FUNCTION(delete_key_value_pair) {
         fclose(data_fp);
         fclose(temp_fp);
         unlink(temp_filename);
-        RETURN_LONG(-2);
+        RETURN_LONG(-3);
     }
     if (flock(fileno(temp_fp), LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", temp_filename);
         fclose(data_fp);
         fclose(temp_fp);
         unlink(temp_filename);
-        RETURN_LONG(-2);
+        RETURN_LONG(-3);
     }
 
     // Перемещение указателя в конец файла для получения его размера
@@ -1001,7 +1001,7 @@ PHP_FUNCTION(delete_key_value_pair) {
                     fclose(temp_fp);
                     unlink(temp_filename);
                     efree(dynamic_buffer);
-                    RETURN_LONG(-3);
+                    RETURN_LONG(-4);
                 }
             } else {
                 found_count++;
@@ -1041,7 +1041,7 @@ PHP_FUNCTION(delete_key_value_pair) {
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
             fclose(data_fp);
 
-            RETURN_LONG(-4);
+            RETURN_LONG(-5);
         }
 
         fclose(temp_fp);
@@ -1609,7 +1609,7 @@ PHP_FUNCTION(get_index_keys) { // рефакторинг
 
             line_count++;
 
-            if(mode == 0 && *lineStart != SPECIAL_CHAR){
+            if(mode == 0){
                 found_count++;
 
                 if(search_start < found_count){
@@ -1626,7 +1626,7 @@ PHP_FUNCTION(get_index_keys) { // рефакторинг
             }
 
 
-            if(mode == 1 && *lineStart != SPECIAL_CHAR){
+            if(mode == 1){
                 found_count++;
 
                 if(search_start < found_count){
