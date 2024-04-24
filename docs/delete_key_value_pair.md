@@ -38,7 +38,7 @@ int delete_key_value_pair(string $filename, string $index_key[, int mode])
 ```
 <?php
 $filename = "/path/to/your/file.txt";
-$index_key = "yourKey";
+$index_key = "yourKey"; // или спецсимвол chr(127)
 
 $result = delete_key_value_pair($filename, $index_key);
 
