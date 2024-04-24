@@ -1247,14 +1247,14 @@ PHP_FUNCTION(pop_key_value_pair) {
     FILE *fp = fopen(filename, "r+"); 
     if (!fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
-        RETURN_LONG(-1);
+        RETURN_FALSE;
     }
 
     // Блокировка файла для записи
     if (flock(fileno(fp), LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
         fclose(fp);
-        RETURN_LONG(-2);
+        RETURN_FALSE;
     }
 
     // Перемещение указателя в конец файла для получения его размера
@@ -2005,7 +2005,7 @@ PHP_FUNCTION(update_key_value) {
 
 
 
-PHP_FUNCTION(detect_align_size) {
+PHP_FUNCTION(detect_align_size) { // Анализ таблицы
     char *filename;
     size_t filename_len;
 
