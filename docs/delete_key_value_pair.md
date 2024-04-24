@@ -9,7 +9,7 @@
 
 ## Синтаксис
 
-long delete_key_value_pair(string $filename, string $index_key[, int mode])
+int delete_key_value_pair(string $filename, string $index_key[, int mode])
 
 
 ### Параметры
