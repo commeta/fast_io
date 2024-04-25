@@ -15,7 +15,6 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - **Buffered Reading**: Functions read data in chunks, preventing memory overflow and ensuring efficient data processing.
 - **Framework-Free**: Developed without third-party frameworks or libraries for maximum performance and compatibility with PHP 8.
 - **Binary-Safe Index Functions**: The index_ prefixed functions support unlimited data volume storage with binary safety.
-- **Data File Storage**: Non-indexed functions store strings - key:value pairs (string, json, serialized) in data files with a maximum pair size of 4096 bytes.
 
 ## Function List
 
