@@ -1,6 +1,6 @@
-# Описание функции find_array_by_key
+# Описание функции file_search_array
 
-Функция find_array_by_key осуществляет поиск значения по ключу в файле данных. 
+Функция file_search_array осуществляет поиск значения по ключу в файле данных. 
 Она выполняет посекторный низкоуровневый поиск и возвращает найденное значение. 
 Файл читается порциями, что делает функцию эффективной для работы с большими файлами. 
 
@@ -8,14 +8,14 @@
 
 ## Синтаксис
 
-string find_array_by_key(string $filename, string $index_key[, int search_state = 0][, int search_start = 0][, int search_length = 1] )
+string file_search_array(string $filename, string $line_key[, int mode = 0][, int search_start = 0][, int search_length = 1] )
 
 
 ### Параметры
 
 - **filename** - Путь к файлу, в котором будет производиться поиск.
-- **index_key** - Ключ, по которому осуществляется поиск значения.
-- **search_state** (int, optional) - Режим поиска.
+- **line_key** - Ключ, по которому осуществляется поиск значения.
+- **mode** (int, optional) - Режим поиска.
 - **search_start** (int, optional) - Стартовая строка начала выборки.
 - **search_limit** (int, optional) - Ограничение массива выборки.
 
@@ -23,10 +23,10 @@ string find_array_by_key(string $filename, string $index_key[, int search_state 
 #### Режимы поиска
 
 
-- 0: Поиск index_key в каждой строке, полнотекстовый поиск, возвращает массив найденных строк.
-- 1: Поиск index_key в каждой строке, полнотекстовый поиск, возвращает номер и длину найденных строк.
-- 2: Поиск index_key в каждой строке, полнотекстовый поиск, возвращает смещение и длину найденных строк.
-- 3: Поиск index_key в каждой строке, полнотекстовый поиск, возвращает общее количество найденных строк в файле, и количество обработанных строк.
+- 0: Поиск line_key в каждой строке, полнотекстовый поиск, возвращает массив найденных строк.
+- 1: Поиск line_key в каждой строке, полнотекстовый поиск, возвращает номер и длину найденных строк.
+- 2: Поиск line_key в каждой строке, полнотекстовый поиск, возвращает смещение и длину найденных строк.
+- 3: Поиск line_key в каждой строке, полнотекстовый поиск, возвращает общее количество найденных строк в файле, и количество обработанных строк.
 
 - 10: Поиск по регулярному выражению [PCRE2](https://pcre2project.github.io/pcre2/doc/html/index.html) в каждой строке, полнотекстовый поиск, возвращает массив найденных строк.
 - 11: Поиск по регулярному выражению PCRE2 в каждой строке, возвращает номер и длину найденных строк.
@@ -45,15 +45,15 @@ string find_array_by_key(string $filename, string $index_key[, int search_state 
 ```
 for($i=0; $i <=500; $i++){
 	print_r(
-		insert_key_value(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i . ' ' . str_pad('', 8, '1234567890'), 8192)
+		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i . ' ' . str_pad('', 8, '1234567890'), 8192)
 	);
 }
 ```
 
 ```
 print_r([
-	find_array_by_key(__DIR__ . '/fast_io1.dat', '\\w+_1', 10, 0, 2),
-	find_array_by_key(__DIR__ . '/fast_io1.dat', 'index_3', 0, 0, 2)
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_1', 10, 0, 2),
+	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 0, 0, 2)
 ]);
 
 Array
@@ -75,8 +75,8 @@ Array
 
 ```
 print_r([
-	find_array_by_key(__DIR__ . '/fast_io1.dat', '\\w+_1', 11, 0, 2),
-	find_array_by_key(__DIR__ . '/fast_io1.dat', 'index_3', 1, 0, 2)
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_1', 11, 0, 2),
+	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 1, 0, 2)
 ]);
 
 Array
@@ -119,8 +119,8 @@ Array
 
 ```
 print_r([
-	find_array_by_key(__DIR__ . '/fast_io1.dat', '\\w+_1', 12, 0, 2),
-	find_array_by_key(__DIR__ . '/fast_io1.dat', 'index_3', 2, 0, 2)
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_1', 12, 0, 2),
+	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 2, 0, 2)
 ]);
 
 Array
@@ -162,8 +162,8 @@ Array
 
 ```
 print_r([
-	find_array_by_key(__DIR__ . '/fast_io1.dat', '\\w+_1', 13),
-	find_array_by_key(__DIR__ . '/fast_io1.dat', 'index_3', 3)
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_1', 13),
+	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 3)
 ]);
 Array
 (
@@ -201,7 +201,7 @@ Array
 $filename = 'path/to/data.txt';
 $key = 'user_id';
 
-$value = find_array_by_key($filename, $key);
+$value = file_search_array($filename, $key);
 
 if ($value !== NULL) {
     print_r(["Найденное значение: ", $value]);
