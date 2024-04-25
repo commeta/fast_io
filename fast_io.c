@@ -153,7 +153,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_insert_line, 0, 3, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, line_key, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, line, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line_align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
@@ -166,7 +166,8 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_update_line, 0, 3, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, line_key, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, line, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, line_row, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, line_align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
@@ -1871,12 +1872,12 @@ PHP_FUNCTION(file_replace_line) {
 PHP_FUNCTION(file_insert_line) {
     char *filename;
     size_t filename_len;
-    char *line_key;
-    size_t line_key_len;
+    char *line;
+    size_t line_len;
     zend_long line_align;
 
     // Парсинг аргументов, переданных в функцию
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssl", &filename, &filename_len, &line_key, &line_key_len, &line_align) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssl", &filename, &filename_len, &line, &line_len, &line_align) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1904,8 +1905,8 @@ PHP_FUNCTION(file_insert_line) {
     buffer[line_align - 1] = '\n'; // Добавление перевода строки
     buffer[line_align] = '\0';
 
-    // Копирование line_key в буфер с учетом выравнивания
-    strncpy(buffer, line_key, line_align < line_key_len ? line_align : line_key_len);
+    // Копирование line в буфер с учетом выравнивания
+    strncpy(buffer, line, line_align < line_len ? line_align : line_len);
 
     // Запись в файл
     size_t written = fwrite(buffer, sizeof(char), line_align, fp); // +1 для записи '\n'
@@ -1998,13 +1999,13 @@ PHP_FUNCTION(file_select_line) {
 PHP_FUNCTION(file_update_line) {
     char *filename;
     size_t filename_len;
-    char *line_key;
-    size_t line_key_len;
+    char *line;
+    size_t line_len;
     zend_long line_row, line_align;
     zend_long mode = 0;
 
     // Парсинг аргументов, переданных в функцию
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssll|l", &filename, &filename_len, &line_key, &line_key_len, &line_row, &line_align, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssll|l", &filename, &filename_len, &line, &line_len, &line_row, &line_align, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -2036,8 +2037,8 @@ PHP_FUNCTION(file_update_line) {
     buffer[line_align - 1] = '\n'; // Добавление перевода строки
     buffer[line_align] = '\0'; // Нуль-терминатор
 
-    // Копирование line_key в буфер с учетом выравнивания
-    strncpy(buffer, line_key, line_key_len < line_align ? line_key_len : line_align);
+    // Копирование line в буфер с учетом выравнивания
+    strncpy(buffer, line, line_len < line_align ? line_len : line_align);
 
     // Запись в файл
     size_t written = fwrite(buffer, 1, line_align, fp); // +1 для '\n'
