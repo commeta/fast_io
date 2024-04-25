@@ -8,13 +8,13 @@
 
 ## Синтаксис
 
-int file_defrag_lines(string $filename, string $index_key[, int mode])
+int file_defrag_lines(string $filename, string $line_key[, int mode])
 
 
 ### Параметры
 
 - **$filename** *(string)*: Путь к файлу, из которого будут удалены пары ключ-значение.
-- **$index_key** *(string)*: Ключ, по которому будут идентифицированы и удалены пары ключ-значение. Если не указан, функция удалит все записи, начинающиеся с специального символа (ASCII Code 127).
+- **$line_key** *(string)*: Ключ, по которому будут идентифицированы и удалены пары ключ-значение. Если не указан, функция удалит все записи, начинающиеся с специального символа (ASCII Code 127).
 - **$mode** (int, optional) - Режим дефрагментации.
 
 ### Возвращаемые значения
@@ -38,9 +38,9 @@ int file_defrag_lines(string $filename, string $index_key[, int mode])
 ```
 <?php
 $filename = "/path/to/your/file.txt";
-$index_key = "yourKey"; // или спецсимвол chr(127)
+$line_key = "yourKey"; // или спецсимвол chr(127)
 
-$result = file_defrag_lines($filename, $index_key);
+$result = file_defrag_lines($filename, $line_key);
 
 if ($result > 0) {
     echo "Ключ успешно удален.\n";
