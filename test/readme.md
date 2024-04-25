@@ -19,7 +19,7 @@ $align = 64; // line_number - длина 12 байт, 52 байта под да�
 // Данные с выравниванием
 $last_line_number = 0;
 if(file_exists($data_file) && filesize($data_file) > 0){
-	$last_line_number = filesize($data_file) / ($align + 1);
+	$last_line_number = filesize($data_file) / $align;
 }
 
 $new_line_number = file_insert_line($data_file, 'insert_key_value_' . $last_line_number, $align); // Добавить строку в файл с выравниванием
