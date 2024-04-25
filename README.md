@@ -19,21 +19,21 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 
 ## Function List
 
-- [write_key_value_pair](/docs/write_key_value_pair.md): Writes a key-value pair to a text file.
-- [pop_key_value_pair](/docs/pop_key_value_pair.md): Extracts and deletes the last line from a file.
-- [rebuild_data_file](/docs/rebuild_data_file.md): Reconstructs a data file and its corresponding index file.
-- [indexed_write_key_value_pair](/docs/indexed_write_key_value_pair.md): Writes a key-value pair to a text data file and its corresponding index file.
-- [indexed_find_value_by_key](/docs/indexed_find_value_by_key.md): Searches for a value by key in a large text file using an index file.
-- [hide_key_value_pair](/docs/hide_key_value_pair.md): Hides keys in files storing data in key-value format.
-- [find_value_by_key](/docs/find_value_by_key.md): Searches for a value by key in a data file, return string.
-- [find_array_by_key](/docs/find_array_by_key.md): Searches for a value by key in a data file, return array.
-- [delete_key_value_pair](/docs/delete_key_value_pair.md): Deletes a key-value pair from a data file.
-- [get_index_keys](/docs/get_index_keys.md): Extracts unique keys from a text file.
-- [update_key_value_pair](/docs/update_key_value_pair.md): Updates a value by the given key.
-- [insert_key_value](/docs/insert_key_value.md): Adds lines with specific alignment to a file.
-- [select_key_value](/docs/select_key_value.md): Selects a line by the specified line number and alignment from a file.
-- [update_key_value](/docs/update_key_value.md): Updates a value by key in the file.
-- [detect_align_size](/docs/detect_align_size.md) - Returns the maximum length of a line in a file.
+- [file_push_line](/docs/file_push_line.md): Adding a line to a text file.
+- [file_pop_line](/docs/file_pop_line.md): Extracting and deleting the last line from the file.
+- [file_defrag_data](/docs/file_defrag_data.md): Defragmenting the data file and its corresponding index file.
+- [file_push_data](/docs/file_push_data.md): Adding a portion of binary data to the data file and its corresponding index file.
+- [file_search_data](/docs/file_search_data.md): Searching for a portion of binary data by key, using the index file.
+- [file_erase_line](/docs/file_erase_line.md): Erasing a line in the data file.
+- [file_search_line](/docs/file_search_line.md): Searching for a line by key in the data file, returning the line.
+- [file_search_array](/docs/file_search_array.md): Searching for lines by key in the data file, returning an array.
+- [file_defrag_lines](/docs/file_defrag_lines.md): Removing lines from the data file.
+- [file_get_keys](/docs/file_get_keys.md): Extracting unique keys from a text file.
+- [file_replace_line](/docs/file_replace_line.md): Replacing a line by key.
+- [file_insert_line](/docs/file_insert_line.md): Inserting lines with alignment into the file.
+- [file_select_line](/docs/file_select_line.md): Selecting a line from the file, based on a specified number or offset.
+- [file_update_line](/docs/file_update_line.md): Updating a line in the file.
+- [file_analyze](/docs/file_analyze.md) - Returns the maximum length of a line in the file.
 
 ## Implementation Highlights
 
@@ -166,35 +166,35 @@ Next, compile and test your extension using phpize, ./configure, make, and make 
 The Fast_IO extension was rigorously tested on Ubuntu 24.04, with a Ryzen 12 Cores CPU, 16GB RAM, and a SATA 3 SSD. Here are the results for some of the key functions when executed in a loop of 10,000 iterations, with linear index incrementation (to avoid cache hits) and repeated searches for the same index:
 
 ```
-write_key_value_pair: 0.11487889289856 (0.00001149)
-find_value_by_key: 1.1644461154938 (0.00011644)
-find_value_by_key repeat: 0.059406042098999 (0.00000594)
-delete_key_value_pair: 10.655761003494 (0.00106558)
-indexed_write_key_value_pair: 0.21924114227295 (0.00002192)
-indexed_find_value_by_key: 0.91544914245605 (0.00009154)
-indexed_find_value_by_key repeat: 0.11506295204163 (0.00001151)
-pop_key_value_pair: 0.20079398155212 (0.00002008)
+file_push_line: 0.13037991523743 (0.00001304)
+file_search_line: 2.8793230056763 (0.00028793)
+file_search_line repeat: 0.091537952423096 (0.00000915)
+file_defrag_lines: 0.87505483627319 (0.00008751)
+file_push_data: 0.23846697807312 (0.00002385)
+file_search_data: 2.5550649166107 (0.00025551)
+file_search_data repeat: 0.17655897140503 (0.00001766)
+file_pop_line: 0.3167359828949 (0.00003167)
 ```
 
 ## Call Costs
 
 The table of function call costs in ascending order:
 
-- select_key_value Very low consumption, sector-based reading of a file segment.
-- update_key_value Very low consumption, sector-based writing of a file segment.
-- pop_key_value_pair Low consumption, with very low alignment, reading from the end of the file, truncating the file.
-- write_key_value_pair Very low consumption, writing a line at the end of the file.
-- insert_key_value Very low consumption, writing a line at the end of the file.
-- indexed_write_key_value_pair Low consumption, writing a line at the end of the index file and a block at the end of the data file.
-- find_value_by_key Medium consumption, reading the entire file.
-- find_array_by_key Medium consumption, reading the entire file.
-- detect_align_size Medium consumption, reading the entire file.
-- get_index_keys Medium consumption, reading the entire file.
-- hide_key_value_pair Medium consumption, reading the entire file, writing a line to the file.
-- indexed_find_value_by_key Medium consumption, reading the entire index file and a block of the data file.
-- delete_key_value_pair High consumption, full reading/writing the entire file.
-- update_key_value_pair High consumption, full reading/writing of the entire file.
-- rebuild_data_file Very high consumption, full reading/writing of index and data files.
+- file_select_line Very low consumption, sector-based reading of a file segment.
+- file_update_line Very low consumption, sector-based writing of a file segment.
+- file_pop_line Low consumption, with very low alignment, reading from the end of the file, truncating the file.
+- file_push_line Very low consumption, writing a line at the end of the file.
+- file_insert_line Very low consumption, writing a line at the end of the file.
+- file_push_data Low consumption, writing a line at the end of the index file and a block at the end of the data file.
+- file_search_line Medium consumption, reading the entire file.
+- file_search_array Medium consumption, reading the entire file.
+- file_analize Medium consumption, reading the entire file.
+- file_get_keys Medium consumption, reading the entire file.
+- file_erase_line Medium consumption, reading the entire file, writing a line to the file.
+- file_search_data Medium consumption, reading the entire index file and a block of the data file.
+- file_defrag_lines Very high consumption, full reading/writing the entire file.
+- file_replace_line Very high consumption, full reading/writing of the entire file.
+- file_defrag_data Very high consumption, full reading/writing of index and data files.
 
 
 ## Function Overview
