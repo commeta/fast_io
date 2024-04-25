@@ -27,7 +27,7 @@ int file_insert_line(string $filename, string $line, int $line_align)
 ```
 <?php
 $filename = "/path/to/your/file.txt";
-$line_key = "exampleKey";
+$line = "exampleKey";
 $index_align = 100; // Допустим, мы хотим, чтобы каждая строка занимала 100 символов
 
 $result = file_insert_line($filename, $line, $index_align);
