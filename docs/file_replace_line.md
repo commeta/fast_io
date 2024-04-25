@@ -14,7 +14,7 @@ int file_replace_line(string $filename, string $line_key, string $line [, int $m
 - **filename**: Имя файла, в котором нужно обновить пару ключ-значение.
 - **line_key**: Ключ, значение которого требуется обновить.
 - **line**: Новая строка для замены.
-- **$mode**: (int, optional) - Режим работы.
+- **mode**: (int, optional) - Режим работы.
 
 
 ## Возвращаемые значения
