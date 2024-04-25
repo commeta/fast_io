@@ -115,7 +115,7 @@ $r_total= memory_get_process_usage_kernel();
 
 for($i=0; $i <=500; $i++){
 	print_r(
-		insert_key_value(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i . ' ' . str_pad('', 92, '1234567890'), 8192) . ', '
+		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 92, '1234567890'), 8192) . ', '
 	);
 }
 
@@ -123,76 +123,76 @@ for($i=0; $i <=500; $i++){
 
 
 print_r([
-	find_value_by_key(__DIR__ . '/fast_io1.dat', '\\w+_1', 10),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_400', 0)
+	file_search_line(__DIR__ . '/fast_io1.dat', '\\w+_1', 10),
+	file_search_line(__DIR__ . '/fast_io1.dat', 'index_400', 0)
 ]);
 
 print_r([
-	find_array_by_key(__DIR__ . '/fast_io1.dat', '\\w+', 10, 2, 5),
-	find_array_by_key(__DIR__ . '/fast_io1.dat', 'index_3', 1),
-	find_matches_pcre2('\\w+_', select_key_value(__DIR__ . '/fast_io1.dat', 16386, 191, 1))
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+', 10, 2, 5),
+	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 1),
+	file_select_line(__DIR__ . '/fast_io1.dat', 8192, 8192, 1),
+	find_matches_pcre2('\\w+_', file_select_line(__DIR__ . '/fast_io1.dat', 16384, 191, 1))
 	
 ]);
 
 
 print_r([
-	select_key_value(__DIR__ . '/fast_io1.dat', 16386, 12, 1),
-	select_key_value(__DIR__ . '/fast_io1.dat', 1, 8192, 0),
+	file_select_line(__DIR__ . '/fast_io1.dat', 16384, 12, 1),
+	file_select_line(__DIR__ . '/fast_io1.dat', 1, 8192, 0),
 ]);
 
 
 
 print_r([
-	'detect_align_size',
-	detect_align_size(__DIR__ . '/fast_io1.dat'),
+	'file_analize',
+	file_analize(__DIR__ . '/fast_io1.dat'),
 ]);
 
 print_r([
-	'select_key_value',
-	select_key_value(__DIR__ . '/fast_io1.dat', 2, 8192)
-]);
-
-
-print_r([
-	'update_key_value',
-	update_key_value(__DIR__ . '/fast_io1.dat', 'update_key_value', 3, 8192),
-	update_key_value(__DIR__ . '/fast_io1.dat', chr(127), 2, 8192),
+	'file_select_line',
+	file_select_line(__DIR__ . '/fast_io1.dat', 1, 8192)
 ]);
 
 
 print_r([
-	'pop_key_value_pair',
-	pop_key_value_pair(__DIR__ . '/fast_io1.dat', 8192),
+	'file_update_line',
+	file_update_line(__DIR__ . '/fast_io1.dat', 'file_update_line mode 1', 8192, 8192, 1),
+	file_update_line(__DIR__ . '/fast_io1.dat', 'file_update_line mode 0', 3, 8192),
+	file_update_line(__DIR__ . '/fast_io1.dat', chr(127), 2, 8192),
 ]);
 
 
-
-
 print_r([
-	'pop_key_value_pair',
-	pop_key_value_pair(__DIR__ . '/fast_io1.dat'),
+	'file_pop_line',
+	file_pop_line(__DIR__ . '/fast_io1.dat', 8192),
 ]);
 
 
-
 print_r([
-	'get_index_keys',
-	get_index_keys(__DIR__ . '/fast_io1.dat', 0),
-	get_index_keys(__DIR__ . '/fast_io1.dat', 1),
+	'file_pop_line',
+	file_pop_line(__DIR__ . '/fast_io1.dat'),
 ]);
 
 
 
 print_r([
-	'hide_key_value_pair',
-	hide_key_value_pair(__DIR__ . '/fast_io1.dat', 'index_6')
+	'file_get_keys',
+	file_get_keys(__DIR__ . '/fast_io1.dat', 0),
+	file_get_keys(__DIR__ . '/fast_io1.dat', 1),
 ]);
 
 
 
 print_r([
-	'delete_key_value_pair',
-	delete_key_value_pair(__DIR__ . '/fast_io1.dat', 'index_360')
+	'file_erase_line',
+	file_erase_line(__DIR__ . '/fast_io1.dat', 'index_6')
+]);
+
+
+
+print_r([
+	'file_defrag_lines',
+	file_defrag_lines(__DIR__ . '/fast_io1.dat', 'index_360')
 ]);
 
 
@@ -200,43 +200,43 @@ print_r([
 
 
 print_r([
-	'update_key_value',
-	update_key_value(__DIR__ . '/fast_io1.dat', 'update апдейт', 10, 8192),
+	'file_update_line',
+	file_update_line(__DIR__ . '/fast_io1.dat', 'update апдейт', 11, 8192),
 ]);
 
 
 
 print_r([
-	'find_value_by_key',
-	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index_360'),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', 'апдейт', 0),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', 'index', 0),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+_1', 10),
-	find_value_by_key(__DIR__ . '/fast_io1.dat', '^\\w+_1', 10),
+	'file_search_line',
+	file_search_line(__DIR__ . '/fast_io1.dat', 'index_360'),
+	file_search_line(__DIR__ . '/fast_io1.dat', 'апдейт', 0),
+	file_search_line(__DIR__ . '/fast_io1.dat', 'index', 0),
+	file_search_line(__DIR__ . '/fast_io1.dat', '^\\w+_1', 10),
+	file_search_line(__DIR__ . '/fast_io1.dat', '^\\w+_1', 10),
 ]);
 
 
 
 for($i=0; $i <=20; $i++){
 	print_r(
-		indexed_write_key_value_pair(__DIR__ . '/fast_io2.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i . "\n") . ", "
+		file_push_data(__DIR__ . '/fast_io2.dat', 'index_' . $i, 'data_file_push_line_' . $i . "\n") . ", "
 	);
 }
 
 
 
 for($i=0; $i <=10; $i++){
-	hide_key_value_pair(__DIR__ . '/fast_io2.dat.index', 'index_' . $i);
+	file_erase_line(__DIR__ . '/fast_io2.dat.index', 'index_' . $i);
 }
 
 print_r([
-	'rebuild_data_file',
-	rebuild_data_file(__DIR__ . '/fast_io2.dat', 'index_19')
+	'file_defrag_data',
+	file_defrag_data(__DIR__ . '/fast_io2.dat', 'index_19')
 ]);
 
 print_r([
-	'get_index_keys',
-	get_index_keys(__DIR__ . '/fast_io2.dat.index')
+	'file_get_keys',
+	file_get_keys(__DIR__ . '/fast_io2.dat.index')
 ]);
 
 
@@ -244,38 +244,38 @@ print_r([
 print_r(__DIR__ . '/fast_io3.dat' . "\n");
 for($i=0; $i <=10; $i++){
 	print_r(
-		write_key_value_pair(__DIR__ . '/fast_io3.dat', 'index_' . $i . ' data_write_key_value_pair_' . $i) . ','
+		file_push_line(__DIR__ . '/fast_io3.dat', 'index_' . $i . ' data_file_push_line_' . $i) . ','
 	);
 }
 
 
 
 print_r([
-	'find_value_by_key',
-	find_value_by_key(__DIR__ . '/fast_io3.dat', 'index_5')
+	'file_search_line',
+	file_search_line(__DIR__ . '/fast_io3.dat', 'index_5')
 ]);
-delete_key_value_pair(__DIR__ . '/fast_io3.dat', 'index_5');
+file_defrag_lines(__DIR__ . '/fast_io3.dat', 'index_5');
 print_r([
-	'find_value_by_key',
-	find_value_by_key(__DIR__ . '/fast_io3.dat', 'index_5')
+	'file_search_line',
+	file_search_line(__DIR__ . '/fast_io3.dat', 'index_5')
 ]);
-
-print_r([
-	'pop_key_value_pair',
-	pop_key_value_pair(__DIR__ . '/fast_io3.dat')
-]);
-
-
-
 
 print_r([
-	'update_key_value_pair',
-	update_key_value_pair(__DIR__ . '/fast_io3.dat', 'index_3', 'update_key_value_pair')
+	'file_pop_line',
+	file_pop_line(__DIR__ . '/fast_io3.dat')
 ]);
 
 
-hide_key_value_pair(__DIR__ . '/fast_io3.dat', 'index_7');
-delete_key_value_pair(__DIR__ . '/fast_io3.dat');
+
+
+print_r([
+	'file_replace_line',
+	file_replace_line(__DIR__ . '/fast_io3.dat', 'index_3', 'file_replace_line')
+]);
+
+
+file_erase_line(__DIR__ . '/fast_io3.dat', 'index_7');
+file_defrag_lines(__DIR__ . '/fast_io3.dat');
 
 
 
@@ -283,34 +283,34 @@ delete_key_value_pair(__DIR__ . '/fast_io3.dat');
 
 print_r(__DIR__ . '/fast_io4.dat' . "\n");
 for($i=0; $i <=110; $i++){
-	$offset = indexed_write_key_value_pair(__DIR__ . '/fast_io4.dat', 'index_' . $i, 'data_indexed_write_key_value_pair_' . $i . "\n");
+	$offset = file_push_data(__DIR__ . '/fast_io4.dat', 'index_' . $i, 'data_file_push_data_' . $i . "\n");
 
 	print_r($i . ' offset:' . $offset . ', ');
 }
 
 
 print_r([
-	'indexed_find_value_by_key',
-	trim(indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_10'))
+	'file_search_data',
+	trim(file_search_data(__DIR__ . '/fast_io4.dat', 'index_10'))
 ]);
 
 print_r([
-	'indexed_find_value_by_key',
-	trim(indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_100'))
-]);
-
-
-
-print_r([
-	'delete_key_value_pair',
-	delete_key_value_pair(__DIR__ . '/fast_io4.dat.index', 'index_8')
+	'file_search_data',
+	trim(file_search_data(__DIR__ . '/fast_io4.dat', 'index_100'))
 ]);
 
 
 
 print_r([
-	'indexed_find_value_by_key',
-	trim(indexed_find_value_by_key(__DIR__ . '/fast_io4.dat', 'index_20'))
+	'file_defrag_lines',
+	file_defrag_lines(__DIR__ . '/fast_io4.dat.index', 'index_8')
+]);
+
+
+
+print_r([
+	'file_search_data',
+	trim(file_search_data(__DIR__ . '/fast_io4.dat', 'index_20'))
 ]);
 
 
@@ -319,64 +319,64 @@ sleep(10);
 
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
-	write_key_value_pair(__DIR__ . '/fast_io5.dat', 'index_' . $i . ' data_write_key_value_pair_' . $i);
+	file_push_line(__DIR__ . '/fast_io5.dat', 'index_' . $i . ' data_file_push_line_' . $i);
 }
 $time= microtime(true) - $start;
-echo "write_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
+echo "file_push_line: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
 sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
-	find_value_by_key(__DIR__ . '/fast_io5.dat', 'index_' . $i);
+	file_search_line(__DIR__ . '/fast_io5.dat', 'index_' . $i);
 }
 $time= microtime(true) - $start;
-echo "find_value_by_key: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
+echo "file_search_line: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
 sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
-	find_value_by_key(__DIR__ . '/fast_io5.dat', 'index_10');
+	file_search_line(__DIR__ . '/fast_io5.dat', 'index_10');
 }
 $time= microtime(true) - $start;
-echo "find_value_by_key repeat: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
+echo "file_search_line repeat: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
 sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
-	delete_key_value_pair(__DIR__ . '/fast_io5.dat', 'index_' . $i);
+	file_defrag_lines(__DIR__ . '/fast_io5.dat', 'index_' . $i);
 }
 $time= microtime(true) - $start;
-echo "delete_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
+echo "file_defrag_lines: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
 sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
-	indexed_write_key_value_pair(__DIR__ . '/fast_io6.dat', 'index_' . $i, 'data_write_key_value_pair_' . $i . "\n");
+	file_push_data(__DIR__ . '/fast_io6.dat', 'index_' . $i, 'data_file_push_line_' . $i . "\n");
 }
 $time= microtime(true) - $start;
-echo "indexed_write_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
+echo "file_push_data: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
 sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
-	indexed_find_value_by_key(__DIR__ . '/fast_io6.dat', 'index_' . $i);
+	file_search_data(__DIR__ . '/fast_io6.dat', 'index_' . $i);
 }
 $time= microtime(true) - $start;
-echo "indexed_find_value_by_key: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
+echo "file_search_data: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
 sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
-	indexed_find_value_by_key(__DIR__ . '/fast_io6.dat', 'index_10');
+	file_search_data(__DIR__ . '/fast_io6.dat', 'index_10');
 }
 $time= microtime(true) - $start;
-echo "indexed_find_value_by_key repeat: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
+echo "file_search_data repeat: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
 
@@ -384,14 +384,14 @@ echo "indexed_find_value_by_key repeat: ", $time, " (", sprintf('%.8f', ($time /
 
 sleep(10);
 for($i=0; $i <=10000; $i++){
-	write_key_value_pair(__DIR__ . '/fast_io7.dat', 'index_' . $i . ' data_write_key_value_pair_' . $i);
+	file_push_line(__DIR__ . '/fast_io7.dat', 'index_' . $i . ' data_file_push_line_' . $i);
 }
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
-	pop_key_value_pair(__DIR__ . '/fast_io7.dat');
+	file_pop_line(__DIR__ . '/fast_io7.dat');
 }
 $time= microtime(true) - $start;
-echo "pop_key_value_pair: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
+echo "file_pop_line: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 print_r([
 	'memory_get_process_usage_kernel in Kilo Bytes',
