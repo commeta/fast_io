@@ -94,11 +94,11 @@ function fast_io_mysql_adapter(& $parser, $sql){
     
             if(flock($lock, LOCK_EX)) {
                 if(file_exists($data_file) && filesize($data_file) > 0){
-                    $last_id = filesize($data_file) / ($index_align + 1);
+                    $last_id = filesize($data_file) / $index_align ;
                     $last_id ++;
                 }
                     
-                $last_id = insert_key_value($data_file, $column_list[0] . "_" . $last_id . ' ' . $insert_values, $index_align);
+                $last_id = file_insert_line($data_file, $column_list[0] . "_" . $last_id . ' ' . $insert_values, $index_align);
                 
                 flock($lock, LOCK_UN);
             }
@@ -160,7 +160,7 @@ function fast_io_mysql_adapter(& $parser, $sql){
             
             if(file_exists($data_file) && in_array('*', $column_list)){
                 if($colref == 'id' && $operator == "="){
-                    $return = select_key_value($data_file, $const, $index_align);
+                    $return = file_select_line($data_file, $const, $index_align);
                     return $return;
                 }
             }
