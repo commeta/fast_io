@@ -1,6 +1,6 @@
-# Описание функции detect_align_size
+# Описание функции file_analize
 
-Функция detect_align_size написана на языке C и предназначена для использования в PHP через специализированное расширение Fast_IO. 
+Функция file_analize написана на языке C и предназначена для использования в PHP через специализированное расширение Fast_IO. 
 Функция анализирует текстовый файл и определяет максимальную длину строки в этом файле. 
 Это может быть особенно полезно для форматирования вывода или оптимизации обработки текстовых данных.
 
@@ -9,7 +9,7 @@
 
 ### Синтаксис
 
-int detect_align_size(string $filename)
+int file_analize(string $filename)
 
 
 #### Параметры
@@ -30,7 +30,7 @@ int detect_align_size(string $filename)
 ```
 <?php
 $filename = "example.txt";
-$maxLineLength = detect_align_size($filename);
+$maxLineLength = file_analize($filename);
 
 if ($maxLineLength !== FALSE) {
     echo "Самая длинная строка содержит $maxLineLength символов.";
@@ -44,7 +44,7 @@ if ($maxLineLength !== FALSE) {
 ```
 <?php
 $filename = "non_existent_file.txt";
-$maxLineLength = detect_align_size($filename);
+$maxLineLength = file_analize($filename);
 
 if ($maxLineLength === FALSE) {
     echo "Не удалось обработать файл. Пожалуйста, проверьте, существует ли файл и доступен ли он для чтения.";
