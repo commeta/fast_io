@@ -181,9 +181,10 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_matches_pcre2, 0, 2, IS_ARR
     ZEND_ARG_TYPE_INFO(0, subject, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_replicate_file, 0, 2, IS_LONG, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_replicate_file, 1, 2, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, source, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, destination, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 
@@ -2190,11 +2191,13 @@ PHP_FUNCTION(find_matches_pcre2) {
 PHP_FUNCTION(replicate_file) {
     char *source, *destination;
     size_t source_len, destination_len;
+    zend_long mode = 0;
 
     // Парсинг аргументов
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &source, &source_len, &destination, &destination_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &source, &source_len, &destination, &destination_len, &mode) == FAILURE) {
         RETURN_FALSE;
     }
+
 
     FILE *source_fp = fopen(source, "r");
     if (!source_fp) {
@@ -2202,7 +2205,7 @@ PHP_FUNCTION(replicate_file) {
         RETURN_LONG(-1);
     }
 
-    FILE *destination_fp = fopen(destination, "w+");
+    FILE *destination_fp = fopen(destination, "w");
     if (!destination_fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", destination);
         fclose(source_fp);
@@ -2214,6 +2217,45 @@ PHP_FUNCTION(replicate_file) {
         fclose(source_fp);
         fclose(destination_fp);
         RETURN_LONG(-3);
+    }
+
+    FILE *index_source_fp;
+    FILE *index_destination_fp;
+
+    if(mode == 1){
+        char index_source[source_len + 7];
+        snprintf(index_source, sizeof(index_source), "%s.index", source);
+
+        char index_destination[destination_len + 7];
+        snprintf(index_destination, sizeof(index_destination), "%s.index", destination);
+
+
+        index_source_fp = fopen(index_source, "r");
+        if (!index_source_fp) {
+            php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_source);
+            fclose(source_fp);
+            fclose(destination_fp);
+            RETURN_LONG(-1);
+        }
+
+        index_destination_fp = fopen(index_destination, "w");
+        if (!index_destination_fp) {
+            php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_destination);
+            fclose(index_source_fp);
+            fclose(source_fp);
+            fclose(destination_fp);
+            RETURN_LONG(-2);
+        }
+
+        if (flock(fileno(index_source_fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_source);
+            fclose(index_source_fp);
+            fclose(index_destination_fp);
+            fclose(source_fp);
+            fclose(destination_fp);
+            RETURN_LONG(-3);
+        }
+        
     }
 
     // Перемещение указателя в конец файла для получения его размера
@@ -2233,6 +2275,15 @@ PHP_FUNCTION(replicate_file) {
 
     while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), source_fp)) > 0) {
         current_size += fwrite(dynamic_buffer, 1, bytesRead, destination_fp);
+    }
+
+    if(mode == 1){
+        while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), index_source_fp)) > 0) {
+            fwrite(dynamic_buffer, 1, bytesRead, index_destination_fp);
+        }
+
+        fclose(index_source_fp);
+        fclose(index_destination_fp);
     }
 
     fclose(source_fp);
