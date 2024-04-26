@@ -2030,7 +2030,10 @@ PHP_FUNCTION(file_update_line) {
     // Рассчитываем смещение для записи в файл
     off_t offset = (mode == 0) ? row * align : row;
 
-    if (fseek(fp, offset, SEEK_SET) != 0) {
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+
+    if (fseek(fp, offset, SEEK_SET) != 0 || offset > file_size) {
         php_error_docref(NULL, E_WARNING, "Failed to seek in the file: %s", filename);
         fclose(fp);
         RETURN_LONG(-3);
@@ -2279,7 +2282,7 @@ PHP_FUNCTION(replicate_file) {
 
     if(mode == 1){
         while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), index_source_fp)) > 0) {
-            fwrite(dynamic_buffer, 1, bytesRead, index_destination_fp);
+            current_size += fwrite(dynamic_buffer, 1, bytesRead, index_destination_fp);
         }
 
         fclose(index_source_fp);
