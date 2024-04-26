@@ -2196,7 +2196,7 @@ PHP_FUNCTION(replicate_file) {
         RETURN_FALSE;
     }
 
-    FILE *source_fp = fopen(source, "r+");
+    FILE *source_fp = fopen(source, "r");
     if (!source_fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", source);
         RETURN_LONG(-1);
@@ -2211,12 +2211,6 @@ PHP_FUNCTION(replicate_file) {
 
     if (flock(fileno(source_fp), LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", source);
-        fclose(source_fp);
-        fclose(destination_fp);
-        RETURN_LONG(-3);
-    }
-    if (flock(fileno(destination_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", destination);
         fclose(source_fp);
         fclose(destination_fp);
         RETURN_LONG(-3);
