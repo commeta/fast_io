@@ -83,6 +83,7 @@ PHP_FUNCTION(file_select_line);
 PHP_FUNCTION(file_update_line);
 PHP_FUNCTION(file_analize);
 PHP_FUNCTION(find_matches_pcre2);
+PHP_FUNCTION(replicate_file);
 
 
 /* Запись аргументов функций */
@@ -129,7 +130,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_pop_line, 1, 1, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, line_align, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_erase_line, 0, 2, IS_LONG, 0)
@@ -154,21 +155,21 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_insert_line, 0, 3, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, line_align, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_select_line, 1, 3, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, line_row, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, line_align, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, row, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, align, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_update_line, 0, 3, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, line_row, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, line_align, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, row, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_analize, 0, 1, IS_LONG, 0)
@@ -178,6 +179,11 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_matches_pcre2, 0, 2, IS_ARRAY, 0)
     ZEND_ARG_TYPE_INFO(0, pattern, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, subject, IS_STRING, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_replicate_file, 0, 2, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, source, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, destination, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
 
@@ -199,6 +205,7 @@ const zend_function_entry fast_io_functions[] = {
     PHP_FE(file_update_line, arginfo_file_update_line)
     PHP_FE(file_analize, arginfo_file_analize)
     PHP_FE(find_matches_pcre2, arginfo_find_matches_pcre2)
+    PHP_FE(replicate_file, arginfo_replicate_file)
     PHP_FE_END
 };
 
@@ -297,6 +304,9 @@ PHP_FUNCTION(file_search_array) {
         match_data = pcre2_match_data_create_from_pattern(re, NULL);
     }
 
+
+    // mode = 9, 19 старт поиска по смещению
+    // mode = 8, 18 старт поиска по номеру строки
 
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
@@ -430,6 +440,7 @@ PHP_FUNCTION(file_search_array) {
             }
 
 
+            /*
             if(mode == 20 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){ // Сделать возврат совпадений
                 found_count++;
 
@@ -437,6 +448,7 @@ PHP_FUNCTION(file_search_array) {
                     add_count++;
                 }
             }
+            */
 
             search_offset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
@@ -481,12 +493,6 @@ PHP_FUNCTION(file_search_array) {
     }
 
     
-    if(mode > 19){
-        free_key_array(&keys);
-        free_key_value_array(&keys_values);
-        return;
-    }
-
     if(
         mode == 0 || 
         mode == 10
@@ -1240,9 +1246,9 @@ PHP_FUNCTION(file_defrag_data) { // рефакторинг
 PHP_FUNCTION(file_pop_line) {
     char *filename;
     size_t filename_len;
-    zend_long line_align = -1; // Значение по умолчанию для необязательного аргумента
+    zend_long align = -1; // Значение по умолчанию для необязательного аргумента
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|l", &filename, &filename_len, &line_align) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|l", &filename, &filename_len, &align) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1272,13 +1278,13 @@ PHP_FUNCTION(file_pop_line) {
     off_t pos = file_size;
     ssize_t bytesRead;
 
-    if (line_align != -1) {
-        pos -= line_align;
+    if (align != -1) {
+        pos -= align;
         fseek(fp, pos , SEEK_SET);
 
         // Увеличиваем размер буфера на 1 для возможного символа перевода строки
-        char *buffer = (char *)emalloc(line_align + 1); // +1 для '\0'
-        bytesRead = fread(buffer, 1, line_align, fp);
+        char *buffer = (char *)emalloc(align + 1); // +1 для '\0'
+        bytesRead = fread(buffer, 1, align, fp);
 
         if (bytesRead < 0) {
             php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
@@ -1418,7 +1424,6 @@ PHP_FUNCTION(file_pop_line) {
         RETVAL_FALSE;
     }
 }
-
 
 
 
@@ -1704,14 +1709,14 @@ PHP_FUNCTION(file_replace_line) {
     char *filename;
     size_t filename_len;
     char *line_key;
-    char *line_value;
-    size_t line_value_len;
+    char *line;
+    size_t line_len;
     size_t line_key_len;
     zend_long mode = 0;
 
 
     // Парсинг аргументов
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss|l", &filename, &filename_len, &line_key, &line_key_len, &line_value, &line_value_len, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss|l", &filename, &filename_len, &line_key, &line_key_len, &line, &line_len, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1785,10 +1790,11 @@ PHP_FUNCTION(file_replace_line) {
             *lineEnd = '\0';
 
             if (strstr(lineStart, line_key) != NULL) {
-                char *replacement = emalloc(line_value_len + 1);
-                snprintf(replacement, line_value_len + 2, "%s\n", line_value);
+                char *replacement = estrndup(line, line_len + 1);
+                replacement[line_len] = '\n';
+                replacement[line_len + 1] = '\0';
                 
-                if (fwrite(replacement, 1, line_value_len + 1, temp_fp) == 0) {
+                if (fwrite(replacement, 1, line_len + 1, temp_fp) == 0) {
                     php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
                     fclose(data_fp);
                     fclose(temp_fp);
@@ -1874,10 +1880,10 @@ PHP_FUNCTION(file_insert_line) {
     size_t filename_len;
     char *line;
     size_t line_len;
-    zend_long line_align;
+    zend_long align;
 
     // Парсинг аргументов, переданных в функцию
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssl", &filename, &filename_len, &line, &line_len, &line_align) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssl", &filename, &filename_len, &line, &line_len, &align) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1897,23 +1903,23 @@ PHP_FUNCTION(file_insert_line) {
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
-    long line_number = file_size / line_align; // Учет символа перевода строки
+    long line_number = file_size / align; // Учет символа перевода строки
 
     // Подготовка строки к записи с учетом выравнивания
-    char *buffer = (char *)emalloc(line_align + 1); // +1 для '\0'
-    memset(buffer, ' ', line_align); // Заполнение пробелами
-    buffer[line_align - 1] = '\n'; // Добавление перевода строки
-    buffer[line_align] = '\0';
+    char *buffer = (char *)emalloc(align + 1); // +1 для '\0'
+    memset(buffer, ' ', align); // Заполнение пробелами
+    buffer[align - 1] = '\n'; // Добавление перевода строки
+    buffer[align] = '\0';
 
     // Копирование line в буфер с учетом выравнивания
-    strncpy(buffer, line, line_align < line_len ? line_align : line_len);
+    strncpy(buffer, line, align < line_len ? align : line_len);
 
     // Запись в файл
-    size_t written = fwrite(buffer, sizeof(char), line_align, fp); // +1 для записи '\n'
+    size_t written = fwrite(buffer, sizeof(char), align, fp);
     fclose(fp); // Это также разблокирует файл
     efree(buffer);
     
-    if (written != line_align) {
+    if (written != align) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
         RETURN_LONG(-3);
     }
@@ -1928,12 +1934,12 @@ PHP_FUNCTION(file_insert_line) {
 PHP_FUNCTION(file_select_line) {
     char *filename;
     size_t filename_len;
-    zend_long line_row;
-    zend_long line_align;
+    zend_long row;
+    zend_long align;
     zend_long mode = 0;
 
     // Парсинг переданных аргументов
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sll|l", &filename, &filename_len, &line_row, &line_align, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sll|l", &filename, &filename_len, &row, &align, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1951,7 +1957,7 @@ PHP_FUNCTION(file_select_line) {
     }
 
     ssize_t bytesRead;
-    off_t offset = (mode == 0) ? line_row * (line_align) : line_row;
+    off_t offset = (mode == 0) ? row * align : row;
 
     if(fseek(fp, offset , SEEK_SET) < 0){
         php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
@@ -1960,9 +1966,9 @@ PHP_FUNCTION(file_select_line) {
     }
 
     // Увеличиваем размер буфера на 1 для возможного символа перевода строки
-    char *buffer = (char *)emalloc(line_align + 1); // +1 для '\0' и +1 для '\n'
+    char *buffer = (char *)emalloc(align + 1); // +1 для '\0' и +1 для '\n'
 
-    bytesRead = fread(buffer, 1, line_align, fp);
+    bytesRead = fread(buffer, 1, align, fp);
     fclose(fp);
     if(bytesRead < 0){
         php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
@@ -1994,18 +2000,16 @@ PHP_FUNCTION(file_select_line) {
 
 
 
-
-
-PHP_FUNCTION(file_update_line) {
+PHP_FUNCTION(file_update_line) { 
     char *filename;
     size_t filename_len;
     char *line;
     size_t line_len;
-    zend_long line_row, line_align;
+    zend_long row, align;
     zend_long mode = 0;
 
     // Парсинг аргументов, переданных в функцию
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssll|l", &filename, &filename_len, &line, &line_len, &line_row, &line_align, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssll|l", &filename, &filename_len, &line, &line_len, &row, &align, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -2023,7 +2027,7 @@ PHP_FUNCTION(file_update_line) {
     }
 
     // Рассчитываем смещение для записи в файл
-    off_t offset = (mode == 0) ? line_row * (line_align) : line_row;
+    off_t offset = (mode == 0) ? row * align : row;
 
     if (fseek(fp, offset, SEEK_SET) != 0) {
         php_error_docref(NULL, E_WARNING, "Failed to seek in the file: %s", filename);
@@ -2032,20 +2036,20 @@ PHP_FUNCTION(file_update_line) {
     }
 
     // Подготовка строки к записи с учетом выравнивания и перевода строки
-    char *buffer = (char *)emalloc(line_align + 1); // +1 для '\n', +1 для '\0'
-    memset(buffer, ' ', line_align); // Заполнение пробелами
-    buffer[line_align - 1] = '\n'; // Добавление перевода строки
-    buffer[line_align] = '\0'; // Нуль-терминатор
+    char *buffer = (char *)emalloc(align + 1); // +1 для '\0'
+    memset(buffer, ' ', align); // Заполнение пробелами
+    buffer[align - 1] = '\n'; // Добавление перевода строки
+    buffer[align] = '\0'; // Нуль-терминатор
 
     // Копирование line в буфер с учетом выравнивания
-    strncpy(buffer, line, line_len < line_align ? line_len : line_align);
+    strncpy(buffer, line, line_len < align ? line_len : align);
 
     // Запись в файл
-    size_t written = fwrite(buffer, 1, line_align, fp); // +1 для '\n'
+    size_t written = fwrite(buffer, 1, align, fp);
     efree(buffer);
     fclose(fp); // Это также разблокирует файл
 
-    if (written != line_align) {
+    if (written != align) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
         RETURN_LONG(-4);
     }
@@ -2181,3 +2185,64 @@ PHP_FUNCTION(find_matches_pcre2) {
     RETURN_ZVAL(&return_matched, 0, 1);
 }
 
+
+
+PHP_FUNCTION(replicate_file) {
+    char *source, *destination;
+    size_t source_len, destination_len;
+
+    // Парсинг аргументов
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &source, &source_len, &destination, &destination_len) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    FILE *source_fp = fopen(source, "r+");
+    if (!source_fp) {
+        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", source);
+        RETURN_LONG(-1);
+    }
+
+    FILE *destination_fp = fopen(destination, "w+");
+    if (!destination_fp) {
+        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", destination);
+        fclose(source_fp);
+        RETURN_LONG(-2);
+    }
+
+    if (flock(fileno(source_fp), LOCK_EX) == -1) {
+        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", source);
+        fclose(source_fp);
+        fclose(destination_fp);
+        RETURN_LONG(-3);
+    }
+    if (flock(fileno(destination_fp), LOCK_EX) == -1) {
+        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", destination);
+        fclose(source_fp);
+        fclose(destination_fp);
+        RETURN_LONG(-3);
+    }
+
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(source_fp, 0, SEEK_END);
+    long file_size = ftell(source_fp);
+    fseek(source_fp, 0, SEEK_SET);
+
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    if(file_size < ini_buffer_size) ini_buffer_size = file_size;
+
+    zend_long dynamic_buffer_size = ini_buffer_size;
+    char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+
+    size_t current_size = 0;
+    ssize_t bytesRead;
+
+    while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), source_fp)) > 0) {
+        current_size += fwrite(dynamic_buffer, 1, bytesRead, destination_fp);
+    }
+
+    fclose(source_fp);
+    fclose(destination_fp);
+
+    RETURN_LONG(current_size);
+}
