@@ -33,6 +33,8 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - [file_select_line](/docs/file_select_line.md): Selecting a line from the file, based on a specified number or offset.
 - [file_update_line](/docs/file_update_line.md): Updating a line in the file.
 - [file_analize](/docs/file_analize.md): - Returns the maximum length of a line in the file.
+- [replicate_file](/docs/replicate_file.md): - Data file replication
+
 
 ## Implementation Highlights
 
