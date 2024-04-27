@@ -2305,7 +2305,7 @@ PHP_FUNCTION(replicate_file) {
     while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), source_fp)) > 0) {
         bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, destination_fp);
 
-        if(bytesRead != bytesWrite) {
+        if(bytesRead != bytesWrite || bytesWrite == 0) {
             php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", destination);
             fclose(source_fp);
             fclose(destination_fp);
@@ -2323,7 +2323,7 @@ PHP_FUNCTION(replicate_file) {
         while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), index_source_fp)) > 0) {
             bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, index_destination_fp);
 
-            if(bytesRead != bytesWrite) {
+            if(bytesRead != bytesWrite || bytesWrite == 0) {
                 php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", index_destination);
                 fclose(source_fp);
                 fclose(destination_fp);
