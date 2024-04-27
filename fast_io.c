@@ -826,15 +826,24 @@ PHP_FUNCTION(file_push_line) {
     }
 
     long file_size = ftell(fp);
+    ssize_t bytesWrite;
 
-    // Запись пары ключ-значение в файл
-    if (fprintf(fp, "%s\n", line) < 0) {
+    char *new_line = estrndup(line, line_len + 1);
+    new_line[line_len] = '\n';
+    new_line[line_len + 1] = '\0';
+
+    bytesWrite = fwrite(new_line, 1, line_len + 1, fp);
+
+    if (bytesWrite != line_len + 1) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
-        fclose(fp); // Это также разблокирует файл
+        fclose(fp);
+        efree(new_line);
         RETURN_LONG(-3);
     }
 
+
     fclose(fp); // Закрытие файла также разблокирует его
+    efree(new_line);
 
     RETURN_LONG(file_size);
 }
@@ -964,6 +973,7 @@ PHP_FUNCTION(file_defrag_lines) {
 
     zend_long found_count = 0;
     ssize_t bytesRead;
+    ssize_t bytesWrite;
     size_t current_size = 0;
 
     bool isEOF;
@@ -1004,7 +1014,9 @@ PHP_FUNCTION(file_defrag_lines) {
             if(!found_match){
                 *lineEnd = '\n';
 
-                if (fwrite(lineStart, 1, lineLength, temp_fp) == 0) {
+                bytesWrite = fwrite(lineStart, 1, lineLength, temp_fp);
+
+                if (bytesWrite != lineLength) {
                     php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
                     fclose(data_fp);
                     fclose(temp_fp);
@@ -1049,7 +1061,9 @@ PHP_FUNCTION(file_defrag_lines) {
         if (ftruncate(fileno(data_fp), current_size)) {
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
             fclose(data_fp);
-
+            efree(dynamic_buffer);
+            fclose(temp_fp);
+            unlink(temp_filename);
             RETURN_LONG(-5);
         }
 
@@ -1069,6 +1083,9 @@ PHP_FUNCTION(file_defrag_lines) {
 
     RETURN_LONG(found_count);
 }
+
+
+
 
 
 
@@ -1464,6 +1481,8 @@ PHP_FUNCTION(file_erase_line) {
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
 
     ssize_t bytesRead;
+    ssize_t bytesWrite;
+
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
     bool found_match = false;
 
@@ -1498,7 +1517,9 @@ PHP_FUNCTION(file_erase_line) {
                 // Перемещаемся к началу найденной строки и записываем замену
                 fseek(fp, writeOffset , SEEK_SET);
 
-                if (fwrite(replacement, 1, lineLength - 1, fp) == 0) {
+                bytesWrite = fwrite(replacement, 1, lineLength - 1, fp);
+
+                if (bytesWrite != lineLength - 1) {
                     efree(replacement);
                     efree(dynamic_buffer);
                     php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
@@ -1766,6 +1787,7 @@ PHP_FUNCTION(file_replace_line) {
 
     zend_long found_count = 0;
     ssize_t bytesRead;
+    ssize_t bytesWrite;
     size_t current_size = 0;
 
     bool isEOF;
@@ -1794,8 +1816,10 @@ PHP_FUNCTION(file_replace_line) {
                 char *replacement = estrndup(line, line_len + 1);
                 replacement[line_len] = '\n';
                 replacement[line_len + 1] = '\0';
+
+                bytesWrite = fwrite(replacement, 1, line_len + 1, temp_fp);
                 
-                if (fwrite(replacement, 1, line_len + 1, temp_fp) == 0) {
+                if (bytesWrite != line_len + 1) {
                     php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
                     fclose(data_fp);
                     fclose(temp_fp);
@@ -1809,7 +1833,9 @@ PHP_FUNCTION(file_replace_line) {
             } else {
                 *lineEnd = '\n';
 
-                if (fwrite(lineStart, 1, lineLength, temp_fp) == 0) {
+                bytesWrite = fwrite(lineStart, 1, lineLength, temp_fp);
+
+                if (bytesWrite != lineLength) {
                     php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
                     fclose(data_fp);
                     fclose(temp_fp);
@@ -2224,14 +2250,12 @@ PHP_FUNCTION(replicate_file) {
 
     FILE *index_source_fp;
     FILE *index_destination_fp;
+    char index_source[source_len + 7];
+    char index_destination[destination_len + 7];
 
     if(mode == 1){
-        char index_source[source_len + 7];
         snprintf(index_source, sizeof(index_source), "%s.index", source);
-
-        char index_destination[destination_len + 7];
         snprintf(index_destination, sizeof(index_destination), "%s.index", destination);
-
 
         index_source_fp = fopen(index_source, "r");
         if (!index_source_fp) {
@@ -2275,14 +2299,40 @@ PHP_FUNCTION(replicate_file) {
 
     size_t current_size = 0;
     ssize_t bytesRead;
+    ssize_t bytesWrite;
+
 
     while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), source_fp)) > 0) {
-        current_size += fwrite(dynamic_buffer, 1, bytesRead, destination_fp);
+        bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, destination_fp);
+
+        if(bytesRead != bytesWrite) {
+            php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", destination);
+            fclose(source_fp);
+            fclose(destination_fp);
+            if(mode == 1){
+                fclose(index_source_fp);
+                fclose(index_destination_fp);
+            }
+            RETURN_LONG(-4);
+        }
+
+        current_size += bytesWrite;
     }
 
     if(mode == 1){
         while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), index_source_fp)) > 0) {
-            current_size += fwrite(dynamic_buffer, 1, bytesRead, index_destination_fp);
+            bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, index_destination_fp);
+
+            if(bytesRead != bytesWrite) {
+                php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", index_destination);
+                fclose(source_fp);
+                fclose(destination_fp);
+                fclose(index_source_fp);
+                fclose(index_destination_fp);
+                RETURN_LONG(-4);
+            }
+
+            current_size += bytesWrite;
         }
 
         fclose(index_source_fp);
