@@ -2303,6 +2303,19 @@ PHP_FUNCTION(replicate_file) {
 
 
     while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), source_fp)) > 0) {
+        if(bytesRead == 0) {
+            php_error_docref(NULL, E_WARNING, "Failed read the file: %s", source);
+            fclose(source_fp);
+            fclose(destination_fp);
+            if(mode == 1){
+                fclose(index_source_fp);
+                fclose(index_destination_fp);
+            }
+            efree(dynamic_buffer);
+            RETURN_LONG(-5);
+        }
+
+
         bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, destination_fp);
 
         if(bytesRead != bytesWrite || bytesWrite == 0) {
@@ -2313,6 +2326,7 @@ PHP_FUNCTION(replicate_file) {
                 fclose(index_source_fp);
                 fclose(index_destination_fp);
             }
+            efree(dynamic_buffer);
             RETURN_LONG(-4);
         }
 
@@ -2321,14 +2335,26 @@ PHP_FUNCTION(replicate_file) {
 
     if(mode == 1){
         while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), index_source_fp)) > 0) {
+            if(bytesRead == 0) {
+                php_error_docref(NULL, E_WARNING, "Failed read the file: %s", index_source);
+                fclose(source_fp);
+                fclose(destination_fp);
+                fclose(index_source_fp);
+                fclose(index_destination_fp);
+                efree(dynamic_buffer);
+                RETURN_LONG(-5);
+            }
+
+
             bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, index_destination_fp);
 
-            if(bytesRead != bytesWrite || bytesWrite == 0) {
+            if(bytesRead != bytesWrite) {
                 php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", index_destination);
                 fclose(source_fp);
                 fclose(destination_fp);
                 fclose(index_source_fp);
                 fclose(index_destination_fp);
+                efree(dynamic_buffer);
                 RETURN_LONG(-4);
             }
 
@@ -2341,6 +2367,7 @@ PHP_FUNCTION(replicate_file) {
 
     fclose(source_fp);
     fclose(destination_fp);
+    efree(dynamic_buffer);
 
     RETURN_LONG(current_size);
 }
