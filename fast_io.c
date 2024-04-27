@@ -2318,7 +2318,7 @@ PHP_FUNCTION(replicate_file) {
 
         bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, destination_fp);
 
-        if(bytesRead != bytesWrite || bytesWrite == 0) {
+        if(bytesRead != bytesWrite) {
             php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", destination);
             fclose(source_fp);
             fclose(destination_fp);
