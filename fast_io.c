@@ -1331,7 +1331,7 @@ PHP_FUNCTION(file_defrag_data) {
                     }
 
                     bytesReadData = fread(dataBuffer, 1, size, data_fp);
-                    if(bytesReadData > 0){
+                    if(bytesReadData < 1){
                         php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
                         fclose(index_fp);
                         fclose(data_fp);
