@@ -74,6 +74,11 @@ $currentBufferSize = ini_get('fast_io.buffer_size');
 ini_set('fast_io.buffer_size', 8192); // 8 KB
 ```
 
+#### Initialization
+
+Initialization of parameters in PHP occurs during server startup or script execution. In the provided code example, initialization of the "fast_io.buffer_size" parameter is done during the initialization of the fast_io module in PHP.
+
+
 ### Notes
 
 - Changing the buffer size during script execution can affect the performance of I/O operations performed after this change.
