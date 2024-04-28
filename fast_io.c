@@ -126,6 +126,7 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_defrag_data, 1, 1, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line_key, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_pop_line, 1, 1, IS_STRING, 1)
@@ -313,9 +314,6 @@ PHP_FUNCTION(file_search_array) {
     }
 
 
-    // mode = 9, 19 старт поиска по смещению
-    // mode = 8, 18 старт поиска по номеру строки
-
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
         // Проверяем, достигли ли мы конца файла (EOF)
@@ -483,6 +481,7 @@ PHP_FUNCTION(file_search_array) {
                     efree(dynamic_buffer);
                     RETURN_FALSE;
                 }
+                efree(dynamic_buffer);
                 dynamic_buffer = temp_buffer;
             }
         }
@@ -646,6 +645,7 @@ PHP_FUNCTION(file_search_line) {
                     fclose(fp);
                     RETURN_FALSE;
                 }
+                efree(dynamic_buffer);
                 dynamic_buffer = temp_buffer;
             }
         }
@@ -769,6 +769,7 @@ PHP_FUNCTION(file_search_data) {
                 fclose(index_fp);
                 RETURN_FALSE;
             }
+            efree(dynamic_buffer);
             dynamic_buffer = temp_buffer;
         }
     }
@@ -808,14 +809,9 @@ PHP_FUNCTION(file_search_data) {
         }
 
         bytesRead = fread(dataBuffer, 1, size, data_fp);
-        if (bytesRead < size) {
-            efree(dataBuffer);
-            fclose(data_fp);
-            php_error_docref(NULL, E_WARNING, "Failed to read data block.");
-            RETURN_FALSE;
-        }
 
-        dataBuffer[size] = '\0';
+
+        dataBuffer[bytesRead] = '\0'; // 
         RETVAL_STRING(dataBuffer);
         efree(dataBuffer);
     } else {
@@ -977,13 +973,6 @@ PHP_FUNCTION(file_defrag_lines) {
         unlink(temp_filename);
         RETURN_LONG(-3);
     }
-    if (flock(fileno(temp_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", temp_filename);
-        fclose(data_fp);
-        fclose(temp_fp);
-        unlink(temp_filename);
-        RETURN_LONG(-3);
-    }
 
     // Перемещение указателя в конец файла для получения его размера
     fseek(data_fp, 0, SEEK_END);
@@ -1048,7 +1037,7 @@ PHP_FUNCTION(file_defrag_lines) {
             if(!found_match){
                 *lineEnd = '\n';
 
-                bytesWrite = fwrite(lineStart, 1, lineLength, temp_fp);
+                bytesWrite = fwrite(lineStart, 1, lineLength, temp_fp); // 
 
                 if (bytesWrite != lineLength) {
                     php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
@@ -1082,6 +1071,7 @@ PHP_FUNCTION(file_defrag_lines) {
                     efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
+                efree(dynamic_buffer);
                 dynamic_buffer = temp_buffer;
             }
         }
@@ -1094,11 +1084,11 @@ PHP_FUNCTION(file_defrag_lines) {
         current_size = 0;
 
         while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), temp_fp)) > 0) {
-            current_size += fwrite(dynamic_buffer, 1, bytesRead, data_fp);
+            current_size += fwrite(dynamic_buffer, 1, bytesRead, data_fp); // 
         }
 
         // Усекаем файл
-        if (ftruncate(fileno(data_fp), current_size)) {
+        if (ftruncate(fileno(data_fp), current_size) < 0) {
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
             fclose(data_fp);
             efree(dynamic_buffer);
@@ -1123,9 +1113,6 @@ PHP_FUNCTION(file_defrag_lines) {
 
     RETURN_LONG(found_count);
 }
-
-
-
 
 
 
@@ -1350,13 +1337,6 @@ PHP_FUNCTION(file_pop_line) {
 
         bytesRead = fread(buffer, 1, align, fp);
 
-        if (bytesRead < 0) {
-            php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
-            efree(buffer);
-            fclose(fp);
-            RETURN_FALSE;
-        }
-
         // Убедимся, что строка нуль-терминирована
         buffer[bytesRead] = '\0';
 
@@ -1367,7 +1347,7 @@ PHP_FUNCTION(file_pop_line) {
         }
 
         // Усекаем файл
-        if(ftruncate(fileno(fp), pos)) {
+        if(ftruncate(fileno(fp), pos) < 0) {
             efree(buffer);
             fclose(fp);
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
@@ -1405,13 +1385,6 @@ PHP_FUNCTION(file_pop_line) {
         fseek(fp, pos, SEEK_SET);
         bytesRead = fread(buffer, 1, ini_buffer_size, fp);
 
-        if (bytesRead < 0) {
-            php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
-            fclose(fp);
-            efree(buffer);
-            if (result_str) zend_string_release(result_str);
-            RETURN_FALSE;
-        }
 
         for (ssize_t i = bytesRead - 1; i >= 0; --i) {
             if (buffer[i] == '\n') {
@@ -1467,7 +1440,7 @@ PHP_FUNCTION(file_pop_line) {
         off_t new_file_size = file_size - len;
         if(new_file_size < 0) new_file_size = 0;
 
-        if(ftruncate(fileno(fp), new_file_size)) {
+        if(ftruncate(fileno(fp), new_file_size) < 0) {
             fclose(fp);
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
             RETURN_FALSE;
@@ -1618,6 +1591,7 @@ PHP_FUNCTION(file_erase_line) {
                     efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
+                efree(dynamic_buffer);
                 dynamic_buffer = temp_buffer;
             }
         }
@@ -1772,6 +1746,7 @@ PHP_FUNCTION(file_get_keys) {
                     efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
+                efree(dynamic_buffer);
                 dynamic_buffer = temp_buffer;
             }
         }
@@ -1954,6 +1929,7 @@ PHP_FUNCTION(file_replace_line) {
                     efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
+                efree(dynamic_buffer);
                 dynamic_buffer = temp_buffer;
             }
         }
@@ -1966,11 +1942,11 @@ PHP_FUNCTION(file_replace_line) {
         current_size = 0;
 
         while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), temp_fp)) > 0) {
-            current_size += fwrite(dynamic_buffer, 1, bytesRead, data_fp);
+            current_size += fwrite(dynamic_buffer, 1, bytesRead, data_fp); //
         }
 
         // Усекаем файл
-        if (ftruncate(fileno(data_fp), current_size)) {
+        if (ftruncate(fileno(data_fp), current_size) < 0) {
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
             fclose(data_fp);
 
@@ -2103,11 +2079,6 @@ PHP_FUNCTION(file_select_line) {
 
     bytesRead = fread(buffer, 1, align, fp);
     fclose(fp);
-    if(bytesRead < 0){
-        php_error_docref(NULL, E_WARNING, "Error reading file: %s", filename);
-        efree(buffer);
-        RETURN_FALSE;
-    }
 
     // Убедимся, что строка нуль-терминирована
     buffer[bytesRead] = '\0';
@@ -2431,7 +2402,7 @@ PHP_FUNCTION(replicate_file) {
     while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), source_fp)) > 0) {
         bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, destination_fp);
 
-        if(bytesRead != bytesWrite) {
+        if(bytesRead != bytesWrite) { // 
             php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", destination);
             fclose(source_fp);
             fclose(destination_fp);
@@ -2450,7 +2421,7 @@ PHP_FUNCTION(replicate_file) {
         while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), index_source_fp)) > 0) {
             bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, index_destination_fp);
 
-            if(bytesRead != bytesWrite) {
+            if(bytesRead != bytesWrite) { // 
                 php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", index_destination);
                 fclose(source_fp);
                 fclose(destination_fp);
