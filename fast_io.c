@@ -266,6 +266,12 @@ PHP_FUNCTION(file_search_array) {
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+    if (!dynamic_buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(fp);
+        RETURN_FALSE;
+    }
+
 
     ssize_t bytesRead;
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
@@ -469,11 +475,14 @@ PHP_FUNCTION(file_search_array) {
 
             if (current_size + ini_buffer_size > dynamic_buffer_size) {
                 dynamic_buffer_size += ini_buffer_size;
-                dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!dynamic_buffer) {
+                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+                if (!temp_buffer) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
-                    break;
+                    fclose(fp);
+                    efree(dynamic_buffer);
+                    RETURN_FALSE;
                 }
+                dynamic_buffer = temp_buffer;
             }
         }
     }
@@ -551,6 +560,11 @@ PHP_FUNCTION(file_search_line) {
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+    if (!dynamic_buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(fp);
+        RETURN_FALSE;
+    }
 
     ssize_t bytesRead;
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
@@ -623,11 +637,14 @@ PHP_FUNCTION(file_search_line) {
 
             if (current_size + ini_buffer_size > dynamic_buffer_size) {
                 dynamic_buffer_size += ini_buffer_size;
-                dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!dynamic_buffer) {
+                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+                if (!temp_buffer) {
+                    efree(dynamic_buffer);
                     php_error_docref(NULL, E_WARNING, "Out of memory");
-                    break;
+                    fclose(fp);
+                    RETURN_FALSE;
                 }
+                dynamic_buffer = temp_buffer;
             }
         }
     }
@@ -704,6 +721,12 @@ PHP_FUNCTION(file_search_data) {
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+    if (!dynamic_buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(data_fp);
+        fclose(index_fp);
+        RETURN_FALSE;
+    }
 
     ssize_t bytesRead;
     size_t current_size = 0;
@@ -775,7 +798,7 @@ PHP_FUNCTION(file_search_data) {
 
         char *dataBuffer = emalloc(size + 1);
         if (!dataBuffer) {
-            php_error_docref(NULL, E_WARNING, "Outof memory");
+            php_error_docref(NULL, E_WARNING, "Out of memory");
             fclose(data_fp);
             RETURN_FALSE;
         }
@@ -969,7 +992,13 @@ PHP_FUNCTION(file_defrag_lines) {
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
-
+    if (!dynamic_buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(data_fp);
+        fclose(temp_fp);
+        unlink(temp_filename);
+        RETURN_LONG(-8);
+    }
 
     zend_long found_count = 0;
     ssize_t bytesRead;
@@ -1038,11 +1067,17 @@ PHP_FUNCTION(file_defrag_lines) {
 
             if (current_size + ini_buffer_size > dynamic_buffer_size) {
                 dynamic_buffer_size += ini_buffer_size;
-                dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!dynamic_buffer) {
+
+                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+                if (!temp_buffer) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
-                    break;
+                    fclose(data_fp);
+                    fclose(temp_fp);
+                    unlink(temp_filename);
+                    efree(dynamic_buffer);
+                    RETURN_LONG(-8);
                 }
+                dynamic_buffer = temp_buffer;
             }
         }
     }
@@ -1302,6 +1337,12 @@ PHP_FUNCTION(file_pop_line) {
 
         // Увеличиваем размер буфера на 1 для возможного символа перевода строки
         char *buffer = (char *)emalloc(align + 1); // +1 для '\0'
+        if (!buffer) {
+            php_error_docref(NULL, E_WARNING, "Out of memory");
+            fclose(fp);
+            RETURN_FALSE;
+        }
+
         bytesRead = fread(buffer, 1, align, fp);
 
         if (bytesRead < 0) {
@@ -1342,6 +1383,12 @@ PHP_FUNCTION(file_pop_line) {
 
     // Авто поиск последней строки
     char *buffer = (char *)emalloc(ini_buffer_size + 1);
+    if (!buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(fp);
+        RETURN_FALSE;
+    }
+
     zend_string *result_str = NULL;
     int found_line_start = 0;
 
@@ -1479,6 +1526,11 @@ PHP_FUNCTION(file_erase_line) {
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+    if (!dynamic_buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(fp);
+        RETURN_LONG(-8);
+    }
 
     ssize_t bytesRead;
     ssize_t bytesWrite;
@@ -1512,6 +1564,13 @@ PHP_FUNCTION(file_erase_line) {
             if (strstr(lineStart, line_key) != NULL) {
                 // Найдено совпадение ключа, подготавливаем замену
                 char *replacement = emalloc(lineLength);
+                if (!replacement) {
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    efree(dynamic_buffer);
+                    fclose(fp);
+                    RETURN_LONG(-8);
+                }
+
                 memset(replacement, SPECIAL_CHAR, lineLength - 1); // Заполнение символами DEL
                 
                 // Перемещаемся к началу найденной строки и записываем замену
@@ -1544,11 +1603,15 @@ PHP_FUNCTION(file_erase_line) {
 
             if (current_size + ini_buffer_size > dynamic_buffer_size) {
                 dynamic_buffer_size += ini_buffer_size;
-                dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!dynamic_buffer) {
+
+                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+                if (!temp_buffer) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
-                    break;
+                    fclose(fp);
+                    efree(dynamic_buffer);
+                    RETURN_LONG(-8);
                 }
+                dynamic_buffer = temp_buffer;
             }
         }
     }
@@ -1598,6 +1661,11 @@ PHP_FUNCTION(file_get_keys) {
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+    if (!dynamic_buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(fp);
+        RETURN_LONG(-8);
+    }
 
     ssize_t bytesRead;
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
@@ -1688,11 +1756,15 @@ PHP_FUNCTION(file_get_keys) {
 
             if (current_size + ini_buffer_size > dynamic_buffer_size) {
                 dynamic_buffer_size += ini_buffer_size;
-                dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!dynamic_buffer) {
+
+                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+                if (!temp_buffer) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
-                    break;
+                    fclose(fp);
+                    efree(dynamic_buffer);
+                    RETURN_LONG(-8);
                 }
+                dynamic_buffer = temp_buffer;
             }
         }
     }
@@ -1784,6 +1856,13 @@ PHP_FUNCTION(file_replace_line) {
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+    if (!dynamic_buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(data_fp);
+        fclose(temp_fp);
+        unlink(temp_filename);
+        RETURN_LONG(-8);
+    }
 
     zend_long found_count = 0;
     ssize_t bytesRead;
@@ -1856,11 +1935,17 @@ PHP_FUNCTION(file_replace_line) {
 
             if (current_size + ini_buffer_size > dynamic_buffer_size) {
                 dynamic_buffer_size += ini_buffer_size;
-                dynamic_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!dynamic_buffer) {
+
+                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+                if (!temp_buffer) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
-                    break;
+                    fclose(data_fp);
+                    fclose(temp_fp);
+                    unlink(temp_filename);
+                    efree(dynamic_buffer);
+                    RETURN_LONG(-8);
                 }
+                dynamic_buffer = temp_buffer;
             }
         }
     }
@@ -1934,6 +2019,12 @@ PHP_FUNCTION(file_insert_line) {
 
     // Подготовка строки к записи с учетом выравнивания
     char *buffer = (char *)emalloc(align + 1); // +1 для '\0'
+    if (!buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(fp);
+        RETURN_LONG(-8);
+    }
+
     memset(buffer, ' ', align); // Заполнение пробелами
     buffer[align - 1] = '\n'; // Добавление перевода строки
     buffer[align] = '\0';
@@ -1994,6 +2085,12 @@ PHP_FUNCTION(file_select_line) {
 
     // Увеличиваем размер буфера на 1 для возможного символа перевода строки
     char *buffer = (char *)emalloc(align + 1); // +1 для '\0' и +1 для '\n'
+    if (!buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(fp);
+        RETURN_FALSE;
+    }
+
 
     bytesRead = fread(buffer, 1, align, fp);
     fclose(fp);
@@ -2067,6 +2164,12 @@ PHP_FUNCTION(file_update_line) {
 
     // Подготовка строки к записи с учетом выравнивания и перевода строки
     char *buffer = (char *)emalloc(align + 1); // +1 для '\0'
+    if (!buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(fp);
+        RETURN_LONG(-8);
+    }
+
     memset(buffer, ' ', align); // Заполнение пробелами
     buffer[align - 1] = '\n'; // Добавление перевода строки
     buffer[align] = '\0'; // Нуль-терминатор
@@ -2121,6 +2224,11 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     if(file_size < ini_buffer_size) ini_buffer_size = file_size;
 
     char *buffer = (char *)emalloc(ini_buffer_size);
+    if (!buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(fp);
+        RETURN_LONG(-8);
+    }
 
     ssize_t bytes_read;
     long max_length = 0, current_length = 0;
@@ -2282,7 +2390,6 @@ PHP_FUNCTION(replicate_file) {
             fclose(destination_fp);
             RETURN_LONG(-3);
         }
-        
     }
 
     // Перемещение указателя в конец файла для получения его размера
@@ -2296,11 +2403,19 @@ PHP_FUNCTION(replicate_file) {
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+    if (!dynamic_buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(index_source_fp);
+        fclose(index_destination_fp);
+        fclose(source_fp);
+        fclose(destination_fp);
+        RETURN_LONG(-8);
+    }
+
 
     size_t current_size = 0;
     ssize_t bytesRead;
     ssize_t bytesWrite;
-
 
     while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), source_fp)) > 0) {
         bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, destination_fp);
