@@ -1163,6 +1163,7 @@ PHP_FUNCTION(file_defrag_data) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
         fclose(data_fp);
         fclose(temp_fp);
+        unlink(temp_filename);
         RETURN_LONG(-2);
     }
 
@@ -2162,6 +2163,8 @@ PHP_FUNCTION(file_replace_line) {
                 php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
                 efree(dynamic_buffer);
                 fclose(data_fp);
+                fclose(temp_fp);
+                unlink(temp_filename);
                 RETURN_LONG(-4);
             }
 
@@ -2171,9 +2174,10 @@ PHP_FUNCTION(file_replace_line) {
         // Усекаем файл
         if (ftruncate(fileno(data_fp), current_size) < 0) {
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
-            fclose(data_fp);
             efree(dynamic_buffer);
-
+            fclose(data_fp);
+            fclose(temp_fp);
+            unlink(temp_filename);
             RETURN_LONG(-5);
         }
 
@@ -2243,6 +2247,7 @@ PHP_FUNCTION(file_insert_line) {
 
     // Запись в файл
     size_t written = fwrite(buffer, sizeof(char), align, fp);
+
     fclose(fp); // Это также разблокирует файл
     efree(buffer);
     
@@ -2563,6 +2568,7 @@ PHP_FUNCTION(replicate_file) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", source);
         fclose(source_fp);
         fclose(destination_fp);
+        unlink(destination);
         RETURN_LONG(-3);
     }
 
@@ -2580,6 +2586,8 @@ PHP_FUNCTION(replicate_file) {
             php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_source);
             fclose(source_fp);
             fclose(destination_fp);
+            unlink(destination);
+            unlink(index_destination);
             RETURN_LONG(-1);
         }
 
@@ -2588,7 +2596,8 @@ PHP_FUNCTION(replicate_file) {
             php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_destination);
             fclose(index_source_fp);
             fclose(source_fp);
-            fclose(destination_fp);
+            unlink(destination);
+            unlink(index_destination);
             RETURN_LONG(-2);
         }
 
@@ -2598,6 +2607,8 @@ PHP_FUNCTION(replicate_file) {
             fclose(index_destination_fp);
             fclose(source_fp);
             fclose(destination_fp);
+            unlink(destination);
+            unlink(index_destination);
             RETURN_LONG(-3);
         }
     }
@@ -2620,6 +2631,8 @@ PHP_FUNCTION(replicate_file) {
         fclose(index_destination_fp);
         fclose(source_fp);
         fclose(destination_fp);
+        unlink(destination);
+        if(mode == 1) unlink(index_destination);
         RETURN_LONG(-8);
     }
 
@@ -2638,8 +2651,10 @@ PHP_FUNCTION(replicate_file) {
             if(mode == 1){
                 fclose(index_source_fp);
                 fclose(index_destination_fp);
+                unlink(index_destination);
             }
             efree(dynamic_buffer);
+            unlink(destination);
             RETURN_LONG(-4);
         }
 
@@ -2657,6 +2672,8 @@ PHP_FUNCTION(replicate_file) {
                 fclose(index_source_fp);
                 fclose(index_destination_fp);
                 efree(dynamic_buffer);
+                unlink(index_destination);
+                unlink(destination);
                 RETURN_LONG(-4);
             }
 
