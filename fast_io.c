@@ -806,7 +806,7 @@ PHP_FUNCTION(file_search_data) {
         }
 
         bytesRead = fread(dataBuffer, 1, size, data_fp);
-        if(bytesRead < 1){
+        if(bytesRead != size){
             php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
             fclose(data_fp);
             RETURN_FALSE;
@@ -1331,7 +1331,7 @@ PHP_FUNCTION(file_defrag_data) {
                     }
 
                     bytesReadData = fread(dataBuffer, 1, size, data_fp);
-                    if(bytesReadData < 1){
+                    if(bytesReadData != size){
                         php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
                         fclose(index_fp);
                         fclose(data_fp);
@@ -1547,6 +1547,12 @@ PHP_FUNCTION(file_pop_line) {
         }
 
         bytesRead = fread(buffer, 1, align, fp);
+        if(bytesRead != align){
+            efree(buffer);
+            fclose(fp);
+            php_error_docref(NULL, E_WARNING, "Failed to read file: %s", filename);
+            RETURN_FALSE;
+        }
 
         // Убедимся, что строка нуль-терминирована
         buffer[bytesRead] = '\0';
@@ -1595,6 +1601,7 @@ PHP_FUNCTION(file_pop_line) {
 
         fseek(fp, pos, SEEK_SET);
         bytesRead = fread(buffer, 1, ini_buffer_size, fp);
+        
 
 
         for (ssize_t i = bytesRead - 1; i >= 0; --i) {
@@ -2295,6 +2302,11 @@ PHP_FUNCTION(file_select_line) {
 
 
     bytesRead = fread(buffer, 1, align, fp);
+    if(bytesRead != align){
+        php_error_docref(NULL, E_WARNING, "Failed to read file: %s", filename);
+        fclose(fp);
+        RETURN_FALSE;
+    }
     fclose(fp);
 
     // Убедимся, что строка нуль-терминирована
