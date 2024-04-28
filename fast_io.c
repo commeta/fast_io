@@ -1121,8 +1121,6 @@ PHP_FUNCTION(file_defrag_lines) {
 
 
 
-
-
 PHP_FUNCTION(file_defrag_data) { // рефакторинг
     char *filename, *line_key = NULL;
     size_t filename_len, line_key_len = 0;
