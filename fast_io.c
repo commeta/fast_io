@@ -806,7 +806,7 @@ PHP_FUNCTION(file_search_data) {
         }
 
         bytesRead = fread(dataBuffer, 1, size, data_fp);
-        if(bytesRead != size){
+        if(bytesRead > 0){
             php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
             fclose(data_fp);
             RETURN_FALSE;
@@ -1331,7 +1331,7 @@ PHP_FUNCTION(file_defrag_data) {
                     }
 
                     bytesReadData = fread(dataBuffer, 1, size, data_fp);
-                    if(bytesReadData != size){
+                    if(bytesReadData > 0){
                         php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
                         fclose(index_fp);
                         fclose(data_fp);
