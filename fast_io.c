@@ -810,8 +810,7 @@ PHP_FUNCTION(file_search_data) {
 
         bytesRead = fread(dataBuffer, 1, size, data_fp);
 
-
-        dataBuffer[bytesRead] = '\0'; // 
+        dataBuffer[bytesRead] = '\0';
         RETVAL_STRING(dataBuffer);
         efree(dataBuffer);
     } else {
@@ -1037,7 +1036,7 @@ PHP_FUNCTION(file_defrag_lines) {
             if(!found_match){
                 *lineEnd = '\n';
 
-                bytesWrite = fwrite(lineStart, 1, lineLength, temp_fp); // 
+                bytesWrite = fwrite(lineStart, 1, lineLength, temp_fp);
 
                 if (bytesWrite != lineLength) {
                     php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
@@ -1084,7 +1083,7 @@ PHP_FUNCTION(file_defrag_lines) {
         current_size = 0;
 
         while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), temp_fp)) > 0) {
-            current_size += fwrite(dynamic_buffer, 1, bytesRead, data_fp); // 
+            current_size += fwrite(dynamic_buffer, 1, bytesRead, data_fp); // добавить проверку на запись рефакторинг
         }
 
         // Усекаем файл
@@ -1942,13 +1941,22 @@ PHP_FUNCTION(file_replace_line) {
         current_size = 0;
 
         while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), temp_fp)) > 0) {
-            current_size += fwrite(dynamic_buffer, 1, bytesRead, data_fp); //
+            bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, data_fp); // проверка на размер записи рефакторинг
+            if(bytesWrite != bytesRead){
+                php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
+                efree(dynamic_buffer);
+                fclose(data_fp);
+                RETURN_LONG(-4);
+            }
+
+            current_size += bytesWrite;
         }
 
         // Усекаем файл
         if (ftruncate(fileno(data_fp), current_size) < 0) {
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
             fclose(data_fp);
+            efree(dynamic_buffer);
 
             RETURN_LONG(-5);
         }
@@ -2402,7 +2410,7 @@ PHP_FUNCTION(replicate_file) {
     while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), source_fp)) > 0) {
         bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, destination_fp);
 
-        if(bytesRead != bytesWrite) { // 
+        if(bytesRead != bytesWrite) { 
             php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", destination);
             fclose(source_fp);
             fclose(destination_fp);
@@ -2421,7 +2429,7 @@ PHP_FUNCTION(replicate_file) {
         while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), index_source_fp)) > 0) {
             bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, index_destination_fp);
 
-            if(bytesRead != bytesWrite) { // 
+            if(bytesRead != bytesWrite) { 
                 php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", index_destination);
                 fclose(source_fp);
                 fclose(destination_fp);
