@@ -1083,7 +1083,16 @@ PHP_FUNCTION(file_defrag_lines) {
         current_size = 0;
 
         while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), temp_fp)) > 0) {
-            current_size += fwrite(dynamic_buffer, 1, bytesRead, data_fp); // добавить проверку на запись рефакторинг
+            bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, data_fp); 
+            if(bytesRead != bytesWrite){
+                php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
+                fclose(data_fp);
+                fclose(temp_fp);
+                unlink(temp_filename);
+                efree(dynamic_buffer);
+                RETURN_LONG(-4);
+            }
+            current_size += bytesWrite;
         }
 
         // Усекаем файл
@@ -1941,7 +1950,7 @@ PHP_FUNCTION(file_replace_line) {
         current_size = 0;
 
         while ((bytesRead = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), temp_fp)) > 0) {
-            bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, data_fp); // проверка на размер записи рефакторинг
+            bytesWrite = fwrite(dynamic_buffer, 1, bytesRead, data_fp); 
             if(bytesWrite != bytesRead){
                 php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
                 efree(dynamic_buffer);
