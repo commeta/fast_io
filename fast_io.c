@@ -481,7 +481,6 @@ PHP_FUNCTION(file_search_array) {
                     efree(dynamic_buffer);
                     RETURN_FALSE;
                 }
-                efree(dynamic_buffer);
                 dynamic_buffer = temp_buffer;
             }
         }
@@ -645,7 +644,6 @@ PHP_FUNCTION(file_search_line) {
                     fclose(fp);
                     RETURN_FALSE;
                 }
-                efree(dynamic_buffer);
                 dynamic_buffer = temp_buffer;
             }
         }
@@ -769,7 +767,6 @@ PHP_FUNCTION(file_search_data) {
                 fclose(index_fp);
                 RETURN_FALSE;
             }
-            efree(dynamic_buffer);
             dynamic_buffer = temp_buffer;
         }
     }
@@ -1070,7 +1067,6 @@ PHP_FUNCTION(file_defrag_lines) {
                     efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
-                efree(dynamic_buffer);
                 dynamic_buffer = temp_buffer;
             }
         }
@@ -1121,6 +1117,8 @@ PHP_FUNCTION(file_defrag_lines) {
 
     RETURN_LONG(found_count);
 }
+
+
 
 
 
@@ -1599,7 +1597,6 @@ PHP_FUNCTION(file_erase_line) {
                     efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
-                efree(dynamic_buffer);
                 dynamic_buffer = temp_buffer;
             }
         }
@@ -1754,7 +1751,6 @@ PHP_FUNCTION(file_get_keys) {
                     efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
-                efree(dynamic_buffer);
                 dynamic_buffer = temp_buffer;
             }
         }
@@ -1937,7 +1933,6 @@ PHP_FUNCTION(file_replace_line) {
                     efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
-                efree(dynamic_buffer);
                 dynamic_buffer = temp_buffer;
             }
         }
