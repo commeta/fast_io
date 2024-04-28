@@ -806,7 +806,7 @@ PHP_FUNCTION(file_search_data) {
         }
 
         bytesRead = fread(dataBuffer, 1, size, data_fp);
-        if(bytesRead > 0){
+        if(bytesRead < 1){
             php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
             fclose(data_fp);
             RETURN_FALSE;
