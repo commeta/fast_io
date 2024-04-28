@@ -806,6 +806,12 @@ PHP_FUNCTION(file_search_data) {
         }
 
         bytesRead = fread(dataBuffer, 1, size, data_fp);
+        if(bytesRead != size){
+            php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
+            fclose(data_fp);
+            RETURN_FALSE;
+        }
+
 
         dataBuffer[bytesRead] = '\0';
         RETVAL_STRING(dataBuffer);
@@ -1309,7 +1315,7 @@ PHP_FUNCTION(file_defrag_data) {
                 }
 
                 if(parsed_err == false){
-                    fseek(data_fp, offset, SEEK_SET);
+                    fseek(data_fp, offset, SEEK_SET); // Проверить выход за пределы файла, тут и везде рефакторинг
                     char *dataBuffer = emalloc(size + 1);
 
                     if(dataBuffer == NULL){
@@ -1324,7 +1330,19 @@ PHP_FUNCTION(file_defrag_data) {
                         RETURN_LONG(-8);
                     }
 
-                    bytesReadData = fread(dataBuffer, 1, size, data_fp); 
+                    bytesReadData = fread(dataBuffer, 1, size, data_fp);
+                    if(bytesReadData != size){
+                        php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
+                        fclose(index_fp);
+                        fclose(data_fp);
+                        fclose(temp_fp);
+                        fclose(temp_index_fp);
+                        unlink(temp_filename);
+                        unlink(temp_index_filename);
+                        efree(dynamic_buffer);
+                        RETURN_LONG(-6);
+                    }
+
                     bytesWriteData = fwrite(dataBuffer, 1, bytesReadData, temp_fp);
 
                     if(bytesReadData != bytesWriteData){ // err
