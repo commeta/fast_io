@@ -59,7 +59,7 @@ buffer_size is a configuration parameter that determines the buffer size for rea
 
 To configure the buffer size in the global PHP configuration, add or modify the following line in the php.ini file:
 
-fast_io.buffer_size = 4096 // From 2 bytes to ini_get("memory_limit") / 2
+fast_io.buffer_size = 4096 // From 2 bytes
 
 The value is specified in bytes. By default, the buffer size is set to 4096 bytes (4 KB).
 
