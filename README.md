@@ -53,7 +53,7 @@ For more information on how to install, configure, and use Fast_IO in your PHP 8
 
 ## Parameters
 
-buffer_size is a configuration parameter that determines the buffer size for read operations. Specifying the optimal buffer size can significantly improve performance when working with large volumes of data.
+buffer_size is a configuration parameter that determines the buffer size for read\write operations. Specifying the optimal buffer size can significantly improve performance when working with large volumes of data.
 
 #### Setting via php.ini
 
