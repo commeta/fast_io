@@ -24,9 +24,11 @@
  */
 
 ini_set('fast_io.buffer_size', 4096);
+
 //date_default_timezone_set ( 'Europe/Moscow' );
 //setlocale (LC_ALL, "ru_RU.UTF-8");
 //setlocale (LC_NUMERIC, "C");
+
 
 
 // Stress test
@@ -120,8 +122,6 @@ for($i=0; $i <=500; $i++){
 }
 
 
-
-
 print_r([
 	file_search_line(__DIR__ . '/fast_io1.dat', '\\w+_1', 10),
 	file_search_line(__DIR__ . '/fast_io1.dat', 'index_400', 0)
@@ -190,6 +190,7 @@ print_r([
 
 
 
+
 print_r([
 	'file_defrag_lines',
 	file_defrag_lines(__DIR__ . '/fast_io1.dat', 'index_360')
@@ -201,7 +202,7 @@ print_r([
 
 print_r([
 	'file_update_line',
-	file_update_line(__DIR__ . '/fast_io1.dat', 'update апдейт', 11, 8192),
+	file_update_line(__DIR__ . '/fast_io1.dat', 'update апдейт', 50, 8192),
 ]);
 
 
@@ -225,18 +226,28 @@ for($i=0; $i <=20; $i++){
 
 
 
+
 for($i=0; $i <=10; $i++){
 	file_erase_line(__DIR__ . '/fast_io2.dat.index', 'index_' . $i);
 }
 
+
 print_r([
 	'file_defrag_data',
-	file_defrag_data(__DIR__ . '/fast_io2.dat', 'index_19')
+	file_defrag_data(__DIR__ . '/fast_io2.dat', 'index_32', 0)
 ]);
+
+
+
 
 print_r([
 	'file_get_keys',
 	file_get_keys(__DIR__ . '/fast_io2.dat.index')
+]);
+
+print_r([
+	'replicate_file mode 1',
+	replicate_file(__DIR__ . '/fast_io2.dat', __DIR__ . '/fast_io22.dat', 1)
 ]);
 
 
@@ -247,6 +258,7 @@ for($i=0; $i <=10; $i++){
 		file_push_line(__DIR__ . '/fast_io3.dat', 'index_' . $i . ' data_file_push_line_' . $i) . ','
 	);
 }
+
 
 
 
@@ -267,7 +279,6 @@ print_r([
 
 
 
-
 print_r([
 	'file_replace_line',
 	file_replace_line(__DIR__ . '/fast_io3.dat', 'index_3', 'file_replace_line')
@@ -277,6 +288,10 @@ print_r([
 file_erase_line(__DIR__ . '/fast_io3.dat', 'index_7');
 file_defrag_lines(__DIR__ . '/fast_io3.dat');
 
+print_r([
+	'replicate_file',
+	replicate_file(__DIR__ . '/fast_io3.dat', __DIR__ . '/fast_io33.dat')
+]);
 
 
 
