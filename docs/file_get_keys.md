@@ -21,31 +21,56 @@ array file_get_keys(string $filename[, int mode = 0][, int search_start = 0][, i
 
 Функция возвращает массив строк (array), каждый элемент которого является уникальным ключом, извлеченным из файла.
 
-## Пример использования
+### Примеры возвращаемых массивов
 
-Допустим, у вас есть файл data.txt, содержащий следующие строки:
 ```
-index_0 data_write_key_value_pair_0
-index_1 data_write_key_value_pair_1
-index_2 data_write_key_value_pair_2
-```
+for($i=0; $i <=500; $i++){
+	print_r(
+		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i . ' ' . str_pad('', 8, '1234567890'), 8192)
+	);
+}
 
-Чтобы получить список уникальных ключей из этого файла, используйте функцию file_get_keys следующим образом:
-```
-$keys = file_get_keys("data.txt");
-print_r($keys);
-```
+print_r([
+	file_get_keys(__DIR__ . '/fast_io1.dat', 0, 0, 3),
+	file_get_keys(__DIR__ . '/fast_io1.dat', 1, 0, 3),
+]);
 
-Результат выполнения:
-```
-Array
+0, 1, 2, 3, 4, Array
 (
-    [0] => index_0
-    [1] => index_1
-    [2] => index_2
-)
+    [0] => Array
+        (
+            [0] => index_0
+            [1] => index_1
+            [2] => index_2
+        )
 
+    [1] => Array
+        (
+            [0] => Array
+                (
+                    [0] => 0
+                    [1] => 8192
+                )
+
+            [1] => Array
+                (
+                    [0] => 8192
+                    [1] => 8192
+                )
+
+            [2] => Array
+                (
+                    [0] => 16384
+                    [1] => 8192
+                )
+
+        )
+
+)
 ```
+
+
+
 
 Еще [пример](/test/readme.md): Тесты.
 
