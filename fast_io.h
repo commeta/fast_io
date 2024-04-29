@@ -70,6 +70,9 @@ bool add_key_value(KeyValueArray *array, int value[2]) {
 }
 
 void free_key_value_array(KeyValueArray *array) {
+    for (size_t i = 0; i < array->count; i++) {
+        efree(array->values[i]);
+    }    
     efree(array->values);
 }
 
@@ -98,3 +101,4 @@ void free_key_array(KeyArray *array) {
     }
     efree(array->keys);
 }
+
