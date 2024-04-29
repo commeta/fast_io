@@ -353,7 +353,7 @@ root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full php -d
 ==126728== Memcheck, a memory error detector
 ==126728== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
 ==126728== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
-==126728== Command: php -dzend_extension=fast_io.so -dxdebug.mode=debug fast_io.php
+==126728== Command: php -dzend_extension=fast_io.so -dxdebug.mode=debug test.php
 ==126728== 
 ==126728== 
 ==126728== HEAP SUMMARY:
@@ -381,7 +381,7 @@ root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full --show
 ==127140== Memcheck, a memory error detector
 ==127140== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
 ==127140== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
-==127140== Command: php -dzend_extension=fast_io.so fast_io.php
+==127140== Command: php -dzend_extension=fast_io.so test.php
 ==127140== 
 /usr/lib/php/20230831/fast_io.so doesn't appear to be a valid Zend extension
 
