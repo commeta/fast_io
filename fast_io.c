@@ -478,7 +478,7 @@ PHP_FUNCTION(file_search_array) {
                 if (!temp_buffer) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
                     fclose(fp);
-                    efree(dynamic_buffer);
+                    if (dynamic_buffer) efree(dynamic_buffer);
                     RETURN_FALSE;
                 }
                 dynamic_buffer = temp_buffer;
@@ -639,7 +639,7 @@ PHP_FUNCTION(file_search_line) {
                 dynamic_buffer_size += ini_buffer_size;
                 char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
                 if (!temp_buffer) {
-                    efree(dynamic_buffer);
+                    if (dynamic_buffer) efree(dynamic_buffer);
                     php_error_docref(NULL, E_WARNING, "Out of memory");
                     fclose(fp);
                     RETURN_FALSE;
@@ -762,7 +762,7 @@ PHP_FUNCTION(file_search_data) {
             char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!temp_buffer) {
                 php_error_docref(NULL, E_WARNING, "Out of memory");
-                efree(dynamic_buffer);
+                if (dynamic_buffer) efree(dynamic_buffer);
                 fclose(data_fp);
                 fclose(index_fp);
                 RETURN_FALSE;
@@ -1070,7 +1070,7 @@ PHP_FUNCTION(file_defrag_lines) {
                     fclose(data_fp);
                     fclose(temp_fp);
                     unlink(temp_filename);
-                    efree(dynamic_buffer);
+                    if (dynamic_buffer) efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
                 dynamic_buffer = temp_buffer;
@@ -1396,7 +1396,7 @@ PHP_FUNCTION(file_defrag_data) {
                     fclose(temp_index_fp);
                     unlink(temp_filename);
                     unlink(temp_index_filename);
-                    efree(dynamic_buffer);
+                    if (dynamic_buffer) efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
 
@@ -1551,7 +1551,7 @@ PHP_FUNCTION(file_pop_line) {
         if(bytesRead != align){
             efree(buffer);
             fclose(fp);
-            php_error_docref(NULL, E_WARNING, "Failed to read file: %s", filename);
+            php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
             RETURN_FALSE;
         }
 
@@ -1770,7 +1770,8 @@ PHP_FUNCTION(file_erase_line) {
                     RETURN_LONG(-8);
                 }
 
-                memset(replacement, SPECIAL_CHAR, lineLength - 1); // Заполнение символами DEL
+                memset(replacement, ' ', lineLength - 1); // Заполнение пробелами
+                replacement[0] = SPECIAL_CHAR; // символ DEL
                 
                 // Перемещаемся к началу найденной строки и записываем замену
                 fseek(fp, writeOffset , SEEK_SET);
@@ -1807,7 +1808,7 @@ PHP_FUNCTION(file_erase_line) {
                 if (!temp_buffer) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
                     fclose(fp);
-                    efree(dynamic_buffer);
+                    if (dynamic_buffer) efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
                 dynamic_buffer = temp_buffer;
@@ -1961,7 +1962,7 @@ PHP_FUNCTION(file_get_keys) {
                 if (!temp_buffer) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
                     fclose(fp);
-                    efree(dynamic_buffer);
+                    if (dynamic_buffer) efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
                 dynamic_buffer = temp_buffer;
@@ -2143,7 +2144,7 @@ PHP_FUNCTION(file_replace_line) {
                     fclose(data_fp);
                     fclose(temp_fp);
                     unlink(temp_filename);
-                    efree(dynamic_buffer);
+                    if (dynamic_buffer) efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
                 dynamic_buffer = temp_buffer;
@@ -2308,7 +2309,7 @@ PHP_FUNCTION(file_select_line) {
 
     bytesRead = fread(buffer, 1, align, fp);
     if(bytesRead != align){
-        php_error_docref(NULL, E_WARNING, "Failed to read file: %s", filename);
+        php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
         fclose(fp);
         RETURN_FALSE;
     }
