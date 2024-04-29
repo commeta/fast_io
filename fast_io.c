@@ -616,12 +616,26 @@ PHP_FUNCTION(file_search_line) {
 
             if(mode == 0 && strstr(lineStart, line_key) != NULL){
                 found_value = estrndup(lineStart, lineLength - 1);
+                if(found_value == NULL){
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    fclose(fp);
+                    efree(dynamic_buffer);
+                    RETURN_FALSE;
+                }
+
                 found_match = true;
                 break;
             }
 
             if(mode == 10 && pcre2_match(re, lineStart, lineLength - 1, 0, 0, match_data, NULL) > 0){
                 found_value = estrndup(lineStart, lineLength - 1);
+                if(found_value == NULL){
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    fclose(fp);
+                    efree(dynamic_buffer);
+                    RETURN_FALSE;
+                }
+                
                 found_match = true;
                 break;
             }
@@ -746,6 +760,14 @@ PHP_FUNCTION(file_search_data) {
             *lineEnd = '\0';
             if (strstr(lineStart, line_key) != NULL) {
                 found_value = estrdup(lineStart + line_key_len + 1);
+                if(found_value == NULL){
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    fclose(data_fp);
+                    fclose(index_fp);
+                    efree(dynamic_buffer);
+                    RETURN_FALSE;
+                }
+                
                 found_match = true;
                 break;
             }
@@ -854,6 +876,12 @@ PHP_FUNCTION(file_push_line) {
     ssize_t bytesWrite;
 
     char *new_line = estrndup(line, line_len + 1);
+    if(new_line == NULL){
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(fp);
+        RETURN_LONG(-8);
+    }
+
     new_line[line_len] = '\n';
     new_line[line_len + 1] = '\0';
 
@@ -2126,6 +2154,15 @@ PHP_FUNCTION(file_replace_line) {
 
             if (strstr(lineStart, line_key) != NULL) {
                 char *replacement = estrndup(line, line_len + 1);
+                if(replacement == NULL){
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    fclose(data_fp);
+                    fclose(temp_fp);
+                    unlink(temp_filename);
+                    efree(dynamic_buffer);
+                    RETURN_LONG(-8);
+                }
+
                 replacement[line_len] = '\n';
                 replacement[line_len + 1] = '\0';
 
