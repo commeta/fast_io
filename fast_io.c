@@ -1558,6 +1558,7 @@ PHP_FUNCTION(file_pop_line) {
     // Получаем текущее смещение в файле данных
     off_t file_size = ftell(fp);
     if (file_size <= 0 || (align != -1 && file_size < align)) {
+        php_error_docref(NULL, E_WARNING, "Failed to pop line from file: %s", filename);
         fclose(fp);
         RETURN_FALSE;
     }
