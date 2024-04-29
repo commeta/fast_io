@@ -5,7 +5,7 @@
 
 ## Синтаксис
 
-int file_defrag_data(string $filename, string $line_key [, int mode = 0])
+int file_defrag_data(string $filename[, string $line_key][, int mode = 0])
 
 
 ## Параметры
