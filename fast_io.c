@@ -861,6 +861,12 @@ PHP_FUNCTION(file_push_line) {
 
     if (bytesWrite != line_len + 1) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
+
+        if(ftruncate(fileno(fp), file_size) < 0) {
+            zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
+            exit(EXIT_FAILURE);
+        }
+        
         fclose(fp);
         efree(new_line);
         RETURN_LONG(-3);
