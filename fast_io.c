@@ -497,6 +497,8 @@ PHP_FUNCTION(file_search_array) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
                     fclose(fp);
                     if (dynamic_buffer) efree(dynamic_buffer);
+                    free_key_array(&keys);
+                    free_key_value_array(&keys_values);
                     RETURN_FALSE;
                 }
                 dynamic_buffer = temp_buffer;
@@ -2084,6 +2086,8 @@ PHP_FUNCTION(file_get_keys) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
                     fclose(fp);
                     if (dynamic_buffer) efree(dynamic_buffer);
+                    free_key_array(&keys);
+                    free_key_value_array(&keys_values);
                     RETURN_LONG(-8);
                 }
                 dynamic_buffer = temp_buffer;
