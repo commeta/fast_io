@@ -349,7 +349,7 @@ Array
 ## Отчет Valgrind leak-check
 
 ```
-root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full php -dzend_extension=fast_io.so -dxdebug.mode=debug fast_io.php
+root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full php -dzend_extension=fast_io.so -dxdebug.mode=debug test.php
 ==126728== Memcheck, a memory error detector
 ==126728== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
 ==126728== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
@@ -377,7 +377,7 @@ root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full php -d
 ## Отчет Valgrind leak-check show-leak-kinds
 
 ```
-root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full --show-leak-kinds=all php -dzend_extension=fast_io.so fast_io.php
+root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full --show-leak-kinds=all php -dzend_extension=fast_io.so test.php
 ==127140== Memcheck, a memory error detector
 ==127140== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
 ==127140== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
