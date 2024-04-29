@@ -1668,10 +1668,24 @@ PHP_FUNCTION(file_pop_line) {
             if (buffer[i] == '\n') {
                 if (!result_str) { // Найден первый перенос строки с конца
                     result_str = zend_string_alloc(bytesRead - i - 1, 0);
+                    if(result_str == NULL){
+                        php_error_docref(NULL, E_WARNING, "Out of memory");
+                        fclose(fp);
+                        efree(buffer);
+                        RETURN_FALSE;
+                    }
+
                     memcpy(ZSTR_VAL(result_str), buffer + i + 1, bytesRead - i - 1);
                 } else if (i != bytesRead - 1 || pos + bytesRead < file_size) { // Найдено начало строки
                     size_t new_len = ZSTR_LEN(result_str) + bytesRead - i - 1;
                     result_str = zend_string_extend(result_str, new_len, 0);
+                    if(result_str == NULL){
+                        php_error_docref(NULL, E_WARNING, "Out of memory");
+                        fclose(fp);
+                        efree(buffer);
+                        RETURN_FALSE;
+                    }
+                    
                     memmove(ZSTR_VAL(result_str) + bytesRead - i - 1, ZSTR_VAL(result_str), ZSTR_LEN(result_str) - (bytesRead - i - 1));
                     memcpy(ZSTR_VAL(result_str), buffer + i + 1, bytesRead - i - 1);
 
@@ -1686,11 +1700,25 @@ PHP_FUNCTION(file_pop_line) {
 
             if(result_str_len + 1 > ini_buffer_size && bytesRead == ini_buffer_size ){
                 result_str = zend_string_extend(result_str, ZSTR_LEN(result_str) + ini_buffer_size, 0);
+                if(result_str == NULL){
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    fclose(fp);
+                    efree(buffer);
+                    RETURN_FALSE;
+                }
+
                 memcpy(ZSTR_VAL(result_str), buffer, ini_buffer_size);
 
                 ZSTR_LEN(result_str) = result_str_len - 1;                
             } else {
                 result_str = zend_string_alloc(bytesRead, 0);
+                if(result_str == NULL){
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    fclose(fp);
+                    efree(buffer);
+                    RETURN_FALSE;
+                }
+                
                 memcpy(ZSTR_VAL(result_str), buffer, bytesRead);
             }
 
@@ -1700,6 +1728,13 @@ PHP_FUNCTION(file_pop_line) {
 
         if (!found_line_start && bytesRead == ini_buffer_size && result_str != NULL) { // Если строка начинается до текущего буфера
             result_str = zend_string_extend(result_str, ZSTR_LEN(result_str) + ini_buffer_size, 0);
+            if(result_str == NULL){
+                php_error_docref(NULL, E_WARNING, "Out of memory");
+                fclose(fp);
+                efree(buffer);
+                RETURN_FALSE;
+            }
+            
             memmove(ZSTR_VAL(result_str) + ini_buffer_size, ZSTR_VAL(result_str), ZSTR_LEN(result_str) - ini_buffer_size);
             memcpy(ZSTR_VAL(result_str), buffer, ini_buffer_size);
         }
