@@ -348,8 +348,9 @@ PHP_FUNCTION(file_search_array) {
 
                     if(add_key(&keys, lineStart) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
-                        found_match = true;
-                        break;
+                        fclose(fp);
+                        efree(dynamic_buffer);
+                        RETURN_FALSE;
                     }
                 }
             }
@@ -364,8 +365,9 @@ PHP_FUNCTION(file_search_array) {
                     value[1] = lineLength;
                     if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
-                        found_match = true;
-                        break;
+                        fclose(fp);
+                        efree(dynamic_buffer);
+                        RETURN_FALSE;
                     }
                 }
             }
@@ -380,8 +382,9 @@ PHP_FUNCTION(file_search_array) {
                     value[1] = lineLength;
                     if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
-                        found_match = true;
-                        break;
+                        fclose(fp);
+                        efree(dynamic_buffer);
+                        RETURN_FALSE;
                     }
                 }
             }
@@ -403,8 +406,9 @@ PHP_FUNCTION(file_search_array) {
 
                     if(add_key(&keys, lineStart) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
-                        found_match = true;
-                        break;
+                        fclose(fp);
+                        efree(dynamic_buffer);
+                        RETURN_FALSE;
                     }
                 }
             }
@@ -419,8 +423,9 @@ PHP_FUNCTION(file_search_array) {
                     value[1] = lineLength;
                     if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
-                        found_match = true;
-                        break;
+                        fclose(fp);
+                        efree(dynamic_buffer);
+                        RETURN_FALSE;
                     }
                 }
             }
@@ -435,8 +440,9 @@ PHP_FUNCTION(file_search_array) {
                     value[1] = lineLength;
                     if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
-                        found_match = true;
-                        break;
+                        fclose(fp);
+                        efree(dynamic_buffer);
+                        RETURN_FALSE;
                     }
                 }
             }
@@ -498,6 +504,7 @@ PHP_FUNCTION(file_search_array) {
 
         if(add_key_value(&keys_values, value) == false){
             php_error_docref(NULL, E_WARNING, "Out of memory");
+            RETURN_FALSE;
         }
     }
 
@@ -2009,8 +2016,9 @@ PHP_FUNCTION(file_get_keys) {
                     if (spacePos) *spacePos = '\0';
                     if(add_key(&keys, lineStart) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
-                        found_match = true;
-                        break;
+                        fclose(fp);
+                        efree(dynamic_buffer);
+                        RETURN_LONG(-8);
                     }
                 }
             }
@@ -2028,8 +2036,9 @@ PHP_FUNCTION(file_get_keys) {
 
                     if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
-                        found_match = true;
-                        break;
+                        fclose(fp);
+                        efree(dynamic_buffer);
+                        RETURN_LONG(-8);
                     }
                 }
             }
