@@ -19,6 +19,8 @@ int file_analize(string $filename [, int mode = 0])
 
 ## Возвращаемые значения
 
+
+
 - В режиме 0 - максимальную длину строки в файле.
 - В режиме 1 - среднюю длину строки в файле.
 - В режиме 2 - длину первой строки в файле.
@@ -31,32 +33,50 @@ int file_analize(string $filename [, int mode = 0])
 
 ### Примеры
 
-#### Пример #1 Базовое использование detect_align_size
+#### Пример #1 Базовое использование file_analize
 ```
 <?php
-$filename = "example.txt";
-$maxLineLength = file_analize($filename);
-
-if ($maxLineLength !== FALSE) {
-    echo "Самая длинная строка содержит $maxLineLength символов.";
-} else {
-    echo "Произошла ошибка.";
+for($i=0; $i <=500; $i++){
+	print_r(
+		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 92, '1234567890'), 8192) . ', '
+	);
 }
-?>
+
+print_r([
+	file_analize(__DIR__ . '/fast_io1.dat'),
+	file_analize(__DIR__ . '/fast_io1.dat', 1),
+]);
+
 ```
 
-#### Пример #2 Обработка ошибок
 ```
-<?php
-$filename = "non_existent_file.txt";
-$maxLineLength = file_analize($filename);
+(
+    [0] => file_analize
+    [1] => Array
+        (
+            [0] => Array
+                (
+                    [0] => 8193
+                    [1] => 8193
+                    [2] => 8193
+                    [3] => 501
+                )
 
-if ($maxLineLength === FALSE) {
-    echo "Не удалось обработать файл. Пожалуйста, проверьте, существует ли файл и доступен ли он для чтения.";
-} else {
-    echo "Самая длинная строка содержит $maxLineLength символов.";
-}
-?>
+        )
+
+    [2] => Array
+        (
+            [0] => Array
+                (
+                    [0] => 8193
+                    [1] => 8193
+                    [2] => 8193
+                    [3] => 1
+                )
+
+        )
+
+)
 
 ```
 
