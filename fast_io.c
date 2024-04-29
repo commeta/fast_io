@@ -915,6 +915,8 @@ PHP_FUNCTION(file_push_line) {
 
         if(ftruncate(fileno(fp), file_size) < 0) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
+            fclose(fp);
+            efree(new_line);
             exit(EXIT_FAILURE);
         }
         
@@ -984,6 +986,8 @@ PHP_FUNCTION(file_push_data) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
         if(ftruncate(fileno(data_fp), offset) < 0) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
+            fclose(data_fp);
+            fclose(index_fp);
             exit(EXIT_FAILURE);
         }
 
@@ -1002,10 +1006,14 @@ PHP_FUNCTION(file_push_data) {
 
         if(ftruncate(fileno(index_fp), file_size) < 0) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", index_filename);
+            fclose(data_fp);
+            fclose(index_fp);
             exit(EXIT_FAILURE);
         }
         if(ftruncate(fileno(data_fp), offset) < 0) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", index_filename);
+            fclose(data_fp);
+            fclose(index_fp);
             exit(EXIT_FAILURE);
         }
 
@@ -2387,6 +2395,8 @@ PHP_FUNCTION(file_insert_line) {
 
         if(ftruncate(fileno(fp), file_size) < 0) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
+            efree(buffer);
+            fclose(fp);
             exit(EXIT_FAILURE);
         }
 
