@@ -50,9 +50,8 @@ print_r([
 ```
 
 ```
-(
-    [0] => file_analize
-    [1] => Array
+
+    [0] => Array
         (
             [0] => Array
                 (
@@ -64,7 +63,7 @@ print_r([
 
         )
 
-    [2] => Array
+    [1] => Array
         (
             [0] => Array
                 (
@@ -76,7 +75,7 @@ print_r([
 
         )
 
-)
+
 
 ```
 
