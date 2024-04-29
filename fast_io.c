@@ -173,8 +173,9 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_update_line, 0, 3, IS_LONG,
     ZEND_ARG_TYPE_INFO(0, align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_analize, 0, 1, IS_LONG, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_analize, 1, 1, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_matches_pcre2, 0, 2, IS_ARRAY, 0)
@@ -2566,8 +2567,9 @@ PHP_FUNCTION(file_update_line) {
 PHP_FUNCTION(file_analize) { // Анализ таблицы
     char *filename;
     size_t filename_len;
+    zend_long mode = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &filename, &filename_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|l", &filename, &filename_len, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -2604,12 +2606,30 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     ssize_t bytes_read;
     long max_length = 0, current_length = 0;
 
+    //zend_long found_count = 0;
+    zend_long avg_count = 0;
+    zend_long line_count = 0;
+    int total_characters = 0;
+    
+
     while ((bytes_read = fread(buffer, 1, ini_buffer_size, fp)) > 0) {
         for (ssize_t i = 0; i < bytes_read; ++i) {
             if (buffer[i] == '\n') { // Конец текущей строки
+                line_count++;
+
                 if (current_length > max_length) {
                     max_length = current_length + 1; // Обновляем максимальную длину
                 }
+
+                total_characters += current_length;
+                avg_count = total_characters / line_count; // Вычисляем среднюю длину
+
+                if(mode == 2) { // Возвращаем длину первой строки.
+                    efree(buffer);
+                    fclose(fp);
+                    RETURN_LONG(current_length + 1);
+                }
+
                 current_length = 0; // Сброс длины для следующей строки
             } else {
                 ++current_length; // Увеличиваем длину текущей строки
@@ -2621,7 +2641,13 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     fclose(fp);
 
     // Возвращаем максимальную длину строки. Если строка оканчивается в конце файла без '\n', её длина уже учтена.
-    RETURN_LONG(max_length);
+    if(mode == 0) RETURN_LONG(max_length);
+
+    // Возвращаем среднюю длину строки.
+    if(mode == 1) RETURN_LONG(avg_count + 1);
+
+    // Возвращаем среднюю длину строки.
+    if(mode == 3) RETURN_LONG(line_count);
 }
 
 
