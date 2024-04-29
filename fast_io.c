@@ -1527,7 +1527,7 @@ PHP_FUNCTION(file_pop_line) {
 
     // Получаем текущее смещение в файле данных
     off_t file_size = ftell(fp);
-    if (file_size <= 0) {
+    if (file_size <= 0 || (align != -1 && file_size < align)) {
         fclose(fp);
         RETURN_FALSE;
     }
@@ -2292,7 +2292,10 @@ PHP_FUNCTION(file_select_line) {
     ssize_t bytesRead;
     off_t offset = (mode == 0) ? row * align : row;
 
-    if(fseek(fp, offset , SEEK_SET) < 0){
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+
+    if(offset > file_size || fseek(fp, offset , SEEK_SET) < 0){
         php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
         fclose(fp);
         RETURN_FALSE;
