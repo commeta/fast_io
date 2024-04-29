@@ -350,6 +350,8 @@ PHP_FUNCTION(file_search_array) {
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         fclose(fp);
                         efree(dynamic_buffer);
+                        free_key_array(&keys);
+                        free_key_value_array(&keys_values);
                         RETURN_FALSE;
                     }
                 }
@@ -367,6 +369,8 @@ PHP_FUNCTION(file_search_array) {
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         fclose(fp);
                         efree(dynamic_buffer);
+                        free_key_array(&keys);
+                        free_key_value_array(&keys_values);
                         RETURN_FALSE;
                     }
                 }
@@ -384,6 +388,8 @@ PHP_FUNCTION(file_search_array) {
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         fclose(fp);
                         efree(dynamic_buffer);
+                        free_key_array(&keys);
+                        free_key_value_array(&keys_values);
                         RETURN_FALSE;
                     }
                 }
@@ -408,6 +414,8 @@ PHP_FUNCTION(file_search_array) {
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         fclose(fp);
                         efree(dynamic_buffer);
+                        free_key_array(&keys);
+                        free_key_value_array(&keys_values);
                         RETURN_FALSE;
                     }
                 }
@@ -425,6 +433,8 @@ PHP_FUNCTION(file_search_array) {
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         fclose(fp);
                         efree(dynamic_buffer);
+                        free_key_array(&keys);
+                        free_key_value_array(&keys_values);
                         RETURN_FALSE;
                     }
                 }
@@ -442,6 +452,8 @@ PHP_FUNCTION(file_search_array) {
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         fclose(fp);
                         efree(dynamic_buffer);
+                        free_key_array(&keys);
+                        free_key_value_array(&keys_values);
                         RETURN_FALSE;
                     }
                 }
@@ -504,6 +516,8 @@ PHP_FUNCTION(file_search_array) {
 
         if(add_key_value(&keys_values, value) == false){
             php_error_docref(NULL, E_WARNING, "Out of memory");
+            free_key_array(&keys);
+            free_key_value_array(&keys_values);
             RETURN_FALSE;
         }
     }
@@ -2018,6 +2032,8 @@ PHP_FUNCTION(file_get_keys) {
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         fclose(fp);
                         efree(dynamic_buffer);
+                        free_key_array(&keys);
+                        free_key_value_array(&keys_values);
                         RETURN_LONG(-8);
                     }
                 }
@@ -2038,6 +2054,8 @@ PHP_FUNCTION(file_get_keys) {
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         fclose(fp);
                         efree(dynamic_buffer);
+                        free_key_array(&keys);
+                        free_key_value_array(&keys_values);
                         RETURN_LONG(-8);
                     }
                 }
