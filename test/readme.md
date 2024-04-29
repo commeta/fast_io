@@ -349,243 +349,243 @@ Array
 ## Отчет Valgrind leak-check
 
 ```
-root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full php -dzend_extension=fast_io.so -dxdebug.mode=debug test.php
-==126728== Memcheck, a memory error detector
-==126728== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
-==126728== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
-==126728== Command: php -dzend_extension=fast_io.so -dxdebug.mode=debug test.php
-==126728== 
-==126728== 
-==126728== HEAP SUMMARY:
-==126728==     in use at exit: 77,809 bytes in 1,349 blocks
-==126728==   total heap usage: 293,542 allocs, 292,193 frees, 603,496,773 bytes allocated
-==126728== 
-==126728== LEAK SUMMARY:
-==126728==    definitely lost: 0 bytes in 0 blocks
-==126728==    indirectly lost: 0 bytes in 0 blocks
-==126728==      possibly lost: 0 bytes in 0 blocks
-==126728==    still reachable: 77,809 bytes in 1,349 blocks
-==126728==         suppressed: 0 bytes in 0 blocks
-==126728== Reachable blocks (those to which a pointer was found) are not shown.
-==126728== To see them, rerun with: --leak-check=full --show-leak-kinds=all
-==126728== 
-==126728== For lists of detected and suppressed errors, rerun with: -s
-==126728== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full php -dxdebug.mode=debug test.php
+==127710== Memcheck, a memory error detector
+==127710== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==127710== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
+==127710== Command: php -dxdebug.mode=debug test.php
+==127710== 
+
+==127710== 
+==127710== HEAP SUMMARY:
+==127710==     in use at exit: 77,809 bytes in 1,349 blocks
+==127710==   total heap usage: 293,530 allocs, 292,181 frees, 603,494,748 bytes allocated
+==127710== 
+==127710== LEAK SUMMARY:
+==127710==    definitely lost: 0 bytes in 0 blocks
+==127710==    indirectly lost: 0 bytes in 0 blocks
+==127710==      possibly lost: 0 bytes in 0 blocks
+==127710==    still reachable: 77,809 bytes in 1,349 blocks
+==127710==         suppressed: 0 bytes in 0 blocks
+==127710== Reachable blocks (those to which a pointer was found) are not shown.
+==127710== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==127710== 
+==127710== For lists of detected and suppressed errors, rerun with: -s
+==127710== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 
 ```
 
 ## Отчет Valgrind leak-check show-leak-kinds
 
 ```
-root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full --show-leak-kinds=all php -dzend_extension=fast_io.so test.php
-==127140== Memcheck, a memory error detector
-==127140== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
-==127140== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
-==127140== Command: php -dzend_extension=fast_io.so test.php
-==127140== 
-/usr/lib/php/20230831/fast_io.so doesn't appear to be a valid Zend extension
+root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full --show-leak-kinds=all php test.php
+==127532== Memcheck, a memory error detector
+==127532== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==127532== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
+==127532== Command: php test.php
+==127532== 
+==127532== 
+==127532== HEAP SUMMARY:
+==127532==     in use at exit: 77,809 bytes in 1,349 blocks
+==127532==   total heap usage: 293,523 allocs, 292,174 frees, 603,494,561 bytes allocated
+==127532== 
+==127532== 32 bytes in 1 blocks are still reachable in loss record 1 of 13
+==127532==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x26A304: ??? (in /usr/bin/php8.3)
+==127532==    by 0x239BD4: ??? (in /usr/bin/php8.3)
+==127532==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
+==127532==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
+==127532==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
+==127532==    by 0x4252FF: ??? (in /usr/bin/php8.3)
+==127532==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
+==127532==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
+==127532==    by 0x2385C9: ??? (in /usr/bin/php8.3)
+==127532==    by 0x52391C9: (below main) (libc_start_call_main.h:58)
+==127532== 
+==127532== 32 bytes in 1 blocks are still reachable in loss record 2 of 13
+==127532==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x4001E04: malloc (rtld-malloc.h:56)
+==127532==    by 0x4001E04: _dl_close_worker.part.0 (dl-close.c:354)
+==127532==    by 0x40027BD: _dl_close_worker (dl-close.c:120)
+==127532==    by 0x40027BD: _dl_close (dl-close.c:793)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x4001668: _dl_catch_error (dl-catch.c:256)
+==127532==    by 0x52A6C72: _dlerror_run (dlerror.c:138)
+==127532==    by 0x52A69A5: dlclose@@GLIBC_2.34 (dlclose.c:31)
+==127532==    by 0x42755A: ??? (in /usr/bin/php8.3)
+==127532==    by 0x4204D0: ??? (in /usr/bin/php8.3)
+==127532==    by 0x3B2451: php_module_shutdown (in /usr/bin/php8.3)
+==127532==    by 0x2386A4: ??? (in /usr/bin/php8.3)
+==127532==    by 0x52391C9: (below main) (libc_start_call_main.h:58)
+==127532== 
+==127532== 72 bytes in 2 blocks are still reachable in loss record 3 of 13
+==127532==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x4028ABF: malloc (rtld-malloc.h:56)
+==127532==    by 0x4028ABF: strdup (strdup.c:42)
+==127532==    by 0x4016A95: _dl_load_cache_lookup (dl-cache.c:515)
+==127532==    by 0x40097CA: _dl_map_object (dl-load.c:2135)
+==127532==    by 0x4002A2C: openaux (dl-deps.c:64)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x4002E66: _dl_map_object_deps (dl-deps.c:232)
+==127532==    by 0x400D944: dl_open_worker_begin (dl-open.c:638)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x400D163: _dl_open (dl-open.c:905)
+==127532== 
+==127532== 72 bytes in 2 blocks are still reachable in loss record 4 of 13
+==127532==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x400CA68: malloc (rtld-malloc.h:56)
+==127532==    by 0x400CA68: _dl_new_object (dl-object.c:199)
+==127532==    by 0x4007ABE: _dl_map_object_from_fd (dl-load.c:1053)
+==127532==    by 0x4009528: _dl_map_object (dl-load.c:2268)
+==127532==    by 0x4002A2C: openaux (dl-deps.c:64)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x4002E66: _dl_map_object_deps (dl-deps.c:232)
+==127532==    by 0x400D944: dl_open_worker_begin (dl-open.c:638)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x400D163: _dl_open (dl-open.c:905)
+==127532== 
+==127532== 720 bytes in 2 blocks are still reachable in loss record 5 of 13
+==127532==    at 0x484D953: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x401622F: calloc (rtld-malloc.h:44)
+==127532==    by 0x401622F: _dl_check_map_versions (dl-version.c:280)
+==127532==    by 0x400DC7C: dl_open_worker_begin (dl-open.c:646)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x400D163: _dl_open (dl-open.c:905)
+==127532==    by 0x52A7193: dlopen_doit (dlopen.c:56)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x4001668: _dl_catch_error (dl-catch.c:256)
+==127532==    by 0x52A6C72: _dlerror_run (dlerror.c:138)
+==127532==    by 0x52A724E: dlopen_implementation (dlopen.c:71)
+==127532==    by 0x52A724E: dlopen@@GLIBC_2.34 (dlopen.c:81)
+==127532== 
+==127532== 816 bytes in 1 blocks are still reachable in loss record 6 of 13
+==127532==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x400CF3F: malloc (rtld-malloc.h:56)
+==127532==    by 0x400CF3F: add_to_global_resize (dl-open.c:152)
+==127532==    by 0x400DF0F: dl_open_worker_begin (dl-open.c:737)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x400D163: _dl_open (dl-open.c:905)
+==127532==    by 0x52A7193: dlopen_doit (dlopen.c:56)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x4001668: _dl_catch_error (dl-catch.c:256)
+==127532==    by 0x52A6C72: _dlerror_run (dlerror.c:138)
+==127532==    by 0x52A724E: dlopen_implementation (dlopen.c:71)
+==127532==    by 0x52A724E: dlopen@@GLIBC_2.34 (dlopen.c:81)
+==127532== 
+==127532== 1,504 bytes in 1 blocks are still reachable in loss record 7 of 13
+==127532==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x26A349: ??? (in /usr/bin/php8.3)
+==127532==    by 0x239BD4: ??? (in /usr/bin/php8.3)
+==127532==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
+==127532==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
+==127532==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
+==127532==    by 0x4252FF: ??? (in /usr/bin/php8.3)
+==127532==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
+==127532==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
+==127532==    by 0x2385C9: ??? (in /usr/bin/php8.3)
+==127532==    by 0x52391C9: (below main) (libc_start_call_main.h:58)
+==127532== 
+==127532== 2,508 bytes in 2 blocks are still reachable in loss record 8 of 13
+==127532==    at 0x484D953: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x400C72C: calloc (rtld-malloc.h:44)
+==127532==    by 0x400C72C: _dl_new_object (dl-object.c:92)
+==127532==    by 0x4007ABE: _dl_map_object_from_fd (dl-load.c:1053)
+==127532==    by 0x4009528: _dl_map_object (dl-load.c:2268)
+==127532==    by 0x4002A2C: openaux (dl-deps.c:64)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x4002E66: _dl_map_object_deps (dl-deps.c:232)
+==127532==    by 0x400D944: dl_open_worker_begin (dl-open.c:638)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
+==127532==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==127532==    by 0x400D163: _dl_open (dl-open.c:905)
+==127532== 
+==127532== 4,384 bytes in 418 blocks are still reachable in loss record 9 of 13
+==127532==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x52C334E: strdup (strdup.c:42)
+==127532==    by 0x26972D: ??? (in /usr/bin/php8.3)
+==127532==    by 0x26A326: ??? (in /usr/bin/php8.3)
+==127532==    by 0x239BD4: ??? (in /usr/bin/php8.3)
+==127532==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
+==127532==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
+==127532==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
+==127532==    by 0x4252FF: ??? (in /usr/bin/php8.3)
+==127532==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
+==127532==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
+==127532==    by 0x2385C9: ??? (in /usr/bin/php8.3)
+==127532== 
+==127532== 7,837 bytes in 499 blocks are still reachable in loss record 10 of 13
+==127532==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x52C334E: strdup (strdup.c:42)
+==127532==    by 0x269A1C: ??? (in /usr/bin/php8.3)
+==127532==    by 0x26A321: ??? (in /usr/bin/php8.3)
+==127532==    by 0x239BD4: ??? (in /usr/bin/php8.3)
+==127532==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
+==127532==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
+==127532==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
+==127532==    by 0x4252FF: ??? (in /usr/bin/php8.3)
+==127532==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
+==127532==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
+==127532==    by 0x2385C9: ??? (in /usr/bin/php8.3)
+==127532== 
+==127532== 8,168 bytes in 1 blocks are still reachable in loss record 11 of 13
+==127532==    at 0x484D953: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x26955A: ??? (in /usr/bin/php8.3)
+==127532==    by 0x26A326: ??? (in /usr/bin/php8.3)
+==127532==    by 0x239BD4: ??? (in /usr/bin/php8.3)
+==127532==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
+==127532==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
+==127532==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
+==127532==    by 0x4252FF: ??? (in /usr/bin/php8.3)
+==127532==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
+==127532==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
+==127532==    by 0x2385C9: ??? (in /usr/bin/php8.3)
+==127532==    by 0x52391C9: (below main) (libc_start_call_main.h:58)
+==127532== 
+==127532== 8,192 bytes in 1 blocks are still reachable in loss record 12 of 13
+==127532==    at 0x484DB80: realloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x269AF5: ??? (in /usr/bin/php8.3)
+==127532==    by 0x26A321: ??? (in /usr/bin/php8.3)
+==127532==    by 0x239BD4: ??? (in /usr/bin/php8.3)
+==127532==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
+==127532==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
+==127532==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
+==127532==    by 0x4252FF: ??? (in /usr/bin/php8.3)
+==127532==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
+==127532==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
+==127532==    by 0x2385C9: ??? (in /usr/bin/php8.3)
+==127532==    by 0x52391C9: (below main) (libc_start_call_main.h:58)
+==127532== 
+==127532== 43,472 bytes in 418 blocks are still reachable in loss record 13 of 13
+==127532==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==127532==    by 0x2696FA: ??? (in /usr/bin/php8.3)
+==127532==    by 0x26A326: ??? (in /usr/bin/php8.3)
+==127532==    by 0x239BD4: ??? (in /usr/bin/php8.3)
+==127532==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
+==127532==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
+==127532==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
+==127532==    by 0x4252FF: ??? (in /usr/bin/php8.3)
+==127532==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
+==127532==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
+==127532==    by 0x2385C9: ??? (in /usr/bin/php8.3)
+==127532==    by 0x52391C9: (below main) (libc_start_call_main.h:58)
+==127532== 
+==127532== LEAK SUMMARY:
+==127532==    definitely lost: 0 bytes in 0 blocks
+==127532==    indirectly lost: 0 bytes in 0 blocks
+==127532==      possibly lost: 0 bytes in 0 blocks
+==127532==    still reachable: 77,809 bytes in 1,349 blocks
+==127532==         suppressed: 0 bytes in 0 blocks
+==127532== 
+==127532== For lists of detected and suppressed errors, rerun with: -s
+==127532== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 
-==127140== 
-==127140== HEAP SUMMARY:
-==127140==     in use at exit: 77,809 bytes in 1,349 blocks
-==127140==   total heap usage: 293,540 allocs, 292,191 frees, 603,492,092 bytes allocated
-==127140== 
-==127140== 32 bytes in 1 blocks are still reachable in loss record 1 of 13
-==127140==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x26A304: ??? (in /usr/bin/php8.3)
-==127140==    by 0x239BD4: ??? (in /usr/bin/php8.3)
-==127140==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
-==127140==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
-==127140==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
-==127140==    by 0x4252FF: ??? (in /usr/bin/php8.3)
-==127140==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
-==127140==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
-==127140==    by 0x2385C9: ??? (in /usr/bin/php8.3)
-==127140==    by 0x52391C9: (below main) (libc_start_call_main.h:58)
-==127140== 
-==127140== 32 bytes in 1 blocks are still reachable in loss record 2 of 13
-==127140==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x4001E04: malloc (rtld-malloc.h:56)
-==127140==    by 0x4001E04: _dl_close_worker.part.0 (dl-close.c:354)
-==127140==    by 0x40027BD: _dl_close_worker (dl-close.c:120)
-==127140==    by 0x40027BD: _dl_close (dl-close.c:793)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x4001668: _dl_catch_error (dl-catch.c:256)
-==127140==    by 0x52A6C72: _dlerror_run (dlerror.c:138)
-==127140==    by 0x52A69A5: dlclose@@GLIBC_2.34 (dlclose.c:31)
-==127140==    by 0x42755A: ??? (in /usr/bin/php8.3)
-==127140==    by 0x4204D0: ??? (in /usr/bin/php8.3)
-==127140==    by 0x3B2451: php_module_shutdown (in /usr/bin/php8.3)
-==127140==    by 0x2386A4: ??? (in /usr/bin/php8.3)
-==127140==    by 0x52391C9: (below main) (libc_start_call_main.h:58)
-==127140== 
-==127140== 72 bytes in 2 blocks are still reachable in loss record 3 of 13
-==127140==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x4028ABF: malloc (rtld-malloc.h:56)
-==127140==    by 0x4028ABF: strdup (strdup.c:42)
-==127140==    by 0x4016A95: _dl_load_cache_lookup (dl-cache.c:515)
-==127140==    by 0x40097CA: _dl_map_object (dl-load.c:2135)
-==127140==    by 0x4002A2C: openaux (dl-deps.c:64)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x4002E66: _dl_map_object_deps (dl-deps.c:232)
-==127140==    by 0x400D944: dl_open_worker_begin (dl-open.c:638)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x400D163: _dl_open (dl-open.c:905)
-==127140== 
-==127140== 72 bytes in 2 blocks are still reachable in loss record 4 of 13
-==127140==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x400CA68: malloc (rtld-malloc.h:56)
-==127140==    by 0x400CA68: _dl_new_object (dl-object.c:199)
-==127140==    by 0x4007ABE: _dl_map_object_from_fd (dl-load.c:1053)
-==127140==    by 0x4009528: _dl_map_object (dl-load.c:2268)
-==127140==    by 0x4002A2C: openaux (dl-deps.c:64)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x4002E66: _dl_map_object_deps (dl-deps.c:232)
-==127140==    by 0x400D944: dl_open_worker_begin (dl-open.c:638)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x400D163: _dl_open (dl-open.c:905)
-==127140== 
-==127140== 720 bytes in 2 blocks are still reachable in loss record 5 of 13
-==127140==    at 0x484D953: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x401622F: calloc (rtld-malloc.h:44)
-==127140==    by 0x401622F: _dl_check_map_versions (dl-version.c:280)
-==127140==    by 0x400DC7C: dl_open_worker_begin (dl-open.c:646)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x400D163: _dl_open (dl-open.c:905)
-==127140==    by 0x52A7193: dlopen_doit (dlopen.c:56)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x4001668: _dl_catch_error (dl-catch.c:256)
-==127140==    by 0x52A6C72: _dlerror_run (dlerror.c:138)
-==127140==    by 0x52A724E: dlopen_implementation (dlopen.c:71)
-==127140==    by 0x52A724E: dlopen@@GLIBC_2.34 (dlopen.c:81)
-==127140== 
-==127140== 816 bytes in 1 blocks are still reachable in loss record 6 of 13
-==127140==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x400CF3F: malloc (rtld-malloc.h:56)
-==127140==    by 0x400CF3F: add_to_global_resize (dl-open.c:152)
-==127140==    by 0x400DF0F: dl_open_worker_begin (dl-open.c:737)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x400D163: _dl_open (dl-open.c:905)
-==127140==    by 0x52A7193: dlopen_doit (dlopen.c:56)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x4001668: _dl_catch_error (dl-catch.c:256)
-==127140==    by 0x52A6C72: _dlerror_run (dlerror.c:138)
-==127140==    by 0x52A724E: dlopen_implementation (dlopen.c:71)
-==127140==    by 0x52A724E: dlopen@@GLIBC_2.34 (dlopen.c:81)
-==127140== 
-==127140== 1,504 bytes in 1 blocks are still reachable in loss record 7 of 13
-==127140==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x26A349: ??? (in /usr/bin/php8.3)
-==127140==    by 0x239BD4: ??? (in /usr/bin/php8.3)
-==127140==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
-==127140==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
-==127140==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
-==127140==    by 0x4252FF: ??? (in /usr/bin/php8.3)
-==127140==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
-==127140==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
-==127140==    by 0x2385C9: ??? (in /usr/bin/php8.3)
-==127140==    by 0x52391C9: (below main) (libc_start_call_main.h:58)
-==127140== 
-==127140== 2,508 bytes in 2 blocks are still reachable in loss record 8 of 13
-==127140==    at 0x484D953: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x400C72C: calloc (rtld-malloc.h:44)
-==127140==    by 0x400C72C: _dl_new_object (dl-object.c:92)
-==127140==    by 0x4007ABE: _dl_map_object_from_fd (dl-load.c:1053)
-==127140==    by 0x4009528: _dl_map_object (dl-load.c:2268)
-==127140==    by 0x4002A2C: openaux (dl-deps.c:64)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x4002E66: _dl_map_object_deps (dl-deps.c:232)
-==127140==    by 0x400D944: dl_open_worker_begin (dl-open.c:638)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
-==127140==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
-==127140==    by 0x400D163: _dl_open (dl-open.c:905)
-==127140== 
-==127140== 4,384 bytes in 418 blocks are still reachable in loss record 9 of 13
-==127140==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x52C334E: strdup (strdup.c:42)
-==127140==    by 0x26972D: ??? (in /usr/bin/php8.3)
-==127140==    by 0x26A326: ??? (in /usr/bin/php8.3)
-==127140==    by 0x239BD4: ??? (in /usr/bin/php8.3)
-==127140==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
-==127140==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
-==127140==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
-==127140==    by 0x4252FF: ??? (in /usr/bin/php8.3)
-==127140==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
-==127140==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
-==127140==    by 0x2385C9: ??? (in /usr/bin/php8.3)
-==127140== 
-==127140== 7,837 bytes in 499 blocks are still reachable in loss record 10 of 13
-==127140==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x52C334E: strdup (strdup.c:42)
-==127140==    by 0x269A1C: ??? (in /usr/bin/php8.3)
-==127140==    by 0x26A321: ??? (in /usr/bin/php8.3)
-==127140==    by 0x239BD4: ??? (in /usr/bin/php8.3)
-==127140==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
-==127140==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
-==127140==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
-==127140==    by 0x4252FF: ??? (in /usr/bin/php8.3)
-==127140==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
-==127140==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
-==127140==    by 0x2385C9: ??? (in /usr/bin/php8.3)
-==127140== 
-==127140== 8,168 bytes in 1 blocks are still reachable in loss record 11 of 13
-==127140==    at 0x484D953: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x26955A: ??? (in /usr/bin/php8.3)
-==127140==    by 0x26A326: ??? (in /usr/bin/php8.3)
-==127140==    by 0x239BD4: ??? (in /usr/bin/php8.3)
-==127140==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
-==127140==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
-==127140==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
-==127140==    by 0x4252FF: ??? (in /usr/bin/php8.3)
-==127140==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
-==127140==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
-==127140==    by 0x2385C9: ??? (in /usr/bin/php8.3)
-==127140==    by 0x52391C9: (below main) (libc_start_call_main.h:58)
-==127140== 
-==127140== 8,192 bytes in 1 blocks are still reachable in loss record 12 of 13
-==127140==    at 0x484DB80: realloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x269AF5: ??? (in /usr/bin/php8.3)
-==127140==    by 0x26A321: ??? (in /usr/bin/php8.3)
-==127140==    by 0x239BD4: ??? (in /usr/bin/php8.3)
-==127140==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
-==127140==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
-==127140==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
-==127140==    by 0x4252FF: ??? (in /usr/bin/php8.3)
-==127140==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
-==127140==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
-==127140==    by 0x2385C9: ??? (in /usr/bin/php8.3)
-==127140==    by 0x52391C9: (below main) (libc_start_call_main.h:58)
-==127140== 
-==127140== 43,472 bytes in 418 blocks are still reachable in loss record 13 of 13
-==127140==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==127140==    by 0x2696FA: ??? (in /usr/bin/php8.3)
-==127140==    by 0x26A326: ??? (in /usr/bin/php8.3)
-==127140==    by 0x239BD4: ??? (in /usr/bin/php8.3)
-==127140==    by 0x49A8CA: zend_register_ini_entries_ex (in /usr/bin/php8.3)
-==127140==    by 0x23F4A3: ??? (in /usr/bin/php8.3)
-==127140==    by 0x425252: zend_startup_module_ex (in /usr/bin/php8.3)
-==127140==    by 0x4252FF: ??? (in /usr/bin/php8.3)
-==127140==    by 0x43440A: zend_hash_apply (in /usr/bin/php8.3)
-==127140==    by 0x3B1E6C: php_module_startup (in /usr/bin/php8.3)
-==127140==    by 0x2385C9: ??? (in /usr/bin/php8.3)
-==127140==    by 0x52391C9: (below main) (libc_start_call_main.h:58)
-==127140== 
-==127140== LEAK SUMMARY:
-==127140==    definitely lost: 0 bytes in 0 blocks
-==127140==    indirectly lost: 0 bytes in 0 blocks
-==127140==      possibly lost: 0 bytes in 0 blocks
-==127140==    still reachable: 77,809 bytes in 1,349 blocks
-==127140==         suppressed: 0 bytes in 0 blocks
-==127140== 
-==127140== For lists of detected and suppressed errors, rerun with: -s
-==127140== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 ```
