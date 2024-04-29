@@ -925,13 +925,37 @@ PHP_FUNCTION(file_push_data) {
 
     if (fwrite(line_value, 1, size, data_fp) != size) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
+        if(ftruncate(fileno(data_fp), offset) < 0) {
+            zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
+            exit(EXIT_FAILURE);
+        }
+
         fclose(data_fp);
         fclose(index_fp);
         RETURN_LONG(-3);
     }
 
+
+    fseek(index_fp, 0, SEEK_END);
+    long file_size = ftell(index_fp);
+
     // Запись индекса в индексный файл
-    fprintf(index_fp, "%s %ld:%zu\n", line_key, offset, size);
+    if(fprintf(index_fp, "%s %ld:%zu\n", line_key, offset, size) < line_key_len + 5){
+        php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", index_filename);
+
+        if(ftruncate(fileno(index_fp), file_size) < 0) {
+            zend_error(E_ERROR, "Failed to truncate to the file: %s", index_filename);
+            exit(EXIT_FAILURE);
+        }
+        if(ftruncate(fileno(data_fp), offset) < 0) {
+            zend_error(E_ERROR, "Failed to truncate to the file: %s", index_filename);
+            exit(EXIT_FAILURE);
+        }
+
+        fclose(data_fp);
+        fclose(index_fp);
+        RETURN_LONG(-3);
+    }
 
     // Закрытие файлов
     fclose(data_fp);
@@ -2248,14 +2272,22 @@ PHP_FUNCTION(file_insert_line) {
 
     // Запись в файл
     size_t written = fwrite(buffer, sizeof(char), align, fp);
+    if (written != align) {
+        php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
+
+        if(ftruncate(fileno(fp), file_size) < 0) {
+            zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
+            exit(EXIT_FAILURE);
+        }
+
+        fclose(fp);
+        efree(buffer);
+        RETURN_LONG(-3);
+    }
 
     fclose(fp); // Это также разблокирует файл
     efree(buffer);
     
-    if (written != align) {
-        php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
-        RETURN_LONG(-3);
-    }
     
     // Возврат номера добавленной строки
     RETURN_LONG(line_number); // Нумерация строк начинается с 0
