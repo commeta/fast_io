@@ -87,7 +87,7 @@ Initialization of parameters in PHP occurs during server startup or script execu
 - With a large buffer size, unnecessary file reads are possible, for example, during a full-text search, when the value can be found at the beginning of the file, and it will be read by the size of the buffer.
 - At a very low buffer size, the number of read/write requests can significantly increase, which will create additional load.
 - The buffer value must be a multiple of the 4096 byte cache memory page.
-- In string search operations, a dynamic dynamic_buffer buffer is created based on the dynamic_buffer_size += buffer_size principle.
+- In string search operations, a dynamic dynamic_buffer buffer is created based on the dynamic_buffer_size += buffer_size principle. The size of the dynamic buffer will be set to the value of the maximum spike in the line length.
 - If the file size is less than buffer_size, then buffer_size is reduced to the file size.
 
 dynamic_buffer is used to store parts of a file that are read into memory to search for a specific key or perform a mapping with a regular expression. dynamic_buffer is based on the following principles:
