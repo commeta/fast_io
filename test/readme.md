@@ -345,3 +345,31 @@ Array
 
 ```
 
+
+## Отчет Valgrind
+
+```
+root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full php -dzend_extension=fast_io.so -dxdebug.mode=debug fast_io.php
+==126728== Memcheck, a memory error detector
+==126728== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==126728== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
+==126728== Command: php -dzend_extension=fast_io.so -dxdebug.mode=debug fast_io.php
+==126728== 
+==126728== 
+==126728== HEAP SUMMARY:
+==126728==     in use at exit: 77,809 bytes in 1,349 blocks
+==126728==   total heap usage: 293,542 allocs, 292,193 frees, 603,496,773 bytes allocated
+==126728== 
+==126728== LEAK SUMMARY:
+==126728==    definitely lost: 0 bytes in 0 blocks
+==126728==    indirectly lost: 0 bytes in 0 blocks
+==126728==      possibly lost: 0 bytes in 0 blocks
+==126728==    still reachable: 77,809 bytes in 1,349 blocks
+==126728==         suppressed: 0 bytes in 0 blocks
+==126728== Reachable blocks (those to which a pointer was found) are not shown.
+==126728== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==126728== 
+==126728== For lists of detected and suppressed errors, rerun with: -s
+==126728== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+```
