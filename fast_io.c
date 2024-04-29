@@ -173,7 +173,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_update_line, 0, 3, IS_LONG,
     ZEND_ARG_TYPE_INFO(0, align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_analize, 1, 1, IS_LONG, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_analize, 1, 1, IS_ARRAY, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
@@ -1979,7 +1979,18 @@ PHP_FUNCTION(file_get_keys) {
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
+
+    zend_long search_offset = 0;
+
+    if((mode == 2 || mode == 3) && search_start > 0 && search_start < file_size){
+        fseek(fp, search_start, SEEK_SET);
+        search_offset = search_start;
+        search_start = 0;
+        if(mode == 2) mode = 0;
+        if(mode == 3) mode = 1;
+    } else {
+        fseek(fp, 0, SEEK_SET);
+    }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
@@ -2008,6 +2019,7 @@ PHP_FUNCTION(file_get_keys) {
     zend_long found_count = 0;
     zend_long add_count = 0;
     zend_long line_count = 0;
+
 
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
@@ -2058,7 +2070,7 @@ PHP_FUNCTION(file_get_keys) {
                     add_count++;
                     
                     int value[2];
-                    value[0] = writeOffset;
+                    value[0] = writeOffset + search_offset;
                     value[1] = lineLength;
 
                     if(add_key_value(&keys_values, value) == false){
@@ -2604,13 +2616,18 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     }
 
     ssize_t bytes_read;
-    long max_length = 0, current_length = 0;
+    zend_long max_length = 0, current_length = 0, avg_length = 0;
 
-    //zend_long found_count = 0;
-    zend_long avg_count = 0;
+    zend_long min_length = LONG_MAX;
+
+    
     zend_long line_count = 0;
     int total_characters = 0;
-    
+
+    array_init(return_value);
+    zval key_value_arr;
+    array_init(&key_value_arr);
+
 
     while ((bytes_read = fread(buffer, 1, ini_buffer_size, fp)) > 0) {
         for (ssize_t i = 0; i < bytes_read; ++i) {
@@ -2621,13 +2638,23 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
                     max_length = current_length + 1; // Обновляем максимальную длину
                 }
 
-                total_characters += current_length;
-                avg_count = total_characters / line_count; // Вычисляем среднюю длину
+                if(current_length < min_length){
+                    min_length = current_length + 1;
+                }
 
-                if(mode == 2) { // Возвращаем длину первой строки.
+                total_characters += current_length;
+                avg_length = total_characters / line_count; // Вычисляем среднюю длину
+
+                if(mode == 1) { // Возвращаем длину первой строки.
                     efree(buffer);
                     fclose(fp);
-                    RETURN_LONG(current_length + 1);
+
+                    add_index_long(&key_value_arr, 0, min_length + 1);
+                    add_index_long(&key_value_arr, 1, max_length + 1);       
+                    add_index_long(&key_value_arr, 2, avg_length + 2);       
+                    add_index_long(&key_value_arr, 3, line_count);       
+                    add_next_index_zval(return_value, &key_value_arr);
+                    return;
                 }
 
                 current_length = 0; // Сброс длины для следующей строки
@@ -2640,14 +2667,11 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     efree(buffer);
     fclose(fp);
 
-    // Возвращаем максимальную длину строки. Если строка оканчивается в конце файла без '\n', её длина уже учтена.
-    if(mode == 0) RETURN_LONG(max_length);
-
-    // Возвращаем среднюю длину строки.
-    if(mode == 1) RETURN_LONG(avg_count + 1);
-
-    // Возвращаем количество строк.
-    if(mode == 3) RETURN_LONG(line_count);
+    add_index_long(&key_value_arr, 0, min_length + 1);
+    add_index_long(&key_value_arr, 1, max_length + 1);       
+    add_index_long(&key_value_arr, 2, avg_length + 2);       
+    add_index_long(&key_value_arr, 3, line_count);       
+    add_next_index_zval(return_value, &key_value_arr);
 }
 
 
