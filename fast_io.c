@@ -1245,7 +1245,7 @@ PHP_FUNCTION(file_defrag_data) {
     if (!temp_fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", temp_filename);
         fclose(data_fp);
-        RETURN_LONG(-2);
+        RETURN_LONG(-1);
     }
 
     FILE *index_fp = fopen(index_filename, "r+");
@@ -1254,7 +1254,7 @@ PHP_FUNCTION(file_defrag_data) {
         fclose(data_fp);
         fclose(temp_fp);
         unlink(temp_filename);
-        RETURN_LONG(-2);
+        RETURN_LONG(-1);
     }
 
     FILE *temp_index_fp = fopen(temp_index_filename, "w+");
@@ -1264,7 +1264,7 @@ PHP_FUNCTION(file_defrag_data) {
         fclose(temp_fp);
         fclose(index_fp);
         unlink(temp_filename);
-        RETURN_LONG(-2);
+        RETURN_LONG(-1);
     }
 
     if (flock(fileno(data_fp), LOCK_EX) == -1) {
@@ -1275,7 +1275,7 @@ PHP_FUNCTION(file_defrag_data) {
         fclose(temp_index_fp);
         unlink(temp_filename);
         unlink(temp_index_filename);
-        RETURN_LONG(-3);
+        RETURN_LONG(-2);
     }
     if (flock(fileno(index_fp), LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_filename);
@@ -1285,7 +1285,7 @@ PHP_FUNCTION(file_defrag_data) {
         fclose(temp_index_fp);
         unlink(temp_filename);
         unlink(temp_index_filename);
-        RETURN_LONG(-3);
+        RETURN_LONG(-2);
     }
 
     // Перемещение указателя в конец файла для получения его размера
@@ -2646,7 +2646,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     // Возвращаем среднюю длину строки.
     if(mode == 1) RETURN_LONG(avg_count + 1);
 
-    // Возвращаем среднюю длину строки.
+    // Возвращаем количество строк.
     if(mode == 3) RETURN_LONG(line_count);
 }
 
