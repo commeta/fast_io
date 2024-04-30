@@ -2021,7 +2021,7 @@ PHP_FUNCTION(file_get_keys) {
     zend_long search_limit = 1;
     zend_long offset = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lll", &filename, &filename_len, &mode, &search_start, &search_limit, &offset) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|llll", &filename, &filename_len, &mode, &search_start, &search_limit, &offset) == FAILURE) {
         RETURN_FALSE;
     }
 
