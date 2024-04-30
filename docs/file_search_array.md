@@ -125,6 +125,47 @@ print_r([
 
 ```
 
+```
+print_r([
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+', 13),
+	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 3),
+]);
+
+Array
+(
+    [0] => Array
+        (
+            [0] => Array
+                (
+                    [line_count] => 501
+                    [found_count] => 501
+                )
+
+        )
+
+    [1] => Array
+        (
+            [0] => Array
+                (
+                    [line_count] => 501
+                    [found_count] => 111
+                )
+
+        )
+
+)
+
+
+
+```
+
+
+
+
+
+
+
+
 
 ## Пример использования
 
