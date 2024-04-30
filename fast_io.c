@@ -145,7 +145,6 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_get_keys, 1, 1, IS_ARRAY, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, search_start, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, search_limit, IS_LONG, 0)  
     ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
@@ -311,10 +310,9 @@ PHP_FUNCTION(file_search_array) {
 
     array_init(return_value);
 
-    KeyArray keys = {0};
-    KeyValueArray keys_values = {0};
+    KeyValueLineArray keys_values_lines = {0};
 
-    int value[2];
+    int line_value[3];
     bool isEOF;
 
     if(mode > 9){
@@ -367,54 +365,20 @@ PHP_FUNCTION(file_search_array) {
                         else break;
                     }
 
-                    if(add_key(&keys, lineStart) == false){
+                    line_value[0] = search_offset;
+                    line_value[1] = lineLength;
+                    line_value[2] = line_count;
+
+                    if(add_key_value_line(&keys_values_lines, line_value, lineStart) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         fclose(fp);
                         efree(dynamic_buffer);
-                        free_key_array(&keys);
-                        free_key_value_array(&keys_values);
+                        free_key_value_line_array(&keys_values_lines);
                         RETURN_FALSE;
                     }
                 }
             }
 
-            if(mode == 1 && strstr(lineStart, line_key) != NULL){
-                found_count++;
-
-                if(search_start < found_count){
-                    add_count++;
-
-                    value[0] = line_count;
-                    value[1] = lineLength;
-                    if(add_key_value(&keys_values, value) == false){
-                        php_error_docref(NULL, E_WARNING, "Out of memory");
-                        fclose(fp);
-                        efree(dynamic_buffer);
-                        free_key_array(&keys);
-                        free_key_value_array(&keys_values);
-                        RETURN_FALSE;
-                    }
-                }
-            }
-
-            if(mode == 2 && strstr(lineStart, line_key) != NULL){
-                found_count++;
-
-                if(search_start < found_count){
-                    add_count++;
-
-                    value[0] = search_offset;
-                    value[1] = lineLength;
-                    if(add_key_value(&keys_values, value) == false){
-                        php_error_docref(NULL, E_WARNING, "Out of memory");
-                        fclose(fp);
-                        efree(dynamic_buffer);
-                        free_key_array(&keys);
-                        free_key_value_array(&keys_values);
-                        RETURN_FALSE;
-                    }
-                }
-            }
 
             if(mode == 3 && strstr(lineStart, line_key) != NULL){
                 found_count++;
@@ -431,54 +395,20 @@ PHP_FUNCTION(file_search_array) {
                         else break;
                     }
 
-                    if(add_key(&keys, lineStart) == false){
+                    line_value[0] = search_offset;
+                    line_value[1] = lineLength;
+                    line_value[2] = line_count;
+
+                    if(add_key_value_line(&keys_values_lines, line_value, lineStart) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         fclose(fp);
                         efree(dynamic_buffer);
-                        free_key_array(&keys);
-                        free_key_value_array(&keys_values);
+                        free_key_value_line_array(&keys_values_lines);
                         RETURN_FALSE;
                     }
                 }
             }
 
-            if(mode == 11 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){
-                found_count++;
-
-                if(search_start < found_count){
-                    add_count++;
-                    
-                    value[0] = line_count;
-                    value[1] = lineLength;
-                    if(add_key_value(&keys_values, value) == false){
-                        php_error_docref(NULL, E_WARNING, "Out of memory");
-                        fclose(fp);
-                        efree(dynamic_buffer);
-                        free_key_array(&keys);
-                        free_key_value_array(&keys_values);
-                        RETURN_FALSE;
-                    }
-                }
-            }
-
-            if(mode == 12 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){
-                found_count++;
-
-                if(search_start < found_count){
-                    add_count++;
-
-                    value[0] = search_offset;
-                    value[1] = lineLength;
-                    if(add_key_value(&keys_values, value) == false){
-                        php_error_docref(NULL, E_WARNING, "Out of memory");
-                        fclose(fp);
-                        efree(dynamic_buffer);
-                        free_key_array(&keys);
-                        free_key_value_array(&keys_values);
-                        RETURN_FALSE;
-                    }
-                }
-            }
 
             if(mode == 13 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){
                 found_count++;
@@ -518,8 +448,7 @@ PHP_FUNCTION(file_search_array) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
                     fclose(fp);
                     if (dynamic_buffer) efree(dynamic_buffer);
-                    free_key_array(&keys);
-                    free_key_value_array(&keys_values);
+                    free_key_value_line_array(&keys_values_lines);
                     RETURN_FALSE;
                 }
                 dynamic_buffer = temp_buffer;
@@ -533,39 +462,22 @@ PHP_FUNCTION(file_search_array) {
     if (mode > 9 && re != NULL) pcre2_code_free(re);
     if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
 
-    if(mode == 3 || mode == 13){      
-        value[0] = found_count;
-        value[1] = line_count;
 
-        if(add_key_value(&keys_values, value) == false){
-            php_error_docref(NULL, E_WARNING, "Out of memory");
-            free_key_array(&keys);
-            free_key_value_array(&keys_values);
-            RETURN_FALSE;
-        }
+    for (size_t i = 0; i < keys_values_lines.count; i++) {
+        zval key_value_line_arr;
+        array_init(&key_value_line_arr);
+
+        add_assoc_string(&key_value_line_arr, "line", keys_values_lines.lines[i]);
+        add_assoc_long(&key_value_line_arr, "offset", keys_values_lines.values[i][0]);
+        add_assoc_long(&key_value_line_arr, "length", keys_values_lines.values[i][1]);
+        add_assoc_long(&key_value_line_arr, "count", keys_values_lines.values[i][2]);
+
+        add_next_index_zval(return_value, &key_value_line_arr);
     }
 
-    
-    if(
-        mode == 0 || 
-        mode == 10
-    ){
-        for (size_t i = 0; i < keys.count; i++) {
-            add_next_index_string(return_value, keys.keys[i]);
-        }
-    } else {
-        for (size_t i = 0; i < keys_values.count; i++) {
-            zval key_value_arr;
-            array_init(&key_value_arr);
 
-            add_index_long(&key_value_arr, 0, keys_values.values[i][0]);
-            add_index_long(&key_value_arr, 1, keys_values.values[i][1]);       
-            add_next_index_zval(return_value, &key_value_arr);
-        }
-    }
-
-    free_key_array(&keys);
-    free_key_value_array(&keys_values);
+    free_key_value_line_array(&keys_values_lines);
+    return;
 }
 
 
@@ -2016,12 +1928,11 @@ PHP_FUNCTION(file_erase_line) {
 PHP_FUNCTION(file_get_keys) {
     char *filename;
     size_t filename_len;
-    zend_long mode = 0;
     zend_long search_start = 0;
     zend_long search_limit = 1;
     zend_long offset = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|llll", &filename, &filename_len, &mode, &search_start, &search_limit, &offset) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lll", &filename, &filename_len, &search_start, &search_limit, &offset) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -2042,7 +1953,7 @@ PHP_FUNCTION(file_get_keys) {
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
 
-    off_t writeOffset = 0; // Смещение для записи обновленных данных
+    off_t searchOffset = 0; // Смещение для записи обновленных данных
 
     if(offset > 0){
         if(offset >= file_size){
@@ -2053,7 +1964,7 @@ PHP_FUNCTION(file_get_keys) {
         }
 
         fseek(fp, offset, SEEK_SET);
-        writeOffset = offset;
+        searchOffset = offset;
     } else {
         fseek(fp, 0, SEEK_SET);
     }
@@ -2077,13 +1988,12 @@ PHP_FUNCTION(file_get_keys) {
 
     bool isEOF;
 
-    KeyValueArray keys_values = {0};
-    KeyArray keys = {0};
+    KeyValueLineArray keys_values_lines = {0};
 
-
-    zend_long found_count = 0;
     zend_long add_count = 0;
     zend_long line_count = 0;
+
+    array_init(return_value);
 
 
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
@@ -2108,48 +2018,28 @@ PHP_FUNCTION(file_get_keys) {
 
             line_count++;
 
-            if(mode == 0){
-                found_count++;
-
-                if(search_start < found_count){
-                    add_count++;
+            if(search_start < line_count){
+                add_count++;
                     
-                    char *spacePos = strchr(lineStart, ' ');
-                    if (spacePos) *spacePos = '\0';
-                    if(add_key(&keys, lineStart) == false){
-                        php_error_docref(NULL, E_WARNING, "Out of memory");
-                        fclose(fp);
-                        efree(dynamic_buffer);
-                        free_key_array(&keys);
-                        free_key_value_array(&keys_values);
-                        RETURN_LONG(-8);
-                    }
+                char *spacePos = strchr(lineStart, ' ');
+                if (spacePos) *spacePos = '\0';
+
+                int line_value[3];
+                line_value[0] = searchOffset;
+                line_value[1] = lineLength;
+                line_value[2] = line_count;
+
+                if(add_key_value_line(&keys_values_lines, line_value, lineStart) == false){
+                    php_error_docref(NULL, E_WARNING, "Out of memory");
+                    fclose(fp);
+                    efree(dynamic_buffer);
+                    free_key_value_line_array(&keys_values_lines);
+                    RETURN_LONG(-8);
                 }
             }
+            
 
-
-            if(mode == 1){
-                found_count++;
-
-                if(search_start < found_count){
-                    add_count++;
-                    
-                    int value[2];
-                    value[0] = writeOffset;
-                    value[1] = lineLength;
-
-                    if(add_key_value(&keys_values, value) == false){
-                        php_error_docref(NULL, E_WARNING, "Out of memory");
-                        fclose(fp);
-                        efree(dynamic_buffer);
-                        free_key_array(&keys);
-                        free_key_value_array(&keys_values);
-                        RETURN_LONG(-8);
-                    }
-                }
-            }
-
-            writeOffset += lineLength; // Обновляем смещение
+            searchOffset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
 
             if(add_count >= search_limit){
@@ -2172,8 +2062,7 @@ PHP_FUNCTION(file_get_keys) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
                     fclose(fp);
                     if (dynamic_buffer) efree(dynamic_buffer);
-                    free_key_array(&keys);
-                    free_key_value_array(&keys_values);
+                    free_key_value_line_array(&keys_values_lines);
                     RETURN_LONG(-8);
                 }
                 dynamic_buffer = temp_buffer;
@@ -2184,28 +2073,21 @@ PHP_FUNCTION(file_get_keys) {
     efree(dynamic_buffer);
     fclose(fp);
 
-    if(mode == 0){
-        array_init(return_value);
-        for (size_t i = 0; i < keys.count; i++) {
-            add_next_index_string(return_value, keys.keys[i]);
-        }
+
+    for (size_t i = 0; i < keys_values_lines.count; i++) {
+        zval key_value_line_arr;
+        array_init(&key_value_line_arr);
+
+        add_assoc_string(&key_value_line_arr, "key", keys_values_lines.lines[i]);
+        add_assoc_long(&key_value_line_arr, "offset", keys_values_lines.values[i][0]);
+        add_assoc_long(&key_value_line_arr, "length", keys_values_lines.values[i][1]);
+        add_assoc_long(&key_value_line_arr, "count", keys_values_lines.values[i][2]);
+
+        add_next_index_zval(return_value, &key_value_line_arr);
     }
 
-    if(mode == 1){
-        array_init(return_value);
-        for (size_t i = 0; i < keys_values.count; i++) {
-            zval key_value_arr;
-            array_init(&key_value_arr);
 
-            add_index_long(&key_value_arr, 0, keys_values.values[i][0]);
-            add_index_long(&key_value_arr, 1, keys_values.values[i][1]);       
-            add_next_index_zval(return_value, &key_value_arr);
-        }
-    } 
-
-    free_key_value_array(&keys_values);
-    free_key_array(&keys);
-    if(mode == -1) RETURN_FALSE;
+    free_key_value_line_array(&keys_values_lines);
 }
 
 
@@ -2709,9 +2591,9 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
                     efree(buffer);
                     fclose(fp);
 
-                    add_index_long(&key_value_arr, 0, min_length + 1);
-                    add_index_long(&key_value_arr, 1, max_length + 1);       
-                    add_index_long(&key_value_arr, 2, avg_length + 2);       
+                    add_index_long(&key_value_arr, 0, min_length);
+                    add_index_long(&key_value_arr, 1, max_length);       
+                    add_index_long(&key_value_arr, 2, avg_length);       
                     add_index_long(&key_value_arr, 3, line_count);       
                     add_next_index_zval(return_value, &key_value_arr);
                     return;
@@ -2727,9 +2609,9 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     efree(buffer);
     fclose(fp);
 
-    add_index_long(&key_value_arr, 0, min_length + 1);
-    add_index_long(&key_value_arr, 1, max_length + 1);       
-    add_index_long(&key_value_arr, 2, avg_length + 2);       
+    add_index_long(&key_value_arr, 0, min_length);
+    add_index_long(&key_value_arr, 1, max_length);       
+    add_index_long(&key_value_arr, 2, avg_length);       
     add_index_long(&key_value_arr, 3, line_count);       
     add_next_index_zval(return_value, &key_value_arr);
 }
