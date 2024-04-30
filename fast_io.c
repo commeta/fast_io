@@ -264,9 +264,12 @@ PHP_FUNCTION(file_search_array) {
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
 
-    zend_long correction_offset = 0;
+    off_t search_offset = 0; // Смещение строки поиска
 
-    if((mode == 8 || mode == 9 || mode == 18 || mode == 19) && search_start > 0){
+    if(
+        (mode > 5 && mode < 10) ||
+        (mode > 15 && mode < 20)
+    ){
         if(search_start >= file_size){
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
 
@@ -275,12 +278,18 @@ PHP_FUNCTION(file_search_array) {
         }
 
         fseek(fp, search_start, SEEK_SET);
-        correction_offset = search_start;
+        search_offset = search_start;
         search_start = 0;
-        if(mode == 8) mode = 0;
-        if(mode == 9) mode = 2;
-        if(mode == 18) mode = 10;
-        if(mode == 19) mode = 12;
+
+        if(mode == 6) mode = 0;
+        if(mode == 7) mode = 1;
+        if(mode == 8) mode = 2;
+        if(mode == 9) mode = 3;
+
+        if(mode == 16) mode = 10;
+        if(mode == 17) mode = 11;
+        if(mode == 18) mode = 12;
+        if(mode == 19) mode = 13;
     } else {
         fseek(fp, 0, SEEK_SET);
     }
@@ -301,7 +310,6 @@ PHP_FUNCTION(file_search_array) {
 
     ssize_t bytesRead;
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
-    off_t search_offset = 0; // Смещение строки поиска
 
     zend_long found_count = 0;
     zend_long add_count = 0;
@@ -406,7 +414,7 @@ PHP_FUNCTION(file_search_array) {
                 if(search_start < found_count){
                     add_count++;
 
-                    value[0] = search_offset + correction_offset;
+                    value[0] = search_offset;
                     value[1] = lineLength;
                     if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
@@ -470,7 +478,7 @@ PHP_FUNCTION(file_search_array) {
                 if(search_start < found_count){
                     add_count++;
 
-                    value[0] = search_offset + correction_offset;
+                    value[0] = search_offset;
                     value[1] = lineLength;
                     if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
