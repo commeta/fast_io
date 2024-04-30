@@ -310,9 +310,6 @@ PHP_FUNCTION(file_search_array) {
 
     array_init(return_value);
 
-    KeyValueLineArray keys_values_lines = {0};
-
-    int line_value[3];
     bool isEOF;
 
     if(mode > 9){
@@ -365,17 +362,15 @@ PHP_FUNCTION(file_search_array) {
                         else break;
                     }
 
-                    line_value[0] = search_offset;
-                    line_value[1] = lineLength;
-                    line_value[2] = line_count;
+                    zval key_value_line_arr;
+                    array_init(&key_value_line_arr);
 
-                    if(add_key_value_line(&keys_values_lines, line_value, lineStart) == false){
-                        php_error_docref(NULL, E_WARNING, "Out of memory");
-                        fclose(fp);
-                        efree(dynamic_buffer);
-                        free_key_value_line_array(&keys_values_lines);
-                        RETURN_FALSE;
-                    }
+                    add_assoc_string(&key_value_line_arr, "line", lineStart);
+                    add_assoc_long(&key_value_line_arr, "offset", search_offset);
+                    add_assoc_long(&key_value_line_arr, "length", lineLength);
+                    add_assoc_long(&key_value_line_arr, "count", line_count);
+
+                    add_next_index_zval(return_value, &key_value_line_arr);
                 }
             }
 
@@ -395,17 +390,16 @@ PHP_FUNCTION(file_search_array) {
                         else break;
                     }
 
-                    line_value[0] = search_offset;
-                    line_value[1] = lineLength;
-                    line_value[2] = line_count;
 
-                    if(add_key_value_line(&keys_values_lines, line_value, lineStart) == false){
-                        php_error_docref(NULL, E_WARNING, "Out of memory");
-                        fclose(fp);
-                        efree(dynamic_buffer);
-                        free_key_value_line_array(&keys_values_lines);
-                        RETURN_FALSE;
-                    }
+                    zval key_value_line_arr;
+                    array_init(&key_value_line_arr);
+
+                    add_assoc_string(&key_value_line_arr, "line", lineStart);
+                    add_assoc_long(&key_value_line_arr, "offset", search_offset);
+                    add_assoc_long(&key_value_line_arr, "length", lineLength);
+                    add_assoc_long(&key_value_line_arr, "count", line_count);
+
+                    add_next_index_zval(return_value, &key_value_line_arr);
                 }
             }
 
@@ -415,15 +409,67 @@ PHP_FUNCTION(file_search_array) {
             }
 
 
-            /*
+            
             if(mode == 20 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){ // Сделать возврат совпадений
                 found_count++;
 
                 if(search_start < found_count){
                     add_count++;
+
+
+                    zval return_matched;
+                    array_init(&return_matched);
+
+                    int rc;
+                    PCRE2_SIZE *ovector;
+                    size_t start_offset = 0;
+
+                    while ((rc = pcre2_match(re, (PCRE2_SPTR)lineStart, lineLength, start_offset, 0, match_data, NULL)) > 0) {
+                        ovector = pcre2_get_ovector_pointer(match_data);
+
+                        for (int i = 0; i < rc; i++) {
+                            PCRE2_SIZE start = ovector[2*i];
+                            PCRE2_SIZE end = ovector[2*i+1];
+                            add_next_index_stringl(&return_matched, lineStart + start, end - start);
+                        }
+
+                        // Изменение для предотвращения потенциального бесконечного цикла
+                        if (ovector[1] > start_offset) {
+                            start_offset = ovector[1];
+                        } else {
+                            start_offset++; // Для продолжения поиска следующего совпадения
+                            if (start_offset >= lineLength) break; // Выходим из цикла, если достигнут конец строки
+                        }
+                    }
+
+                    if (rc == PCRE2_ERROR_NOMATCH) {
+                        /* Если совпадений нет, возвращаем пустой массив. */
+                    } else if (rc < 0) {
+                        /* Обработка других ошибок. */
+                        php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
+                        fclose(fp);
+                        if (dynamic_buffer) efree(dynamic_buffer);
+                        RETURN_FALSE;
+                    }
+
+                    for (int i = lineLength - 2; i >= 0; --i) {
+                        if(lineStart[i] == ' ') lineStart[i] = '\0';
+                        else break;
+                    }
+
+                    zval key_value_line_arr;
+                    array_init(&key_value_line_arr);
+
+                    add_assoc_string(&key_value_line_arr, "line", lineStart);
+                    add_assoc_zval(&key_value_line_arr, "matches", &return_matched);
+                    add_assoc_long(&key_value_line_arr, "offset", search_offset);
+                    add_assoc_long(&key_value_line_arr, "length", lineLength);
+                    add_assoc_long(&key_value_line_arr, "count", line_count);
+
+                    add_next_index_zval(return_value, &key_value_line_arr);
                 }
             }
-            */
+            
 
             search_offset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
@@ -448,7 +494,6 @@ PHP_FUNCTION(file_search_array) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
                     fclose(fp);
                     if (dynamic_buffer) efree(dynamic_buffer);
-                    free_key_value_line_array(&keys_values_lines);
                     RETURN_FALSE;
                 }
                 dynamic_buffer = temp_buffer;
@@ -463,34 +508,6 @@ PHP_FUNCTION(file_search_array) {
     if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
 
 
-    if(mode == 3 || mode == 13){
-        zval key_value_line_arr;
-        array_init(&key_value_line_arr);
-
-        add_assoc_long(&key_value_line_arr, "line_count", line_count);
-        add_assoc_long(&key_value_line_arr, "found_count", found_count);
-
-        add_next_index_zval(return_value, &key_value_line_arr);
-
-        free_key_value_line_array(&keys_values_lines);
-        return;
-    }
-
-
-    for (size_t i = 0; i < keys_values_lines.count; i++) {
-        zval key_value_line_arr;
-        array_init(&key_value_line_arr);
-
-        add_assoc_string(&key_value_line_arr, "line", keys_values_lines.lines[i]);
-        add_assoc_long(&key_value_line_arr, "offset", keys_values_lines.values[i][0]);
-        add_assoc_long(&key_value_line_arr, "length", keys_values_lines.values[i][1]);
-        add_assoc_long(&key_value_line_arr, "count", keys_values_lines.values[i][2]);
-
-        add_next_index_zval(return_value, &key_value_line_arr);
-    }
-
-
-    free_key_value_line_array(&keys_values_lines);
     return;
 }
 
@@ -2002,11 +2019,8 @@ PHP_FUNCTION(file_get_keys) {
 
     bool isEOF;
 
-    KeyValueLineArray keys_values_lines = {0};
-
     zend_long add_count = 0;
     zend_long line_count = 0;
-
     array_init(return_value);
 
 
@@ -2038,18 +2052,15 @@ PHP_FUNCTION(file_get_keys) {
                 char *spacePos = strchr(lineStart, ' ');
                 if (spacePos) *spacePos = '\0';
 
-                int line_value[3];
-                line_value[0] = searchOffset;
-                line_value[1] = lineLength;
-                line_value[2] = line_count;
+                zval key_value_line_arr;
+                array_init(&key_value_line_arr);
 
-                if(add_key_value_line(&keys_values_lines, line_value, lineStart) == false){
-                    php_error_docref(NULL, E_WARNING, "Out of memory");
-                    fclose(fp);
-                    efree(dynamic_buffer);
-                    free_key_value_line_array(&keys_values_lines);
-                    RETURN_LONG(-8);
-                }
+                add_assoc_string(&key_value_line_arr, "line", lineStart);
+                add_assoc_long(&key_value_line_arr, "offset", searchOffset);
+                add_assoc_long(&key_value_line_arr, "length", lineLength);
+                add_assoc_long(&key_value_line_arr, "count", line_count);
+
+                add_next_index_zval(return_value, &key_value_line_arr);
             }
             
 
@@ -2076,7 +2087,6 @@ PHP_FUNCTION(file_get_keys) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
                     fclose(fp);
                     if (dynamic_buffer) efree(dynamic_buffer);
-                    free_key_value_line_array(&keys_values_lines);
                     RETURN_LONG(-8);
                 }
                 dynamic_buffer = temp_buffer;
@@ -2086,22 +2096,7 @@ PHP_FUNCTION(file_get_keys) {
 
     efree(dynamic_buffer);
     fclose(fp);
-
-
-    for (size_t i = 0; i < keys_values_lines.count; i++) {
-        zval key_value_line_arr;
-        array_init(&key_value_line_arr);
-
-        add_assoc_string(&key_value_line_arr, "key", keys_values_lines.lines[i]);
-        add_assoc_long(&key_value_line_arr, "offset", keys_values_lines.values[i][0]);
-        add_assoc_long(&key_value_line_arr, "length", keys_values_lines.values[i][1]);
-        add_assoc_long(&key_value_line_arr, "count", keys_values_lines.values[i][2]);
-
-        add_next_index_zval(return_value, &key_value_line_arr);
-    }
-
-
-    free_key_value_line_array(&keys_values_lines);
+    RETURN_ZVAL(return_value, 0, 1);
 }
 
 
