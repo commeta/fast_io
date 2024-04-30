@@ -260,7 +260,25 @@ PHP_FUNCTION(file_search_array) {
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
+
+    zend_long correction_offset = 0;
+
+    if((mode == 8 || mode == 9 || mode == 18 || mode == 19) && search_start > 0){
+        if(search_start >= file_size){
+            fclose(fp);
+            RETURN_FALSE;
+        }
+
+        fseek(fp, search_start, SEEK_SET);
+        correction_offset = search_start;
+        search_start = 0;
+        if(mode == 8) mode = 0;
+        if(mode == 9) mode = 2;
+        if(mode == 18) mode = 10;
+        if(mode == 19) mode = 12;
+    } else {
+        fseek(fp, 0, SEEK_SET);
+    }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
@@ -383,7 +401,7 @@ PHP_FUNCTION(file_search_array) {
                 if(search_start < found_count){
                     add_count++;
 
-                    value[0] = search_offset;
+                    value[0] = search_offset + correction_offset;
                     value[1] = lineLength;
                     if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
@@ -447,7 +465,7 @@ PHP_FUNCTION(file_search_array) {
                 if(search_start < found_count){
                     add_count++;
 
-                    value[0] = search_offset;
+                    value[0] = search_offset + correction_offset;
                     value[1] = lineLength;
                     if(add_key_value(&keys_values, value) == false){
                         php_error_docref(NULL, E_WARNING, "Out of memory");
@@ -1980,7 +1998,7 @@ PHP_FUNCTION(file_get_keys) {
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
 
-    zend_long search_offset = 0;
+    zend_long correction_offset = 0;
 
     if((mode == 2 || mode == 3) && search_start > 0){
         if(search_start >= file_size){
@@ -1989,7 +2007,7 @@ PHP_FUNCTION(file_get_keys) {
         }
 
         fseek(fp, search_start, SEEK_SET);
-        search_offset = search_start;
+        correction_offset = search_start;
         search_start = 0;
         if(mode == 2) mode = 0;
         if(mode == 3) mode = 1;
@@ -2075,7 +2093,7 @@ PHP_FUNCTION(file_get_keys) {
                     add_count++;
                     
                     int value[2];
-                    value[0] = writeOffset + search_offset;
+                    value[0] = writeOffset + correction_offset;
                     value[1] = lineLength;
 
                     if(add_key_value(&keys_values, value) == false){
@@ -2622,17 +2640,13 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
 
     ssize_t bytes_read;
     zend_long max_length = 0, current_length = 0, avg_length = 0;
-
     zend_long min_length = LONG_MAX;
-
-    
     zend_long line_count = 0;
     int total_characters = 0;
 
     array_init(return_value);
     zval key_value_arr;
     array_init(&key_value_arr);
-
 
     while ((bytes_read = fread(buffer, 1, ini_buffer_size, fp)) > 0) {
         for (ssize_t i = 0; i < bytes_read; ++i) {
