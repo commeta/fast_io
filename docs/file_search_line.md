@@ -9,7 +9,7 @@
 
 ## Синтаксис
 
-string file_search_line(string $filename, string $line_key[, int mode = 0] )
+string file_search_line(string $filename, string $line_key[, int mode = 0][, int offset = 0] )
 
 
 ### Параметры
@@ -17,6 +17,7 @@ string file_search_line(string $filename, string $line_key[, int mode = 0] )
 - **filename** - Путь к файлу, в котором будет производиться поиск.
 - **line_key** - Ключ, по которому осуществляется поиск значения.
 - **mode** (int, optional) - Режим поиска.
+- **offset** (int, optional) - Смещение offset начала поиска в файле.
 
 
 #### Режимы поиска
