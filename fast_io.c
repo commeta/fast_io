@@ -257,10 +257,12 @@ PHP_FUNCTION(file_search_array) {
     }
 
     // Попытка установить блокирующую блокировку на запись
-    if (mode < 100 && flock(fileno(fp), LOCK_EX) < 0) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
-        fclose(fp);
-        RETURN_FALSE;
+    if(mode < 100){
+        if (flock(fileno(fp), LOCK_EX) < 0) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+            fclose(fp);
+            RETURN_FALSE;
+        }
     }
 
     if(mode > 99) mode -= 100;
@@ -531,10 +533,12 @@ PHP_FUNCTION(file_search_line) {
     }
 
     // Попытка установить блокирующую блокировку на запись
-    if (mode < 100 && flock(fileno(fp), LOCK_EX) < 0) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
-        fclose(fp);
-        RETURN_FALSE;
+    if(mode < 100){
+        if (flock(fileno(fp), LOCK_EX) < 0) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+            fclose(fp);
+            RETURN_FALSE;
+        }
     }
 
     if(mode > 99) mode -= 100;
@@ -1051,13 +1055,17 @@ PHP_FUNCTION(file_defrag_lines) {
         RETURN_LONG(-2);
     }
 
-    if (mode < 100 && flock(fileno(data_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        fclose(data_fp);
-        fclose(temp_fp);
-        unlink(temp_filename);
-        RETURN_LONG(-3);
+
+    if(mode < 100){
+        if (flock(fileno(data_fp), LOCK_EX) < 0) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
+            fclose(data_fp);
+            fclose(temp_fp);
+            unlink(temp_filename);
+            RETURN_LONG(-3);
+        }
     }
+ 
 
     if(mode > 99) mode -= 100;
 
@@ -2137,19 +2145,21 @@ PHP_FUNCTION(file_replace_line) {
         RETURN_LONG(-2);
     }
 
-    if (mode < 100 && flock(fileno(data_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        fclose(data_fp);
-        fclose(temp_fp);
-        unlink(temp_filename);
-        RETURN_LONG(-3);
-    }
-    if (mode < 100 && flock(fileno(temp_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", temp_filename);
-        fclose(data_fp);
-        fclose(temp_fp);
-        unlink(temp_filename);
-        RETURN_LONG(-3);
+    if(mode < 100){
+        if (flock(fileno(data_fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
+            fclose(data_fp);
+            fclose(temp_fp);
+            unlink(temp_filename);
+            RETURN_LONG(-3);
+        }
+        if (flock(fileno(temp_fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", temp_filename);
+            fclose(data_fp);
+            fclose(temp_fp);
+            unlink(temp_filename);
+            RETURN_LONG(-3);
+        }
     }
 
     if(mode > 99) mode -= 100;
@@ -2410,10 +2420,12 @@ PHP_FUNCTION(file_select_line) {
     }
 
     // Попытка установить блокирующую блокировку на запись
-    if (mode < 100 && flock(fileno(fp), LOCK_EX) < 0) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
-        fclose(fp);
-        RETURN_FALSE;
+    if(mode < 100){
+        if (flock(fileno(fp), LOCK_EX) < 0) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+            fclose(fp);
+            RETURN_FALSE;
+        }
     }
 
     if(mode > 99) mode -= 100;
@@ -2491,10 +2503,12 @@ PHP_FUNCTION(file_update_line) {
     }
 
     // Попытка установить блокирующую блокировку на запись
-    if (mode < 100 && flock(fileno(fp), LOCK_EX) < 0) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
-        fclose(fp);
-        RETURN_LONG(-2);
+    if(mode < 100){
+        if (flock(fileno(fp), LOCK_EX) < 0) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+            fclose(fp);
+            RETURN_LONG(-2);
+        }
     }
 
     if(mode > 99) mode -= 100;
@@ -2559,10 +2573,12 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     }
 
     // Попытка установить блокирующую блокировку на запись
-    if (mode < 100 && flock(fileno(fp), LOCK_EX) < 0) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
-        fclose(fp);
-        RETURN_LONG(-2);
+    if(mode < 100){
+        if (flock(fileno(fp), LOCK_EX) < 0) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+            fclose(fp);
+            RETURN_LONG(-2);
+        }
     }
 
     if(mode > 99) mode -= 100;
