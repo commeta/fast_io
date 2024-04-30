@@ -2582,8 +2582,8 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     int total_characters = 0;
 
     array_init(return_value);
-    zval key_value_arr;
-    array_init(&key_value_arr);
+    zval key_value_line_arr;
+    array_init(&key_value_line_arr);
 
     while ((bytes_read = fread(buffer, 1, ini_buffer_size, fp)) > 0) {
         for (ssize_t i = 0; i < bytes_read; ++i) {
@@ -2605,11 +2605,12 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
                     efree(buffer);
                     fclose(fp);
 
-                    add_index_long(&key_value_arr, 0, min_length);
-                    add_index_long(&key_value_arr, 1, max_length);       
-                    add_index_long(&key_value_arr, 2, avg_length);       
-                    add_index_long(&key_value_arr, 3, line_count);       
-                    add_next_index_zval(return_value, &key_value_arr);
+                    add_assoc_long(&key_value_line_arr, "min_length", min_length);
+                    add_assoc_long(&key_value_line_arr, "max_length", max_length);
+                    add_assoc_long(&key_value_line_arr, "avg_length", avg_length);
+                    add_assoc_long(&key_value_line_arr, "line_count", line_count);
+
+                    add_next_index_zval(return_value, &key_value_line_arr);
                     return;
                 }
 
@@ -2623,11 +2624,12 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     efree(buffer);
     fclose(fp);
 
-    add_index_long(&key_value_arr, 0, min_length);
-    add_index_long(&key_value_arr, 1, max_length);       
-    add_index_long(&key_value_arr, 2, avg_length);       
-    add_index_long(&key_value_arr, 3, line_count);       
-    add_next_index_zval(return_value, &key_value_arr);
+    add_assoc_long(&key_value_line_arr, "min_length", min_length);
+    add_assoc_long(&key_value_line_arr, "max_length", max_length);
+    add_assoc_long(&key_value_line_arr, "avg_length", avg_length);
+    add_assoc_long(&key_value_line_arr, "line_count", line_count);
+
+    add_next_index_zval(return_value, &key_value_line_arr);
 }
 
 
