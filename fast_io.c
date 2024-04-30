@@ -147,7 +147,8 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_get_keys, 1, 1, IS_ARRAY, 1
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, search_start, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, search_limit, IS_LONG, 0)    
+    ZEND_ARG_TYPE_INFO(0, search_limit, IS_LONG, 0)  
+    ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_replace_line, 1, 3, IS_LONG, 0)
@@ -2018,8 +2019,9 @@ PHP_FUNCTION(file_get_keys) {
     zend_long mode = 0;
     zend_long search_start = 0;
     zend_long search_limit = 1;
+    zend_long offset = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lll", &filename, &filename_len, &mode, &search_start, &search_limit) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lll", &filename, &filename_len, &mode, &search_start, &search_limit, &offset) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -2040,21 +2042,18 @@ PHP_FUNCTION(file_get_keys) {
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
 
-    zend_long correction_offset = 0;
+    off_t writeOffset = 0; // Смещение для записи обновленных данных
 
-    if((mode == 2 || mode == 3) && search_start > 0){
-        if(search_start >= file_size){
+    if(offset > 0){
+        if(offset >= file_size){
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
 
             fclose(fp);
             RETURN_FALSE;
         }
 
-        fseek(fp, search_start, SEEK_SET);
-        correction_offset = search_start;
-        search_start = 0;
-        if(mode == 2) mode = 0;
-        if(mode == 3) mode = 1;
+        fseek(fp, offset, SEEK_SET);
+        writeOffset = offset;
     } else {
         fseek(fp, 0, SEEK_SET);
     }
@@ -2081,7 +2080,6 @@ PHP_FUNCTION(file_get_keys) {
     KeyValueArray keys_values = {0};
     KeyArray keys = {0};
 
-    off_t writeOffset = 0; // Смещение для записи обновленных данных
 
     zend_long found_count = 0;
     zend_long add_count = 0;
@@ -2137,7 +2135,7 @@ PHP_FUNCTION(file_get_keys) {
                     add_count++;
                     
                     int value[2];
-                    value[0] = writeOffset + correction_offset;
+                    value[0] = writeOffset;
                     value[1] = lineLength;
 
                     if(add_key_value(&keys_values, value) == false){
