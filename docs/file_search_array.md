@@ -21,7 +21,6 @@ string file_search_array(string $filename, string $line_key[, int mode = 0][, in
 - **offset** (int, optional) - Смещение offset начала поиска в файле.
 
 
-
 #### Режимы поиска
 
 - 0: Поиск line_key в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: line, offset, length, count.
@@ -35,6 +34,7 @@ string file_search_array(string $filename, string $line_key[, int mode = 0][, in
 
 Чтение файла идет всегда с нулевой позиции offset = 0, и если search_start больше нуля то функция просто пропускает строки у которых номер меньше search_start.
 
+Режимы +100 Log mode подходят для работы с файлами журналов.
 
 
 
