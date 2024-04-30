@@ -52,37 +52,3 @@ int lock_file(int fd, int lock_type) {
     return fcntl(fd, F_SETLKW, &fl);
 }
 
-
-// Структура для хранения динамического массива ключей и их значений
-typedef struct {
-    int (*values)[3];
-    char **lines;
-    size_t count;
-} KeyValueLineArray;
-
-bool add_key_value_line(KeyValueLineArray *array, int value[3], char *line) {
-    if (array == NULL) return false;
-
-    array->count++;
-    array->values = erealloc(array->values, array->count * sizeof(int[3]));
-    if(array->values == NULL) return false;
-
-    array->lines = erealloc(array->lines, array->count * sizeof(char *));
-    if(array->lines == NULL) return false;
-    
-    array->lines[array->count - 1] = estrdup(line);
-    array->values[array->count - 1][0] = value[0];
-    array->values[array->count - 1][1] = value[1];
-    array->values[array->count - 1][2] = value[2];
-
-    return true;
-}
-
-void free_key_value_line_array(KeyValueLineArray *array) {
-    for (size_t i = 0; i < array->count; i++) {
-        efree(array->lines[i]);
-        efree(array->values[i]);
-    }    
-    efree(array->values);
-}
-
