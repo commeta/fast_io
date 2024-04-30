@@ -531,11 +531,13 @@ PHP_FUNCTION(file_search_line) {
     }
 
     // Попытка установить блокирующую блокировку на запись
-    if (flock(fileno(fp), LOCK_EX) < 0) {
+    if (mode < 100 && flock(fileno(fp), LOCK_EX) < 0) {
         php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
         fclose(fp);
         RETURN_FALSE;
     }
+
+    if(mode > 99) mode -= 100;
 
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
