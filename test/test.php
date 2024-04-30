@@ -123,17 +123,31 @@ for($i=0; $i <=500; $i++){
 
 
 print_r([
+	file_analize(__DIR__ . '/fast_io1.dat'),
+	file_analize(__DIR__ . '/fast_io1.dat', 1),
+]);
+
+
+
+
+
+
+
+print_r([
 	file_search_line(__DIR__ . '/fast_io1.dat', '\\w+_1', 10),
 	file_search_line(__DIR__ . '/fast_io1.dat', 'index_400', 0)
 ]);
 
+
+
 print_r([
 	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+', 10, 2, 5),
-	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 1),
+	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 0),
 	file_select_line(__DIR__ . '/fast_io1.dat', 8192, 8192, 1),
 	find_matches_pcre2('\\w+_', file_select_line(__DIR__ . '/fast_io1.dat', 16384, 191, 1))
 	
 ]);
+
 
 
 print_r([
@@ -143,10 +157,8 @@ print_r([
 
 
 
-print_r([
-	'file_analize',
-	file_analize(__DIR__ . '/fast_io1.dat'),
-]);
+
+
 
 print_r([
 	'file_select_line',
@@ -177,9 +189,9 @@ print_r([
 
 print_r([
 	'file_get_keys',
-	file_get_keys(__DIR__ . '/fast_io1.dat', 0),
-	file_get_keys(__DIR__ . '/fast_io1.dat', 1),
+	file_get_keys(__DIR__ . '/fast_io1.dat', 1, 5),
 ]);
+
 
 
 
@@ -327,6 +339,7 @@ print_r([
 	'file_search_data',
 	trim(file_search_data(__DIR__ . '/fast_io4.dat', 'index_20'))
 ]);
+
 
 
 
