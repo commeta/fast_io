@@ -93,6 +93,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_array, 1, 2, IS_ARRA
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, search_start, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, search_limit, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_line, 1, 2, IS_STRING, 1)
@@ -242,8 +243,9 @@ PHP_FUNCTION(file_search_array) {
     zend_long mode = 0;
     zend_long search_start = 0;
     zend_long search_limit = 1;
+    zend_long offset = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|lll", &filename, &filename_len, &line_key, &line_key_len, &mode, &search_start, &search_limit) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|llll", &filename, &filename_len, &line_key, &line_key_len, &mode, &search_start, &search_limit, &offset) == FAILURE) {
         return;
     }
 
@@ -266,30 +268,16 @@ PHP_FUNCTION(file_search_array) {
 
     off_t search_offset = 0; // Смещение строки поиска
 
-    if(
-        (mode > 5 && mode < 10) ||
-        (mode > 15 && mode < 20)
-    ){
-        if(search_start >= file_size){
+    if(offset > 0){
+        if(offset >= file_size){
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
 
             fclose(fp);
             RETURN_FALSE;
         }
 
-        fseek(fp, search_start, SEEK_SET);
-        search_offset = search_start;
-        search_start = 0;
-
-        if(mode == 6) mode = 0;
-        if(mode == 7) mode = 1;
-        if(mode == 8) mode = 2;
-        if(mode == 9) mode = 3;
-
-        if(mode == 16) mode = 10;
-        if(mode == 17) mode = 11;
-        if(mode == 18) mode = 12;
-        if(mode == 19) mode = 13;
+        fseek(fp, offset, SEEK_SET);
+        search_offset = offset;
     } else {
         fseek(fp, 0, SEEK_SET);
     }
