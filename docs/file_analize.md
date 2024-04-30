@@ -28,10 +28,10 @@ array file_analize(string $filename [, int mode = 0])
  
 
 ### Элементы массива
-- [0] => min_length - Минимальная длина строки.
-- [1] => max_length - Максимальная длина строки.
-- [2] => avg_length - Средняя длина строки.
-- [3] => line_count - Количество прочитанных строк.
+- min_length - Минимальная длина строки.
+- max_length - Максимальная длина строки.
+- avg_length - Средняя длина строки.
+- line_count - Количество прочитанных строк.
 		    
 
 #### Пример #1 Базовое использование file_analize
@@ -51,15 +51,15 @@ print_r([
 ```
 
 ```
-
+(
     [0] => Array
         (
             [0] => Array
                 (
-                    [0] => 8193 // min_length
-                    [1] => 8193 // max_length
-                    [2] => 8193 // avg_length
-                    [3] => 501 // line_count
+                    [min_length] => 8192
+                    [max_length] => 8192
+                    [avg_length] => 8191
+                    [line_count] => 501
                 )
 
         )
@@ -68,13 +68,16 @@ print_r([
         (
             [0] => Array
                 (
-                    [0] => 8193 // min_length
-                    [1] => 8193 // max_length
-                    [2] => 8193 // avg_length
-                    [3] => 1 // line_count
+                    [min_length] => 8192
+                    [max_length] => 8192
+                    [avg_length] => 8191
+                    [line_count] => 1
                 )
 
         )
+
+)
+
 ```
 
 
