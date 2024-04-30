@@ -463,6 +463,20 @@ PHP_FUNCTION(file_search_array) {
     if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
 
 
+    if(mode == 3 || mode == 13){
+        zval key_value_line_arr;
+        array_init(&key_value_line_arr);
+
+        add_assoc_long(&key_value_line_arr, "line_count", line_count);
+        add_assoc_long(&key_value_line_arr, "found_count", found_count);
+
+        add_next_index_zval(return_value, &key_value_line_arr);
+
+        free_key_value_line_array(&keys_values_lines);
+        return;
+    }
+
+
     for (size_t i = 0; i < keys_values_lines.count; i++) {
         zval key_value_line_arr;
         array_init(&key_value_line_arr);
