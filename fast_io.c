@@ -416,7 +416,6 @@ PHP_FUNCTION(file_search_array) {
                 if(search_start < found_count){
                     add_count++;
 
-
                     zval return_matched;
                     array_init(&return_matched);
 
@@ -460,7 +459,7 @@ PHP_FUNCTION(file_search_array) {
                     zval key_value_line_arr;
                     array_init(&key_value_line_arr);
 
-                    add_assoc_string(&key_value_line_arr, "line", lineStart);
+                    //add_assoc_string(&key_value_line_arr, "line", lineStart);
                     add_assoc_zval(&key_value_line_arr, "matches", &return_matched);
                     add_assoc_long(&key_value_line_arr, "offset", search_offset);
                     add_assoc_long(&key_value_line_arr, "length", lineLength);
