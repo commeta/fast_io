@@ -38,7 +38,7 @@ string file_search_array(string $filename, string $line_key[, int mode = 0][, in
 ### Возвращаемые значения
 
 Функция возвращает ассоциативный массив
-- line - Ключ строки
+- line - Строка
 - offset - Смещение строки
 - length - Длина строки
 - count - Счетчик строк от начала поиска
