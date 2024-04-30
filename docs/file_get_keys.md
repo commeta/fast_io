@@ -40,7 +40,7 @@ array file_get_keys(string $filename[, int search_start = 0][, int search_length
 ```
 for($i=0; $i <=500; $i++){
 	print_r(
-		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_key_value_' . $i . ' ' . str_pad('', 8, '1234567890'), 8192)
+		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' insert_line_' . $i . ' ' . str_pad('', 8, '1234567890'), 8192)
 	);
 }
 
