@@ -2406,11 +2406,13 @@ PHP_FUNCTION(file_select_line) {
     }
 
     // Попытка установить блокирующую блокировку на запись
-    if (flock(fileno(fp), LOCK_EX) < 0) {
+    if (mode < 99 && flock(fileno(fp), LOCK_EX) < 0) {
         php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
         fclose(fp);
         RETURN_FALSE;
     }
+
+    if(mode > 99) mode -= 100;
 
     ssize_t bytesRead;
     off_t offset = (mode == 0) ? row * align : row;
@@ -2485,11 +2487,14 @@ PHP_FUNCTION(file_update_line) {
     }
 
     // Попытка установить блокирующую блокировку на запись
-    if (flock(fileno(fp), LOCK_EX) < 0) {
+    if (mode < 100 && flock(fileno(fp), LOCK_EX) < 0) {
         php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
         fclose(fp);
         RETURN_LONG(-2);
     }
+
+    if(mode > 99) mode -= 100;
+
 
     // Рассчитываем смещение для записи в файл
     off_t offset = (mode == 0) ? row * align : row;
