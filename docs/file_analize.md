@@ -58,7 +58,7 @@ print_r([
                 (
                     [min_length] => 8192
                     [max_length] => 8192
-                    [avg_length] => 8191
+                    [avg_length] => 8192
                     [line_count] => 501
                 )
 
@@ -70,7 +70,7 @@ print_r([
                 (
                     [min_length] => 8192
                     [max_length] => 8192
-                    [avg_length] => 8191
+                    [avg_length] => 8192
                     [line_count] => 1
                 )
 
