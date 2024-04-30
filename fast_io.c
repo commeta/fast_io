@@ -1982,7 +1982,12 @@ PHP_FUNCTION(file_get_keys) {
 
     zend_long search_offset = 0;
 
-    if((mode == 2 || mode == 3) && search_start > 0 && search_start < file_size){
+    if((mode == 2 || mode == 3) && search_start > 0){
+        if(search_start >= file_size){
+            fclose(fp);
+            RETURN_FALSE;
+        }
+
         fseek(fp, search_start, SEEK_SET);
         search_offset = search_start;
         search_start = 0;
