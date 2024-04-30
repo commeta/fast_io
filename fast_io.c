@@ -265,6 +265,8 @@ PHP_FUNCTION(file_search_array) {
 
     if((mode == 8 || mode == 9 || mode == 18 || mode == 19) && search_start > 0){
         if(search_start >= file_size){
+            php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
+
             fclose(fp);
             RETURN_FALSE;
         }
@@ -2002,6 +2004,8 @@ PHP_FUNCTION(file_get_keys) {
 
     if((mode == 2 || mode == 3) && search_start > 0){
         if(search_start >= file_size){
+            php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
+
             fclose(fp);
             RETURN_FALSE;
         }
