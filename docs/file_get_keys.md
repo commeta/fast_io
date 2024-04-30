@@ -15,7 +15,6 @@ array file_get_keys(string $filename[, int mode = 0][, int search_start = 0][, i
 ### Параметры
 
 - **filename** (string): Путь к файлу, из которого необходимо извлечь ключи.
-- **mode** (int, optional) - Режим поиска.
 - **search_start** (int, optional) - Стартовая строка начала выборки.
 - **search_limit** (int, optional) - Ограничение массива выборки.
 - **offset** (int, optional) - Смещение offset начала поиска в файле.
@@ -23,8 +22,11 @@ array file_get_keys(string $filename[, int mode = 0][, int search_start = 0][, i
 
 ### Возвращаемое значение
 
-- В режиме 0 - функция возвращает массив строк (array), каждый элемент которого является уникальным ключом, извлеченным из файла.
-- В режиме 1 - функция возвращает массив (array), каждый элемент которого содержит элементы: [0] смещение и [1] размер строки в файле.
+Функция возвращает ассоциативный массив
+- key - Ключ строки
+- offset - Смещение строки
+- length - Длина строки
+- count - Счетчик строк от начала поиска
 
 
 Чтение по смещению offset позволяет избежать лишних чтений файла при выборке с окном пагинации.
@@ -43,44 +45,58 @@ for($i=0; $i <=500; $i++){
 }
 
 print_r([
-	file_get_keys(__DIR__ . '/fast_io1.dat', 0, 0, 3),
-	file_get_keys(__DIR__ . '/fast_io1.dat', 1, 0, 3),
+	file_get_keys(__DIR__ . '/fast_io1.dat', 1, 5)
 ]);
 
 0, 1, 2, 3, 4, Array
 (
     [0] => Array
         (
-            [0] => index_0
-            [1] => index_1
-            [2] => index_2
-        )
-
-    [1] => Array
-        (
             [0] => Array
                 (
-                    [0] => 0
-                    [1] => 8192
+                    [key] => index_1
+                    [offset] => 8192
+                    [length] => 8192
+                    [count] => 2
                 )
 
             [1] => Array
                 (
-                    [0] => 8192
-                    [1] => 8192
+                    [key] => index_2
+                    [offset] => 16384
+                    [length] => 8192
+                    [count] => 3
                 )
 
             [2] => Array
                 (
-                    [0] => 16384
-                    [1] => 8192
+                    [key] => index_3
+                    [offset] => 24576
+                    [length] => 8192
+                    [count] => 4
+                )
+
+            [3] => Array
+                (
+                    [key] => index_4
+                    [offset] => 32768
+                    [length] => 8192
+                    [count] => 5
+                )
+
+            [4] => Array
+                (
+                    [key] => index_5
+                    [offset] => 40960
+                    [length] => 8192
+                    [count] => 6
                 )
 
         )
 
 )
-```
 
+```
 
 
 
