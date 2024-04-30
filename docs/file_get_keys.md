@@ -24,7 +24,7 @@ array file_get_keys(string $filename[, int search_start = 0][, int search_length
 
 Функция возвращает ассоциативный массив
 - key - Ключ строки
-- offset - Смещение строки
+- offset - Смещение строки (с учетом смещения начала поиска в файле)
 - length - Длина строки
 - count - Счетчик строк от начала поиска
 
