@@ -99,11 +99,13 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_line, 1, 2, IS_STRIN
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line_key, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_data, 0, 2, IS_STRING, 1)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_data, 1, 2, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line_key, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_push_line, 0, 2, IS_LONG, 0)
@@ -134,9 +136,10 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_pop_line, 1, 1, IS_STRING, 
     ZEND_ARG_TYPE_INFO(0, align, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_erase_line, 0, 2, IS_LONG, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_erase_line, 1, 2, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line_key, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_get_keys, 1, 1, IS_ARRAY, 1)
@@ -574,8 +577,9 @@ PHP_FUNCTION(file_search_line) {
     char *filename, *line_key;
     size_t filename_len, line_key_len;
     zend_long mode = 0;
+    zend_long offset = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &filename, &filename_len, &line_key, &line_key_len, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|ll", &filename, &filename_len, &line_key, &line_key_len, &mode, &offset) == FAILURE) {
         RETURN_FALSE; // Неправильные параметры вызова функции
     }
 
@@ -595,7 +599,18 @@ PHP_FUNCTION(file_search_line) {
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
+
+    if(offset > 0){
+        if(offset >= file_size){
+            php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
+            fclose(fp);
+            RETURN_FALSE;
+        }
+
+        fseek(fp, offset, SEEK_SET);
+    } else {
+        fseek(fp, 0, SEEK_SET);
+    }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
@@ -734,24 +749,43 @@ PHP_FUNCTION(file_search_line) {
 PHP_FUNCTION(file_search_data) {
     char *filename, *line_key;
     size_t filename_len, line_key_len;
+    zend_long offset = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &filename, &filename_len, &line_key, &line_key_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &filename, &filename_len, &line_key, &line_key_len, &offset) == FAILURE) {
         RETURN_FALSE;
     }
 
     char index_filename[filename_len + 7];
     snprintf(index_filename, sizeof(index_filename), "%s.index", filename);
 
-    FILE *data_fp = fopen(filename, "r");
-    if (!data_fp) {
-        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
-        RETURN_FALSE;
-    }
 
     FILE *index_fp = fopen(index_filename, "r");
     if (!index_fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_filename);
-        fclose(data_fp);
+        RETURN_FALSE;
+    }
+
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(index_fp, 0, SEEK_END);
+    long file_size = ftell(index_fp);
+
+    if(offset > 0){
+        if(offset >= file_size){
+            php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
+            fclose(index_fp);
+            RETURN_FALSE;
+        }
+
+        fseek(index_fp, offset, SEEK_SET);
+    } else {
+        fseek(index_fp, 0, SEEK_SET);
+    }
+
+
+    FILE *data_fp = fopen(filename, "r");
+    if (!data_fp) {
+        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
+        fclose(index_fp);
         RETURN_FALSE;
     }
 
@@ -768,10 +802,6 @@ PHP_FUNCTION(file_search_data) {
         RETURN_FALSE;
     }
 
-    // Перемещение указателя в конец файла для получения его размера
-    fseek(index_fp, 0, SEEK_END);
-    long file_size = ftell(index_fp);
-    fseek(index_fp, 0, SEEK_SET);
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
@@ -853,7 +883,7 @@ PHP_FUNCTION(file_search_data) {
     }
 
     *colon_ptr = '\0';
-    long offset = atol(found_value);
+    offset = atol(found_value);
     size_t size = (size_t)strtoul(colon_ptr + 1, NULL, 10);
     efree(found_value);
 
@@ -1841,8 +1871,9 @@ PHP_FUNCTION(file_pop_line) {
 PHP_FUNCTION(file_erase_line) {
     char *filename, *line_key;
     size_t filename_len, line_key_len;
+    zend_long offset = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &filename, &filename_len, &line_key, &line_key_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &filename, &filename_len, &line_key, &line_key_len, &offset) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1862,7 +1893,21 @@ PHP_FUNCTION(file_erase_line) {
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
+
+    off_t writeOffset = 0; // Смещение для записи обновленных данных
+
+    if(offset > 0){
+        if(offset >= file_size){
+            php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
+            fclose(fp);
+            RETURN_LONG(-5);
+        }
+
+        fseek(fp, offset, SEEK_SET);
+        writeOffset = offset;
+    } else {
+        fseek(fp, 0, SEEK_SET);
+    }
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
@@ -1884,7 +1929,6 @@ PHP_FUNCTION(file_erase_line) {
     bool found_match = false;
 
     bool isEOF;
-    off_t writeOffset = 0; // Смещение для записи обновленных данных
 
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
@@ -2181,7 +2225,6 @@ PHP_FUNCTION(file_replace_line) {
     size_t line_len;
     size_t line_key_len;
     zend_long mode = 0;
-
 
     // Парсинг аргументов
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss|l", &filename, &filename_len, &line_key, &line_key_len, &line, &line_len, &mode) == FAILURE) {
