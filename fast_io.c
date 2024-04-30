@@ -2598,7 +2598,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
                     min_length = current_length + 1;
                 }
 
-                total_characters += current_length;
+                total_characters += current_length + 1;
                 avg_length = total_characters / line_count; // Вычисляем среднюю длину
 
                 if(mode == 1) { // Возвращаем длину первой строки.
