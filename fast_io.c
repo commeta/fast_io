@@ -2941,7 +2941,6 @@ PHP_FUNCTION(file_select_array) {
     array_init(return_value);
     zval *elem, *value;
     ssize_t bytesRead;
-    zend_long add_count = 0;
     bool found_match = false;
 
 
@@ -3068,10 +3067,7 @@ PHP_FUNCTION(file_select_array) {
                     if(found_match){
                         add_assoc_long(&key_value_line_arr, "offset", select_pos);
                         add_assoc_long(&key_value_line_arr, "length", select_size);
-                        add_assoc_long(&key_value_line_arr, "add_count", add_count);
                         add_next_index_zval(return_value, &key_value_line_arr);
-
-                        add_count++;
                     }
 
                     efree(buffer);
