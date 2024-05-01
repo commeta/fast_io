@@ -8,7 +8,7 @@
 
 ## Синтаксис
 
-string file_search_array(string $filename, string $line_key[, int mode = 0][, int search_start = 0][, int search_length = 1][, int offset = 0] )
+string file_search_array(string $filename, string $line_key[, int mode = 0][, int search_start = 0][, int search_length = 1][, int position = 0] )
 
 
 ### Параметры
@@ -18,7 +18,7 @@ string file_search_array(string $filename, string $line_key[, int mode = 0][, in
 - **mode** (int, optional) - Режим поиска.
 - **search_start** (int, optional) - Стартовая строка начала выборки.
 - **search_limit** (int, optional) - Ограничение массива выборки.
-- **offset** (int, optional) - Смещение offset начала поиска в файле.
+- **position** (int, optional) - Позиция начала поиска в файле.
 
 
 #### Режимы поиска
@@ -30,9 +30,9 @@ string file_search_array(string $filename, string $line_key[, int mode = 0][, in
 - 20: Поиск по регулярному выражению PCRE2 в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: matches, offset, length, count.
 - +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим mode -= 100 но не будет блокировать файл.
 
-Чтение по смещению offset позволяет избежать лишних чтений файла при выборке с окном пагинации.
+Чтение по смещению позиции position позволяет избежать лишних чтений файла при выборке с окном пагинации.
 
-Чтение файла идет всегда с нулевой позиции offset = 0, и если search_start больше нуля то функция просто пропускает строки у которых номер меньше search_start.
+Чтение файла идет всегда с нулевой позиции position = 0, и если search_start больше нуля то функция просто пропускает строки у которых номер меньше search_start.
 
 Режимы +100 Log mode подходят для работы с файлами журналов.
 
