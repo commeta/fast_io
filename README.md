@@ -45,6 +45,13 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - The cost of calling low-consumption functions in case of hitting the cache is comparable to the speed of cache memory access.
 
 
+### Behavior of the Fast_IO function in case of transaction abort
+- file_push_data, file_push_line, file_insert_line - always cancel the last record and exit with an error.
+- file_replace_line, file_defrag_data, file_defrag_line - if there is an error during writeback, it renames temporary files and data remains intact.
+- file_erase_line - checks the number of written bytes; if there is an error writing a file (-3), this operation cannot be undone!
+- file_update_line - checks the number of written bytes; if there is an error writing a file (-4), this operation cannot be undone!
+
+
 ## Getting Started
 
 Each function within the Fast_IO extension is documented in detail on separate pages with PHP examples. These resources will help developers quickly get started with the extension and efficiently utilize its capabilities in their projects.
