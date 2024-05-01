@@ -9,8 +9,7 @@
 
 ## Синтаксис
 
-array file_get_keys(string $filename[, int search_start = 0][, int search_length = 1][, int offset = 0]  )
-
+array file_get_keys(string $filename[, int search_start = 0][, int search_length = 1][, int offset = 0][, int mode = 0])
 
 ### Параметры
 
@@ -18,7 +17,12 @@ array file_get_keys(string $filename[, int search_start = 0][, int search_length
 - **search_start** (int, optional) - Стартовая строка начала выборки.
 - **search_limit** (int, optional) - Ограничение массива выборки.
 - **offset** (int, optional) - Смещение offset начала поиска в файле.
+- **mode** (int, optional) - Режим поиска.
 
+
+#### Режимы поиска
+- 0: Блокировка файла.
+- 100 Log mode: Без блокировки файла.
 
 ### Возвращаемое значение
 
