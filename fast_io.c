@@ -3098,6 +3098,14 @@ PHP_FUNCTION(file_select_array) {
                             add_assoc_string(&key_value_line_arr, "line", buffer);
                         }
 
+                        if(mode == 22) {
+                            for (int i = bytesRead - 1; i >= 0; --i) {
+                                if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
+                                else break;
+                            }
+                            add_assoc_string(&key_value_line_arr, "line", buffer);
+                        }
+
                         if(found_match) add_assoc_zval(&key_value_line_arr, "matches", &return_matched);
                     }
 
