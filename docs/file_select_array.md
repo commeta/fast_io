@@ -11,18 +11,20 @@
 
 ## Синтаксис
 
-array file_select_array(string $filename, array $addresses[, int mode = 0])
+array file_select_array(string $filename, array $addresses[, int $mode = 0][, string $pattern])
 
 ### Параметры
 
 - **filename** (string): Путь к файлу, из которого необходимо извлечь ключи.
 - **addresses** - Массив адресов строк.
 - **mode** (int, optional) - Режим.
+- **pattern** - регулярное выражение, по которому будет осуществляться поиск.
 
 
 #### Режимы
 - 0: Обрезка пробелов справа и символа перевода строки.
 - 1: Возврат сырой строки.
+- 20: Возврат совпадений по регулярному выражению PCRE2 в каждой строке.
 - +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим mode -= 100 но не будет блокировать файл.
 
 Режимы +100 Log mode подходят для работы с файлами журналов.
@@ -37,7 +39,12 @@ for($i=0; $i <=500; $i++){
 	);
 }
 
-$array=[[8192,8192],[16384,8192],[24576,8192]];
+$array=[
+	[8192,8192], // Адрес и размер строки 1 в файле
+	[16384,8192], // Адрес и размер строки 2 в файле
+	[24576,8192] // Адрес и размер строки 3 в файле
+];
+
 print_r([
 	file_select_array(__DIR__ . '/fast_io1.dat', $array, 0)
 ]);
@@ -76,8 +83,64 @@ Array
         )
 
 )
-
 ```
 
+
+
+```
+print_r([
+	file_select_array(__DIR__ . '/fast_io1.dat', $array, 20, '\\w+_\\d+')
+]);
+```
+
+```
+Array
+(
+    [0] => Array
+        (
+            [0] => Array
+                (
+                    [matches] => Array
+                        (
+                            [0] => index_1
+                            [1] => file_insert_line_1
+                        )
+
+                    [offset] => 8192
+                    [length] => 8192
+                    [add_count] => 0
+                )
+
+            [1] => Array
+                (
+                    [matches] => Array
+                        (
+                            [0] => index_2
+                            [1] => file_insert_line_2
+                        )
+
+                    [offset] => 16384
+                    [length] => 8192
+                    [add_count] => 1
+                )
+
+            [2] => Array
+                (
+                    [matches] => Array
+                        (
+                            [0] => index_3
+                            [1] => file_insert_line_3
+                        )
+
+                    [offset] => 24576
+                    [length] => 8192
+                    [add_count] => 2
+                )
+
+        )
+
+)
+
+```
 
 
