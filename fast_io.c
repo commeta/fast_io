@@ -1165,7 +1165,7 @@ PHP_FUNCTION(file_defrag_lines) {
                 php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
                 fclose(data_fp);
                 fclose(temp_fp);
-                unlink(temp_filename);
+                rename(temp_filename, filename);
                 efree(dynamic_buffer);
                 RETURN_LONG(-4);
             }
@@ -1178,7 +1178,7 @@ PHP_FUNCTION(file_defrag_lines) {
             fclose(data_fp);
             efree(dynamic_buffer);
             fclose(temp_fp);
-            unlink(temp_filename);
+            rename(temp_filename, filename);
             RETURN_LONG(-5);
         }
 
@@ -1488,8 +1488,8 @@ PHP_FUNCTION(file_defrag_data) {
                 fclose(data_fp);
                 fclose(temp_fp);
                 fclose(temp_index_fp);
-                unlink(temp_filename);
-                unlink(temp_index_filename);
+                rename(temp_filename, filename);
+                rename(temp_index_filename, index_filename);
                 efree(dynamic_buffer);
                 RETURN_LONG(-4);
             }
@@ -1504,8 +1504,8 @@ PHP_FUNCTION(file_defrag_data) {
             fclose(data_fp);
             fclose(temp_fp);
             fclose(temp_index_fp);
-            unlink(temp_filename);
-            unlink(temp_index_filename);
+            rename(temp_filename, filename);
+            rename(temp_index_filename, index_filename);
             efree(dynamic_buffer);
             RETURN_LONG(-5);
         }
@@ -1519,9 +1519,9 @@ PHP_FUNCTION(file_defrag_data) {
                 fclose(index_fp);
                 fclose(data_fp);
                 fclose(temp_fp);
-                fclose(temp_index_fp);
-                unlink(temp_filename);
-                unlink(temp_index_filename);
+                fclose(temp_index_fp);                
+                rename(temp_filename, filename);
+                rename(temp_index_filename, index_filename);
                 efree(dynamic_buffer);
                 RETURN_LONG(-4);
             }
