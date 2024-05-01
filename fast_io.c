@@ -1632,7 +1632,7 @@ PHP_FUNCTION(file_pop_line) {
         // Убедимся, что строка нуль-терминирована
         buffer[bytesRead] = '\0';
 
-        if(mode < 1){
+        if(mode < 1 || mode == 2){
             // Обрезка пробелов справа и символа перевода строки
             for (int i = bytesRead - 1; i >= 0; --i) {
                 if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
@@ -1780,7 +1780,7 @@ PHP_FUNCTION(file_pop_line) {
 
         fclose(fp);
 
-        if(mode < 1){
+        if(mode < 1 || mode == 2){
             // Находим позицию, до которой нужно обрезать строку
             ssize_t i;
             for (i = len - 1; i >= 0; --i) {
