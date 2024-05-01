@@ -2652,7 +2652,20 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     zval key_value_line_arr;
     array_init(&key_value_line_arr);
 
+    bool isEOF;
+
     while ((bytes_read = fread(buffer, 1, ini_buffer_size, fp)) > 0) {
+
+        // Проверяем, достигли ли мы конца файла (EOF)
+        isEOF = feof(fp);
+        
+        if (isEOF && buffer[bytes_read - 1] != '\n') {
+            php_error_docref(NULL, E_WARNING, "Failed to flow interruption in file: %s", filename);
+            efree(buffer);
+            fclose(fp);
+            RETURN_LONG(-9);
+        }
+
         for (ssize_t i = 0; i < bytes_read; ++i) {
             if (buffer[i] == '\n') { // Конец текущей строки
                 line_count++;
