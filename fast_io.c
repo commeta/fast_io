@@ -342,14 +342,7 @@ PHP_FUNCTION(file_search_array) {
         current_size += bytesRead;
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(fp);
-
-        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
-            php_error_docref(NULL, E_WARNING, "Failed to flow interruption in file: %s", filename);
-            fclose(fp);
-            efree(dynamic_buffer);
-            RETURN_FALSE;
-        }
-        
+       
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -607,13 +600,6 @@ PHP_FUNCTION(file_search_line) {
         current_size += bytesRead;
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(fp);
-
-        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
-            php_error_docref(NULL, E_WARNING, "Failed to flow interruption in file: %s", filename);
-            fclose(fp);
-            efree(dynamic_buffer);
-            RETURN_FALSE;
-        }
         
         dynamic_buffer[current_size] = '\0';
 
@@ -1887,14 +1873,7 @@ PHP_FUNCTION(file_erase_line) {
         current_size += bytesRead;
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(fp);
-        
-        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
-            php_error_docref(NULL, E_WARNING, "Failed to flow interruption in file: %s", filename);
-            fclose(fp);
-            efree(dynamic_buffer);
-            RETURN_LONG(-9);
-        }
-        
+                
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -2045,13 +2024,6 @@ PHP_FUNCTION(file_get_keys) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(fp);
         
-        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
-            php_error_docref(NULL, E_WARNING, "Failed to flow interruption in file: %s", filename);
-            fclose(fp);
-            efree(dynamic_buffer);
-            RETURN_LONG(-9);
-        }
-
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -2198,15 +2170,6 @@ PHP_FUNCTION(file_replace_line) {
         current_size += bytesRead;
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(data_fp);
-
-        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
-            php_error_docref(NULL, E_WARNING, "Failed to flow interruption in file: %s", filename);
-            fclose(data_fp);
-            fclose(temp_fp);
-            unlink(temp_filename);
-            efree(dynamic_buffer);
-            RETURN_LONG(-9);
-        }
 
         dynamic_buffer[current_size] = '\0';
 
@@ -2627,6 +2590,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     zend_long min_length = LONG_MAX;
     zend_long line_count = 0;
     int total_characters = 0;
+    int flow_interruption = 0;
 
     array_init(return_value);
     zval key_value_line_arr;
@@ -2635,15 +2599,12 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     bool isEOF;
 
     while ((bytes_read = fread(buffer, 1, ini_buffer_size, fp)) > 0) {
-
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(fp);
         
         if (isEOF && buffer[bytes_read - 1] != '\n') {
             php_error_docref(NULL, E_WARNING, "Failed to flow interruption in file: %s", filename);
-            efree(buffer);
-            fclose(fp);
-            RETURN_LONG(-9);
+            flow_interruption = 1;
         }
 
         for (ssize_t i = 0; i < bytes_read; ++i) {
@@ -2669,6 +2630,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
                     add_assoc_long(&key_value_line_arr, "max_length", max_length);
                     add_assoc_long(&key_value_line_arr, "avg_length", avg_length);
                     add_assoc_long(&key_value_line_arr, "line_count", line_count);
+                    add_assoc_long(&key_value_line_arr, "flow_interruption", flow_interruption);
 
                     add_next_index_zval(return_value, &key_value_line_arr);
                     return;
@@ -2688,7 +2650,8 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     add_assoc_long(&key_value_line_arr, "max_length", max_length);
     add_assoc_long(&key_value_line_arr, "avg_length", avg_length);
     add_assoc_long(&key_value_line_arr, "line_count", line_count);
-
+    add_assoc_long(&key_value_line_arr, "flow_interruption", flow_interruption);
+    
     add_next_index_zval(return_value, &key_value_line_arr);
 }
 
