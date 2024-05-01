@@ -4,13 +4,13 @@
 
 ## Синтаксис
 
-int file_erase_line(string $filename, string $line_key[, int offset = 0])
+int file_erase_line(string $filename, string $line_key[, int position = 0])
 
 ### Параметры
 
 - **filename** - Путь к файлу, в котором требуется скрыть ключ.
 - **line_key** - Ключ, который необходимо скрыть в файле.
-- **offset** (int, optional) - Смещение offset начала поиска в файле.
+- **position** (int, optional) - Позиция начала поиска в файле.
 
 
 ### Возвращаемые значения
