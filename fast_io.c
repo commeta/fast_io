@@ -202,6 +202,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_select_array, 1, 2, IS_ARRA
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, pattern, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
 
@@ -461,10 +462,10 @@ PHP_FUNCTION(file_search_array) {
                         RETURN_FALSE;
                     }
 
-                    for (int i = lineLength - 2; i >= 0; --i) {
-                        if(lineStart[i] == ' ') lineStart[i] = '\0';
-                        else break;
-                    }
+                    //for (int i = lineLength - 2; i >= 0; --i) {
+                        //if(lineStart[i] == ' ') lineStart[i] = '\0';
+                        //else break;
+                    //}
 
                     zval key_value_line_arr;
                     array_init(&key_value_line_arr);
@@ -2895,13 +2896,16 @@ PHP_FUNCTION(replicate_file) {
 
 
 
+
 PHP_FUNCTION(file_select_array) {
-    char  * filename;
+    char  *filename;
     size_t filename_len;
-    zval  * array = NULL;
+    char *pattern;
+    size_t pattern_len;
+    zval  *array = NULL;
     zend_long mode = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sa|l", &filename, &filename_len, &array, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sa|ls", &filename, &filename_len, &array, &mode, &pattern, &pattern_len) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -2930,6 +2934,30 @@ PHP_FUNCTION(file_select_array) {
     zval *elem, *value;
     ssize_t bytesRead;
     zend_long add_count = 0;
+
+
+    pcre2_code *re;
+    pcre2_match_data *match_data; 
+
+    array_init(return_value);
+
+
+    if(mode > 9){
+        PCRE2_SIZE erroffset;
+        int errorcode;
+        re = pcre2_compile((PCRE2_SPTR)pattern, PCRE2_ZERO_TERMINATED, 0, &errorcode, &erroffset, NULL);
+
+        if (re == NULL) {
+            PCRE2_UCHAR message[256];
+            pcre2_get_error_message(errorcode, message, sizeof(message));
+            php_error_docref(NULL, E_WARNING, "PCRE2 compilation failed at offset %d: %s", (int)erroffset, message);
+            fclose(fp);
+            RETURN_FALSE;
+        }
+
+        match_data = pcre2_match_data_create_from_pattern(re, NULL);
+    }
+
 
     // Если массив был передан, обходим его
     if (array) {
@@ -2980,6 +3008,45 @@ PHP_FUNCTION(file_select_array) {
 
                     if(mode == 1) {
                         add_assoc_string(&key_value_line_arr, "line", buffer);
+                    }
+
+                    if(mode == 20) {
+                        zval return_matched;
+                        array_init(&return_matched);
+
+                        int rc;
+                        PCRE2_SIZE *ovector;
+                        size_t start_offset = 0;
+
+                        while ((rc = pcre2_match(re, (PCRE2_SPTR)buffer, select_size, start_offset, 0, match_data, NULL)) > 0) {
+                            ovector = pcre2_get_ovector_pointer(match_data);
+
+                            for (int i = 0; i < rc; i++) {
+                                PCRE2_SIZE start = ovector[2*i];
+                                PCRE2_SIZE end = ovector[2*i+1];
+                                add_next_index_stringl(&return_matched, buffer + start, end - start);
+                            }
+
+                            // Изменение для предотвращения потенциального бесконечного цикла
+                            if (ovector[1] > start_offset) {
+                                start_offset = ovector[1];
+                            } else {
+                                start_offset++; // Для продолжения поиска следующего совпадения
+                                if (start_offset >= bytesRead) break; // Выходим из цикла, если достигнут конец строки
+                            }
+                        }
+
+                        if (rc == PCRE2_ERROR_NOMATCH) {
+                            /* Если совпадений нет, возвращаем пустой массив. */
+                        } else if (rc < 0) {
+                            /* Обработка других ошибок. */
+                            php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
+                            fclose(fp);
+                            efree(buffer);
+                            RETURN_FALSE;
+                        }
+
+                        add_assoc_zval(&key_value_line_arr, "matches", &return_matched);
                     }
 
                     add_assoc_long(&key_value_line_arr, "offset", select_pos);
