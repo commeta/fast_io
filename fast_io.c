@@ -1535,8 +1535,8 @@ PHP_FUNCTION(file_defrag_data) {
             fclose(data_fp);
             fclose(temp_fp);
             fclose(temp_index_fp);
-            unlink(temp_filename);
-            unlink(temp_index_filename);
+            rename(temp_filename, filename);
+            rename(temp_index_filename, index_filename);
             efree(dynamic_buffer);
             RETURN_LONG(-5);
         }
