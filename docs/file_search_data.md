@@ -4,14 +4,14 @@
 
 ## Синтаксис
 
-string file_search_data(string $filename, string $line_key[, int offset = 0])
+string file_search_data(string $filename, string $line_key[, int position = 0])
 
 
 ### Параметры
 
 - **filename** - Путь к текстовому файлу, в котором будет производиться поиск.
 - **line_key** - Ключ, по которому осуществляется поиск значения.
-- **offset** (int, optional) - Смещение offset начала поиска в файле.
+- **position** (int, optional) - Позиция начала поиска в файле.
 
 
 ### Возвращаемые значения
