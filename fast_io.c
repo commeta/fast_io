@@ -459,6 +459,8 @@ PHP_FUNCTION(file_search_array) {
                         php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
                         fclose(fp);
                         if (dynamic_buffer) efree(dynamic_buffer);
+                        if (re != NULL) pcre2_code_free(re);
+                        if (match_data != NULL) pcre2_match_data_free(match_data);
                         RETURN_FALSE;
                     }
 
@@ -2934,6 +2936,7 @@ PHP_FUNCTION(file_select_array) {
     zval *elem, *value;
     ssize_t bytesRead;
     zend_long add_count = 0;
+    bool found_match = false;
 
 
     pcre2_code *re;
@@ -2976,6 +2979,8 @@ PHP_FUNCTION(file_select_array) {
                 } ZEND_HASH_FOREACH_END();
 
                 if(select_pos != -1 && select_size != -1 && file_size > select_pos + select_size){ // добавить проверки в других функциях
+                    found_match = true;
+
                     char *buffer = (char *)emalloc(select_size + 1);
                     if (!buffer) {
                         php_error_docref(NULL, E_WARNING, "Out of memory");
@@ -3017,11 +3022,13 @@ PHP_FUNCTION(file_select_array) {
                         int rc;
                         PCRE2_SIZE *ovector;
                         size_t start_offset = 0;
+                        found_match = false;
 
                         while ((rc = pcre2_match(re, (PCRE2_SPTR)buffer, select_size, start_offset, 0, match_data, NULL)) > 0) {
                             ovector = pcre2_get_ovector_pointer(match_data);
 
                             for (int i = 0; i < rc; i++) {
+                                found_match = true;
                                 PCRE2_SIZE start = ovector[2*i];
                                 PCRE2_SIZE end = ovector[2*i+1];
                                 add_next_index_stringl(&return_matched, buffer + start, end - start);
@@ -3038,23 +3045,28 @@ PHP_FUNCTION(file_select_array) {
 
                         if (rc == PCRE2_ERROR_NOMATCH) {
                             /* Если совпадений нет, возвращаем пустой массив. */
+                            //
                         } else if (rc < 0) {
                             /* Обработка других ошибок. */
                             php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
                             fclose(fp);
                             efree(buffer);
+                            if (re != NULL) pcre2_code_free(re);
+                            if (match_data != NULL) pcre2_match_data_free(match_data);
                             RETURN_FALSE;
                         }
 
-                        add_assoc_zval(&key_value_line_arr, "matches", &return_matched);
+                        if(found_match) add_assoc_zval(&key_value_line_arr, "matches", &return_matched);
                     }
 
-                    add_assoc_long(&key_value_line_arr, "offset", select_pos);
-                    add_assoc_long(&key_value_line_arr, "length", select_size);
-                    add_assoc_long(&key_value_line_arr, "add_count", add_count);
-                    add_next_index_zval(return_value, &key_value_line_arr);
+                    if(found_match){
+                        add_assoc_long(&key_value_line_arr, "offset", select_pos);
+                        add_assoc_long(&key_value_line_arr, "length", select_size);
+                        add_assoc_long(&key_value_line_arr, "add_count", add_count);
+                        add_next_index_zval(return_value, &key_value_line_arr);
 
-                    add_count++;
+                        add_count++;
+                    }
 
                     efree(buffer);
                 }
@@ -3063,6 +3075,9 @@ PHP_FUNCTION(file_select_array) {
     }
 
     fclose(fp);
+    if (mode > 9 && re != NULL) pcre2_code_free(re);
+    if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
+
 
     // Если массив пуст, возвращаем FALSE
     if (Z_TYPE_P(return_value) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(return_value)) == 0) {
