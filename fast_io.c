@@ -2603,7 +2603,6 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
         isEOF = feof(fp);
         
         if (isEOF && buffer[bytes_read - 1] != '\n') {
-            php_error_docref(NULL, E_WARNING, "Failed to flow interruption in file: %s", filename);
             flow_interruption = 1;
         }
 
@@ -2651,7 +2650,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     add_assoc_long(&key_value_line_arr, "avg_length", avg_length);
     add_assoc_long(&key_value_line_arr, "line_count", line_count);
     add_assoc_long(&key_value_line_arr, "flow_interruption", flow_interruption);
-    
+
     add_next_index_zval(return_value, &key_value_line_arr);
 }
 
