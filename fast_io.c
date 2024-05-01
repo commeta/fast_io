@@ -2629,6 +2629,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
                     add_assoc_long(&key_value_line_arr, "max_length", max_length);
                     add_assoc_long(&key_value_line_arr, "avg_length", avg_length);
                     add_assoc_long(&key_value_line_arr, "line_count", line_count);
+                    add_assoc_long(&key_value_line_arr, "total_characters", total_characters);
                     add_assoc_long(&key_value_line_arr, "flow_interruption", flow_interruption);
 
                     add_next_index_zval(return_value, &key_value_line_arr);
@@ -2649,6 +2650,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     add_assoc_long(&key_value_line_arr, "max_length", max_length);
     add_assoc_long(&key_value_line_arr, "avg_length", avg_length);
     add_assoc_long(&key_value_line_arr, "line_count", line_count);
+    add_assoc_long(&key_value_line_arr, "total_characters", total_characters);
     add_assoc_long(&key_value_line_arr, "flow_interruption", flow_interruption);
 
     add_next_index_zval(return_value, &key_value_line_arr);
