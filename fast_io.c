@@ -3040,7 +3040,7 @@ PHP_FUNCTION(file_select_array) {
                         (mode == 5 || mode == 6) &&
                         strstr(buffer, pattern) != NULL
                     ){
-                        if(mode == 6){
+                        if(mode == 5){
                             for (int i = bytesRead - 1; i >= 0; --i) {
                                 if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
                                 else break;
