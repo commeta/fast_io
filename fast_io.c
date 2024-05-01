@@ -1104,16 +1104,7 @@ PHP_FUNCTION(file_defrag_lines) {
         current_size += bytesRead;
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(data_fp);
-        
-        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
-            php_error_docref(NULL, E_WARNING, "Failed to flow interruption in file: %s", filename);
-            fclose(data_fp);
-            fclose(temp_fp);
-            unlink(temp_filename);
-            efree(dynamic_buffer);
-            RETURN_LONG(-9);
-        }
-        
+                
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -1337,18 +1328,7 @@ PHP_FUNCTION(file_defrag_data) {
         current_size += bytesRead;
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(index_fp);
-        
-        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
-            php_error_docref(NULL, E_WARNING, "Failed to flow interruption in file: %s", index_filename);
-            fclose(index_fp);
-            fclose(data_fp);
-            fclose(temp_fp);
-            fclose(temp_index_fp);
-            unlink(temp_filename);
-            unlink(temp_index_filename);
-            RETURN_LONG(-9);
-        }
-        
+               
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
