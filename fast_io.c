@@ -93,20 +93,20 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_array, 1, 2, IS_ARRA
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, search_start, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, search_limit, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, position, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_line, 1, 2, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line_key, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, position, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_data, 1, 2, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line_key, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, position, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_push_line, 0, 2, IS_LONG, 0)
@@ -141,14 +141,14 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_erase_line, 1, 2, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line_key, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, position, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_get_keys, 1, 1, IS_ARRAY, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, search_start, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, search_limit, IS_LONG, 0)  
-    ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, position, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
@@ -246,9 +246,9 @@ PHP_FUNCTION(file_search_array) {
     zend_long mode = 0;
     zend_long search_start = 0;
     zend_long search_limit = 1;
-    zend_long offset = 0;
+    zend_long position = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|llll", &filename, &filename_len, &line_key, &line_key_len, &mode, &search_start, &search_limit, &offset) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|llll", &filename, &filename_len, &line_key, &line_key_len, &mode, &search_start, &search_limit, &position) == FAILURE) {
         return;
     }
 
@@ -276,16 +276,16 @@ PHP_FUNCTION(file_search_array) {
 
     off_t search_offset = 0; // Смещение строки поиска
 
-    if(offset > 0){
-        if(offset >= file_size){
+    if(position > 0){
+        if(position >= file_size){
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
 
             fclose(fp);
             RETURN_FALSE;
         }
 
-        fseek(fp, offset, SEEK_SET);
-        search_offset = offset;
+        fseek(fp, position, SEEK_SET);
+        search_offset = position;
     } else {
         fseek(fp, 0, SEEK_SET);
     }
@@ -516,9 +516,9 @@ PHP_FUNCTION(file_search_line) {
     char *filename, *line_key;
     size_t filename_len, line_key_len;
     zend_long mode = 0;
-    zend_long offset = 0;
+    zend_long position = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|ll", &filename, &filename_len, &line_key, &line_key_len, &mode, &offset) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|ll", &filename, &filename_len, &line_key, &line_key_len, &mode, &position) == FAILURE) {
         RETURN_FALSE; // Неправильные параметры вызова функции
     }
 
@@ -543,14 +543,14 @@ PHP_FUNCTION(file_search_line) {
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
 
-    if(offset > 0){
-        if(offset >= file_size){
+    if(position > 0){
+        if(position >= file_size){
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
             fclose(fp);
             RETURN_FALSE;
         }
 
-        fseek(fp, offset, SEEK_SET);
+        fseek(fp, position, SEEK_SET);
     } else {
         fseek(fp, 0, SEEK_SET);
     }
@@ -685,9 +685,9 @@ PHP_FUNCTION(file_search_line) {
 PHP_FUNCTION(file_search_data) {
     char *filename, *line_key;
     size_t filename_len, line_key_len;
-    zend_long offset = 0;
+    zend_long position = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &filename, &filename_len, &line_key, &line_key_len, &offset) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &filename, &filename_len, &line_key, &line_key_len, &position) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -705,14 +705,14 @@ PHP_FUNCTION(file_search_data) {
     fseek(index_fp, 0, SEEK_END);
     long file_size = ftell(index_fp);
 
-    if(offset > 0){
-        if(offset >= file_size){
+    if(position > 0){
+        if(position >= file_size){
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
             fclose(index_fp);
             RETURN_FALSE;
         }
 
-        fseek(index_fp, offset, SEEK_SET);
+        fseek(index_fp, position, SEEK_SET);
     } else {
         fseek(index_fp, 0, SEEK_SET);
     }
@@ -819,12 +819,12 @@ PHP_FUNCTION(file_search_data) {
     }
 
     *colon_ptr = '\0';
-    offset = atol(found_value);
+    position = atol(found_value);
     size_t size = (size_t)strtoul(colon_ptr + 1, NULL, 10);
     efree(found_value);
 
     if (size > 0) {
-        if (fseek(data_fp, offset, SEEK_SET) < 0) {
+        if (fseek(data_fp, position, SEEK_SET) < 0) {
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
             fclose(data_fp);
             RETURN_FALSE;
@@ -966,12 +966,12 @@ PHP_FUNCTION(file_push_data) {
     // Запись значения в файл данных
     fseek(data_fp, 0, SEEK_END); // Перемещаем указатель в конец файла
     // Получаем текущее смещение в файле данных
-    long offset = ftell(data_fp);
+    long position = ftell(data_fp);
     size_t size = strlen(line_value);
 
     if (fwrite(line_value, 1, size, data_fp) != size) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
-        if(ftruncate(fileno(data_fp), offset) < 0) {
+        if(ftruncate(fileno(data_fp), position) < 0) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
             fclose(data_fp);
             fclose(index_fp);
@@ -988,7 +988,7 @@ PHP_FUNCTION(file_push_data) {
     long file_size = ftell(index_fp);
 
     // Запись индекса в индексный файл
-    if(fprintf(index_fp, "%s %ld:%zu\n", line_key, offset, size) < line_key_len + 5){
+    if(fprintf(index_fp, "%s %ld:%zu\n", line_key, position, size) < line_key_len + 5){
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", index_filename);
 
         if(ftruncate(fileno(index_fp), file_size) < 0) {
@@ -997,7 +997,7 @@ PHP_FUNCTION(file_push_data) {
             fclose(index_fp);
             exit(EXIT_FAILURE);
         }
-        if(ftruncate(fileno(data_fp), offset) < 0) {
+        if(ftruncate(fileno(data_fp), position) < 0) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", index_filename);
             fclose(data_fp);
             fclose(index_fp);
@@ -1012,7 +1012,7 @@ PHP_FUNCTION(file_push_data) {
     // Закрытие файлов
     fclose(data_fp);
     fclose(index_fp);
-    RETURN_LONG(offset);
+    RETURN_LONG(position);
 }
 
 
@@ -1307,7 +1307,7 @@ PHP_FUNCTION(file_defrag_data) {
     bool isEOF;
     bool found_match;
 
-    off_t offset;
+    off_t position;
     size_t size;
 
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, index_fp)) > 0) {
@@ -1369,11 +1369,11 @@ PHP_FUNCTION(file_defrag_data) {
                 }
                 
                 if (offsetPtr && sizePtr) {
-                    offset = strtoul(offsetPtr, NULL, 10);
+                    position = strtoul(offsetPtr, NULL, 10);
                     size = strtoul(sizePtr, NULL, 10);
 
                     if (
-                        (offset == 0 && *offsetPtr != '0') ||
+                        (position == 0 && *offsetPtr != '0') ||
                         (size == 0 && *sizePtr != '0')
                     ) {
                         parsed_err = true;
@@ -1384,7 +1384,7 @@ PHP_FUNCTION(file_defrag_data) {
                 }
 
                 if(parsed_err == false){
-                    fseek(data_fp, offset, SEEK_SET); // Проверить выход за пределы файла, тут и везде рефакторинг
+                    fseek(data_fp, position, SEEK_SET); // Проверить выход за пределы файла, тут и везде рефакторинг
                     char *dataBuffer = emalloc(size + 1);
 
                     if(dataBuffer == NULL){
@@ -1810,9 +1810,9 @@ PHP_FUNCTION(file_pop_line) {
 PHP_FUNCTION(file_erase_line) {
     char *filename, *line_key;
     size_t filename_len, line_key_len;
-    zend_long offset = 0;
+    zend_long position = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &filename, &filename_len, &line_key, &line_key_len, &offset) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &filename, &filename_len, &line_key, &line_key_len, &position) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1835,15 +1835,15 @@ PHP_FUNCTION(file_erase_line) {
 
     off_t writeOffset = 0; // Смещение для записи обновленных данных
 
-    if(offset > 0){
-        if(offset >= file_size){
+    if(position > 0){
+        if(position >= file_size){
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
             fclose(fp);
             RETURN_LONG(-5);
         }
 
-        fseek(fp, offset, SEEK_SET);
-        writeOffset = offset;
+        fseek(fp, position, SEEK_SET);
+        writeOffset = position;
     } else {
         fseek(fp, 0, SEEK_SET);
     }
@@ -1953,10 +1953,10 @@ PHP_FUNCTION(file_get_keys) {
     size_t filename_len;
     zend_long search_start = 0;
     zend_long search_limit = 1;
-    zend_long offset = 0;
+    zend_long position = 0;
     zend_long mode = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|llll", &filename, &filename_len, &search_start, &search_limit, &offset, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|llll", &filename, &filename_len, &search_start, &search_limit, &position, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1981,16 +1981,16 @@ PHP_FUNCTION(file_get_keys) {
 
     off_t searchOffset = 0; // Смещение для записи обновленных данных
 
-    if(offset > 0){
-        if(offset >= file_size){
+    if(position > 0){
+        if(position >= file_size){
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
 
             fclose(fp);
             RETURN_FALSE;
         }
 
-        fseek(fp, offset, SEEK_SET);
-        searchOffset = offset;
+        fseek(fp, position, SEEK_SET);
+        searchOffset = position;
     } else {
         fseek(fp, 0, SEEK_SET);
     }
@@ -2036,14 +2036,15 @@ PHP_FUNCTION(file_get_keys) {
 
             if(search_start < line_count){
                 add_count++;
-                    
-                char *spacePos = strchr(lineStart, ' ');
-                if (spacePos) *spacePos = '\0';
-
                 zval key_value_line_arr;
                 array_init(&key_value_line_arr);
 
-                add_assoc_string(&key_value_line_arr, "line", lineStart);
+                if(mode == 1) add_assoc_string(&key_value_line_arr, "line", lineStart);
+
+                char *spacePos = strchr(lineStart, ' ');
+                if (spacePos) *spacePos = '\0';
+
+                if(mode == 0) add_assoc_string(&key_value_line_arr, "key", lineStart);
                 add_assoc_long(&key_value_line_arr, "offset", searchOffset);
                 add_assoc_long(&key_value_line_arr, "length", lineLength);
                 add_assoc_long(&key_value_line_arr, "count", line_count);
@@ -2401,18 +2402,18 @@ PHP_FUNCTION(file_select_line) {
     if(mode > 99) mode -= 100;
 
     ssize_t bytesRead;
-    off_t offset;
+    off_t position;
 
-    if(mode == 0) offset = row * align;
-    if(mode == 1) offset = row;
-    if(mode == 2) offset = row * align;
-    if(mode == 3) offset = row;
+    if(mode == 0) position = row * align;
+    if(mode == 1) position = row;
+    if(mode == 2) position = row * align;
+    if(mode == 3) position = row;
 
 
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
 
-    if(offset > file_size || fseek(fp, offset , SEEK_SET) < 0){
+    if(position > file_size || fseek(fp, position , SEEK_SET) < 0){
         php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
         fclose(fp);
         RETURN_FALSE;
@@ -2492,17 +2493,17 @@ PHP_FUNCTION(file_update_line) {
 
 
     // Рассчитываем смещение для записи в файл
-    off_t offset;
+    off_t position;
 
-    if(mode == 0) offset = row * align;
-    if(mode == 1) offset = row;
-    if(mode == 2) offset = row * align;
-    if(mode == 3) offset = row;
+    if(mode == 0) position = row * align;
+    if(mode == 1) position = row;
+    if(mode == 2) position = row * align;
+    if(mode == 3) position = row;
 
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
 
-    if (fseek(fp, offset, SEEK_SET) != 0 || offset > file_size) {
+    if (fseek(fp, position, SEEK_SET) != 0 || position > file_size) {
         php_error_docref(NULL, E_WARNING, "Failed to seek in the file: %s", filename);
         fclose(fp);
         RETURN_LONG(-3);
