@@ -11,7 +11,7 @@ string file_search_data(string $filename, string $line_key[, int position = 0])
 
 - **filename** - Путь к текстовому файлу, в котором будет производиться поиск.
 - **line_key** - Ключ, по которому осуществляется поиск значения.
-- **position** (int, optional) - Позиция начала поиска в файле.
+- **position** (int, optional) - Позиция начала поиска в файле индекса.
 
 
 ### Возвращаемые значения
