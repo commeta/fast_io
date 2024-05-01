@@ -9,14 +9,14 @@
 
 ## Синтаксис
 
-array file_get_keys(string $filename[, int search_start = 0][, int search_length = 1][, int offset = 0][, int mode = 0])
+array file_get_keys(string $filename[, int search_start = 0][, int search_length = 1][, int position = 0][, int mode = 0])
 
 ### Параметры
 
 - **filename** (string): Путь к файлу, из которого необходимо извлечь ключи.
 - **search_start** (int, optional) - Стартовая строка начала выборки.
 - **search_limit** (int, optional) - Ограничение массива выборки.
-- **offset** (int, optional) - Смещение offset начала поиска в файле.
+- **position** (int, optional) - Позиция начала поиска в файле.
 - **mode** (int, optional) - Режим поиска.
 
 
@@ -36,10 +36,10 @@ array file_get_keys(string $filename[, int search_start = 0][, int search_length
 - count - Счетчик строк от начала поиска
 
 
-Чтение по смещению offset позволяет избежать лишних чтений файла при выборке с окном пагинации.
+Чтение по смещению позиции position позволяет избежать лишних чтений файла при выборке с окном пагинации.
 Может потребоваться для пагинации таблицы ключей или пагинации таблицы распределения косвенной адресации строк в файле.
 
-Чтение файла идет всегда с нулевой позиции offset = 0, и если search_start больше нуля то функция просто пропускает строки у которых номер меньше search_start.
+Чтение файла идет всегда с нулевой позиции position = 0, и если search_start больше нуля то функция просто пропускает строки у которых номер меньше search_start.
 
 
 ### Примеры возвращаемых массивов
