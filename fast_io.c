@@ -342,15 +342,6 @@ PHP_FUNCTION(file_search_array) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(fp);
         
-        /*
-        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
-            // Если это EOF и последний символ не является переводом строки,
-            // добавляем перевод строки для упрощения обработки
-            dynamic_buffer[current_size] = '\n';
-            current_size++;
-        }
-        */
-
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -609,15 +600,6 @@ PHP_FUNCTION(file_search_line) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(fp);
         
-        /*
-        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
-            // Если это EOF и последний символ не является переводом строки,
-            // добавляем перевод строки для упрощения обработки
-            dynamic_buffer[current_size] = '\n';
-            current_size++;
-        }
-        */
-
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -1108,14 +1090,12 @@ PHP_FUNCTION(file_defrag_lines) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(data_fp);
         
-        /*
         if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
             // Если это EOF и последний символ не является переводом строки,
             // добавляем перевод строки для упрощения обработки
             dynamic_buffer[current_size ] = '\n';
             current_size++;
         }
-        */
 
         dynamic_buffer[current_size] = '\0';
 
@@ -1617,12 +1597,16 @@ PHP_FUNCTION(file_pop_line) {
         RETURN_FALSE;
     }
 
-    // Блокировка файла для записи
-    if (flock(fileno(fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        fclose(fp);
-        RETURN_FALSE;
+    if(mode < 100){
+        // Блокировка файла для записи
+        if (flock(fileno(fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
+            fclose(fp);
+            RETURN_FALSE;
+        }
     }
+
+    if(mode > 99) mode -= 100;
 
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
@@ -1903,15 +1887,6 @@ PHP_FUNCTION(file_erase_line) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(fp);
         
-        /*
-        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
-            // Если это EOF и последний символ не является переводом строки,
-            // добавляем перевод строки для упрощения обработки
-            dynamic_buffer[current_size] = '\n';
-            current_size++;
-        }
-        */
-
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -2218,15 +2193,6 @@ PHP_FUNCTION(file_replace_line) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(data_fp);
         
-        /*
-        if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
-            // Если это EOF и последний символ не является переводом строки,
-            // добавляем перевод строки для упрощения обработки
-            dynamic_buffer[current_size ] = '\n';
-            current_size++;
-        }
-        */
-
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
