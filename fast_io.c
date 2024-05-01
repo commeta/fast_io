@@ -135,6 +135,7 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_pop_line, 1, 1, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, align, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_erase_line, 1, 2, IS_LONG, 0)
@@ -148,6 +149,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_get_keys, 1, 1, IS_ARRAY, 1
     ZEND_ARG_TYPE_INFO(0, search_start, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, search_limit, IS_LONG, 0)  
     ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_replace_line, 1, 3, IS_LONG, 0)
@@ -340,13 +342,15 @@ PHP_FUNCTION(file_search_array) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(fp);
         
+        /*
         if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
             // Если это EOF и последний символ не является переводом строки,
             // добавляем перевод строки для упрощения обработки
             dynamic_buffer[current_size] = '\n';
             current_size++;
         }
-        
+        */
+
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -605,13 +609,15 @@ PHP_FUNCTION(file_search_line) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(fp);
         
+        /*
         if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
             // Если это EOF и последний символ не является переводом строки,
             // добавляем перевод строки для упрощения обработки
-            dynamic_buffer[current_size ] = '\n';
+            dynamic_buffer[current_size] = '\n';
             current_size++;
         }
-        
+        */
+
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -1102,13 +1108,15 @@ PHP_FUNCTION(file_defrag_lines) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(data_fp);
         
+        /*
         if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
             // Если это EOF и последний символ не является переводом строки,
             // добавляем перевод строки для упрощения обработки
             dynamic_buffer[current_size ] = '\n';
             current_size++;
         }
-        
+        */
+
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -1597,8 +1605,9 @@ PHP_FUNCTION(file_pop_line) {
     char *filename;
     size_t filename_len;
     zend_long align = -1; // Значение по умолчанию для необязательного аргумента
+    zend_long mode = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|l", &filename, &filename_len, &align) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|ll", &filename, &filename_len, &align, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1652,18 +1661,22 @@ PHP_FUNCTION(file_pop_line) {
         // Убедимся, что строка нуль-терминирована
         buffer[bytesRead] = '\0';
 
-        // Обрезка пробелов справа и символа перевода строки
-        for (int i = bytesRead - 1; i >= 0; --i) {
-            if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
-            else break;
+        if(mode < 1){
+            // Обрезка пробелов справа и символа перевода строки
+            for (int i = bytesRead - 1; i >= 0; --i) {
+                if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
+                else break;
+            }
         }
 
-        // Усекаем файл
-        if(ftruncate(fileno(fp), pos) < 0) {
-            efree(buffer);
-            fclose(fp);
-            php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
-            RETURN_FALSE;
+        if(mode < 2){
+            // Усекаем файл
+            if(ftruncate(fileno(fp), pos) < 0) {
+                efree(buffer);
+                fclose(fp);
+                php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
+                RETURN_FALSE;
+            }
         }
         
         fclose(fp);
@@ -1697,8 +1710,6 @@ PHP_FUNCTION(file_pop_line) {
         fseek(fp, pos, SEEK_SET);
         bytesRead = fread(buffer, 1, ini_buffer_size, fp);
         
-
-
         for (ssize_t i = bytesRead - 1; i >= 0; --i) {
             if (buffer[i] == '\n') {
                 if (!result_str) { // Найден первый перенос строки с конца
@@ -1783,31 +1794,35 @@ PHP_FUNCTION(file_pop_line) {
         // Обрезка пробелов справа и символа перевода строки
         size_t len = ZSTR_LEN(result_str);
         char *str = ZSTR_VAL(result_str);
+        
+        if(mode < 2){
+            // Усечь файл
+            off_t new_file_size = file_size - len;
+            if(new_file_size < 0) new_file_size = 0;
 
-        // Усечь файл
-        off_t new_file_size = file_size - len;
-        if(new_file_size < 0) new_file_size = 0;
-
-        if(ftruncate(fileno(fp), new_file_size) < 0) {
-            fclose(fp);
-            php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
-            RETURN_FALSE;
+            if(ftruncate(fileno(fp), new_file_size) < 0) {
+                fclose(fp);
+                php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
+                RETURN_FALSE;
+            }
         }
 
         fclose(fp);
 
-        // Находим позицию, до которой нужно обрезать строку
-        ssize_t i;
-        for (i = len - 1; i >= 0; --i) {
-            if(str[i] != ' ' && str[i] != '\n') break;
-        }
+        if(mode < 1){
+            // Находим позицию, до которой нужно обрезать строку
+            ssize_t i;
+            for (i = len - 1; i >= 0; --i) {
+                if(str[i] != ' ' && str[i] != '\n') break;
+            }
 
-        // Обрезаем строку, если найдены пробелы или символы перевода строки
-        if (i < (ssize_t)(len - 1)) {
-            // Устанавливаем новый конец строки
-            str[i + 1] = '\0';
-            // Обновляем длину zend_string
-            ZSTR_LEN(result_str) = i + 1;
+            // Обрезаем строку, если найдены пробелы или символы перевода строки
+            if (i < (ssize_t)(len - 1)) {
+                // Устанавливаем новый конец строки
+                str[i + 1] = '\0';
+                // Обновляем длину zend_string
+                ZSTR_LEN(result_str) = i + 1;
+            }
         }
 
         RETVAL_STR(result_str);
@@ -1888,13 +1903,15 @@ PHP_FUNCTION(file_erase_line) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(fp);
         
+        /*
         if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
             // Если это EOF и последний символ не является переводом строки,
             // добавляем перевод строки для упрощения обработки
             dynamic_buffer[current_size] = '\n';
             current_size++;
         }
-        
+        */
+
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -1975,8 +1992,9 @@ PHP_FUNCTION(file_get_keys) {
     zend_long search_start = 0;
     zend_long search_limit = 1;
     zend_long offset = 0;
+    zend_long mode = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lll", &filename, &filename_len, &search_start, &search_limit, &offset) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|llll", &filename, &filename_len, &search_start, &search_limit, &offset, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1986,11 +2004,13 @@ PHP_FUNCTION(file_get_keys) {
         RETURN_FALSE;
     }
 
-    // Попытка установить блокирующую блокировку на запись
-    if (flock(fileno(fp), LOCK_EX) < 0) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
-        fclose(fp);
-        RETURN_FALSE;
+    if(mode < 100){
+        // Попытка установить блокирующую блокировку на запись
+        if (flock(fileno(fp), LOCK_EX) < 0) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+            fclose(fp);
+            RETURN_FALSE;
+        }
     }
 
     // Перемещение указателя в конец файла для получения его размера
@@ -2042,13 +2062,15 @@ PHP_FUNCTION(file_get_keys) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(fp);
         
+        /*
         if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
             // Если это EOF и последний символ не является переводом строки,
             // добавляем перевод строки для упрощения обработки
-            dynamic_buffer[current_size ] = '\n';
+            dynamic_buffer[current_size] = '\n';
             current_size++;
         }
-        
+        */
+
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -2196,13 +2218,15 @@ PHP_FUNCTION(file_replace_line) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(data_fp);
         
+        /*
         if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
             // Если это EOF и последний символ не является переводом строки,
             // добавляем перевод строки для упрощения обработки
             dynamic_buffer[current_size ] = '\n';
             current_size++;
         }
-        
+        */
+
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -2431,7 +2455,13 @@ PHP_FUNCTION(file_select_line) {
     if(mode > 99) mode -= 100;
 
     ssize_t bytesRead;
-    off_t offset = (mode == 0) ? row * align : row;
+    off_t offset;
+
+    if(mode == 0) offset = row * align;
+    if(mode == 1) offset = row;
+    if(mode == 2) offset = row * align;
+    if(mode == 3) offset = row;
+
 
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
@@ -2450,7 +2480,6 @@ PHP_FUNCTION(file_select_line) {
         RETURN_FALSE;
     }
 
-
     bytesRead = fread(buffer, 1, align, fp);
     if(bytesRead != align){
         php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
@@ -2462,18 +2491,20 @@ PHP_FUNCTION(file_select_line) {
     // Убедимся, что строка нуль-терминирована
     buffer[bytesRead] = '\0';
 
-    if (mode == 1) {
-        char *lineEnd = strchr(buffer, '\n');
-        if (lineEnd != NULL) {
-            *lineEnd = '\0'; // Заменяем перевод строки на нуль-терминатор
+    if(mode == 0 || mode == 1){
+        if (mode == 1) {
+            char *lineEnd = strchr(buffer, '\n');
+            if (lineEnd != NULL) {
+                *lineEnd = '\0'; // Заменяем перевод строки на нуль-терминатор
+            }
         }
-    }
 
-    // Обрезка пробелов справа и символа перевода строки
-    size_t len = strlen(buffer);
-    for (int i = len - 1; i >= 0; --i) {
-        if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
-        else break;
+        // Обрезка пробелов справа и символа перевода строки
+        size_t len = strlen(buffer);
+        for (int i = len - 1; i >= 0; --i) {
+            if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
+            else break;
+        }
     }
 
     // Возврат строки в PHP
@@ -2515,7 +2546,12 @@ PHP_FUNCTION(file_update_line) {
 
 
     // Рассчитываем смещение для записи в файл
-    off_t offset = (mode == 0) ? row * align : row;
+    off_t offset;
+
+    if(mode == 0) offset = row * align;
+    if(mode == 1) offset = row;
+    if(mode == 2) offset = row * align;
+    if(mode == 3) offset = row;
 
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
@@ -2534,9 +2570,14 @@ PHP_FUNCTION(file_update_line) {
         RETURN_LONG(-8);
     }
 
-    memset(buffer, ' ', align); // Заполнение пробелами
-    buffer[align - 1] = '\n'; // Добавление перевода строки
-    buffer[align] = '\0'; // Нуль-терминатор
+    if(mode == 0 || mode == 1){
+        memset(buffer, ' ', align); // Заполнение пробелами
+        buffer[align - 1] = '\n'; // Добавление перевода строки
+        buffer[align] = '\0'; // Нуль-терминатор
+    } else {
+        memset(buffer, ' ', align); // Заполнение пробелами
+        buffer[align] = '\0'; // Нуль-терминатор
+    }
 
     // Копирование line в буфер с учетом выравнивания
     strncpy(buffer, line, line_len < align ? line_len : align);
@@ -2582,7 +2623,6 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     }
 
     if(mode > 99) mode -= 100;
-
 
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
