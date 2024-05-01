@@ -1091,11 +1091,13 @@ PHP_FUNCTION(file_defrag_lines) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(data_fp);
         
+        /*
         if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
             // Если это EOF и последний символ не является переводом строки,
-            // добавляем перевод строки для упрощения обработки
-            dynamic_buffer[current_size -1] = '\n';
+            // меняем последний символ на перевод строки
+            dynamic_buffer[current_size - 1] = '\n';
         }
+        */
 
         dynamic_buffer[current_size] = '\0';
 
@@ -1321,11 +1323,13 @@ PHP_FUNCTION(file_defrag_data) {
         // Проверяем, достигли ли мы конца файла (EOF)
         isEOF = feof(index_fp);
         
+        /*
         if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
             // Если это EOF и последний символ не является переводом строки,
             // меняем последний символ на перевод строки
             dynamic_buffer[current_size - 1] = '\n';
         }
+        */
         
         dynamic_buffer[current_size] = '\0';
 
@@ -2039,9 +2043,8 @@ PHP_FUNCTION(file_get_keys) {
         /*
         if (isEOF && dynamic_buffer[current_size - 1] != '\n') {
             // Если это EOF и последний символ не является переводом строки,
-            // добавляем перевод строки для упрощения обработки
-            dynamic_buffer[current_size] = '\n';
-            current_size++;
+            // меняем последний символ на перевод строки
+            dynamic_buffer[current_size - 1] = '\n';
         }
         */
 
