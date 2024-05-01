@@ -51,7 +51,7 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - file_erase_line - checks the number of written bytes; if there is an error writing a file (-3), this operation cannot be undone!
 - file_update_line - checks the number of written bytes; if there is an error writing a file (-4), this operation cannot be undone!
 
-An error when writing to the file_update_line function can occur when updating the last record in a file if there is no more space on the disk and the length of the string exceeds the file size.
+An error when writing to the file_update_line function can occur when updating the last sectors of the file if there is no more space on the disk and the length of the string exceeds the file size.
 
 An error when writing to the file_erase_line function can only indicate hardware failure.
 
