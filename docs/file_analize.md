@@ -63,6 +63,7 @@ print_r([
                     [max_length] => 8192
                     [avg_length] => 8192
                     [line_count] => 501
+                    [total_characters] => 4104192
                     [flow_interruption] => 0
                 )
         )
@@ -75,6 +76,7 @@ print_r([
                     [max_length] => 8192
                     [avg_length] => 8192
                     [line_count] => 1
+                    [total_characters] => 8192
                     [flow_interruption] => 0
                 )
         )
