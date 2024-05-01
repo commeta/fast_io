@@ -2992,7 +2992,7 @@ PHP_FUNCTION(file_select_array) {
                 } ZEND_HASH_FOREACH_END();
 
                 if(select_pos != -1 && select_size != -1 && file_size > select_pos + select_size){ // добавить проверки в других функциях
-                    found_match = true;
+                    found_match = false;
 
                     char *buffer = (char *)emalloc(select_size + 1);
                     if (!buffer) {
@@ -3022,11 +3022,35 @@ PHP_FUNCTION(file_select_array) {
                         }
 
                         add_assoc_string(&key_value_line_arr, "line", buffer);
+                        found_match = true;
                     }
 
                     if(mode == 1) {
                         add_assoc_string(&key_value_line_arr, "line", buffer);
+                        found_match = true;
                     }
+
+                    if(mode == 5) {
+                        add_assoc_string(&key_value_line_arr, "line", buffer);
+                        found_match = true;
+                    }
+
+
+                    if(
+                        (mode == 5 || mode == 6) &&
+                        strstr(buffer, pattern) != NULL
+                    ){
+                        if(mode == 6){
+                            for (int i = bytesRead - 1; i >= 0; --i) {
+                                if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
+                                else break;
+                            }
+                        }
+
+                        add_assoc_string(&key_value_line_arr, "line", buffer);
+                        found_match = true;
+                    }
+
 
                     if(mode > 19) {
                         zval return_matched;
@@ -3041,7 +3065,6 @@ PHP_FUNCTION(file_select_array) {
                             ovector = pcre2_get_ovector_pointer(match_data);
 
                             for (int i = 0; i < rc; i++) {
-                                found_match = true;
                                 PCRE2_SIZE start = ovector[2*i];
                                 PCRE2_SIZE end = ovector[2*i+1];
                                 add_next_index_stringl(&return_matched, buffer + start, end - start);
@@ -3054,6 +3077,8 @@ PHP_FUNCTION(file_select_array) {
                                 start_offset++; // Для продолжения поиска следующего совпадения
                                 if (start_offset >= bytesRead) break; // Выходим из цикла, если достигнут конец строки
                             }
+
+                            found_match = true;
                         }
 
                         if (rc == PCRE2_ERROR_NOMATCH) {
