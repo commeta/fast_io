@@ -507,7 +507,7 @@ PHP_FUNCTION(file_search_array) {
                     fclose(fp);
                     if (dynamic_buffer) efree(dynamic_buffer);
                     if (re != NULL) pcre2_code_free(re);
-                    if (match_data != NULL) pcre2_match_data_free(match_data);
+                    if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
                     RETURN_FALSE;
                 }
                 dynamic_buffer = temp_buffer;
@@ -629,8 +629,6 @@ PHP_FUNCTION(file_search_line) {
                     php_error_docref(NULL, E_WARNING, "Out of memory");
                     fclose(fp);
                     efree(dynamic_buffer);
-                    if (re != NULL) pcre2_code_free(re);
-                    if (match_data != NULL) pcre2_match_data_free(match_data);
                     RETURN_FALSE;
                 }
 
@@ -668,7 +666,7 @@ PHP_FUNCTION(file_search_line) {
                 if (!temp_buffer) {
                     if (dynamic_buffer) efree(dynamic_buffer);
                     if (re != NULL) pcre2_code_free(re);
-                    if (match_data != NULL) pcre2_match_data_free(match_data);
+                    if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
                     php_error_docref(NULL, E_WARNING, "Out of memory");
                     fclose(fp);
                     RETURN_FALSE;
