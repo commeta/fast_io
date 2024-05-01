@@ -84,6 +84,8 @@ PHP_FUNCTION(file_update_line);
 PHP_FUNCTION(file_analize);
 PHP_FUNCTION(find_matches_pcre2);
 PHP_FUNCTION(replicate_file);
+PHP_FUNCTION(file_select_array);
+
 
 
 /* Запись аргументов функций */
@@ -196,6 +198,12 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_replicate_file, 1, 2, IS_LONG, 0
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_select_array, 1, 2, IS_ARRAY, 0)
+    ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
 
 /* Регистрация функций */
 const zend_function_entry fast_io_functions[] = {
@@ -216,6 +224,7 @@ const zend_function_entry fast_io_functions[] = {
     PHP_FE(file_analize, arginfo_file_analize)
     PHP_FE(find_matches_pcre2, arginfo_find_matches_pcre2)
     PHP_FE(replicate_file, arginfo_replicate_file)
+    PHP_FE(file_select_array, arginfo_file_select_array)
     PHP_FE_END
 };
 
@@ -1567,6 +1576,7 @@ PHP_FUNCTION(file_defrag_data) {
 
 
 
+
 /* Функция для извлечения и удаления последней строки из файла */
 PHP_FUNCTION(file_pop_line) {
     char *filename;
@@ -2881,3 +2891,117 @@ PHP_FUNCTION(replicate_file) {
 
     RETURN_LONG(current_size);
 }
+
+
+
+
+PHP_FUNCTION(file_select_array) {
+    char  * filename;
+    size_t filename_len;
+    zval  * array = NULL;
+    zend_long mode = 0;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sa|l", &filename, &filename_len, &array, &mode) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
+        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
+        RETURN_FALSE;
+    }
+
+    // Попытка установить блокирующую блокировку на запись
+    if(mode < 100){
+        if (flock(fileno(fp), LOCK_EX) < 0) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+            fclose(fp);
+            RETURN_FALSE;
+        }
+    }
+
+    if(mode > 99) mode -= 100;
+
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+
+    array_init(return_value);
+    zval *elem, *value;
+    ssize_t bytesRead;
+    zend_long add_count = 0;
+
+    // Если массив был передан, обходим его
+    if (array) {
+        ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(array), elem) {
+            if (Z_TYPE_P(elem) == IS_ARRAY) {
+                int num_elem = 0;
+                zend_long select_pos = -1; // Позиция
+                zend_long select_size = -1;
+
+                ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(elem), value) {
+                    if (Z_TYPE_P(value) == IS_LONG) {
+                        if(num_elem == 0) select_pos = Z_LVAL_P(value);
+                        if(num_elem == 1) select_size = Z_LVAL_P(value);
+                        num_elem++;
+                    }
+                } ZEND_HASH_FOREACH_END();
+
+                if(select_pos != -1 && select_size != -1 && file_size > select_pos + select_size){ // добавить проверки в других функциях
+                    char *buffer = (char *)emalloc(select_size + 1);
+                    if (!buffer) {
+                        php_error_docref(NULL, E_WARNING, "Out of memory");
+                        fclose(fp);
+                        RETURN_FALSE;
+                    }
+
+                    fseek(fp, select_pos, SEEK_SET);
+
+                    bytesRead = fread(buffer, 1, select_size, fp);
+                    if(bytesRead != select_size){
+                        php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
+                        fclose(fp);
+                        efree(buffer);
+                        RETURN_FALSE;
+                    }
+
+                    zval key_value_line_arr;
+                    array_init(&key_value_line_arr);
+
+                    if(mode == 0) {
+                        // Обрезка пробелов справа и символа перевода строки
+                        for (int i = bytesRead - 1; i >= 0; --i) {
+                            if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
+                            else break;
+                        }
+
+                        add_assoc_string(&key_value_line_arr, "line", buffer);
+                    }
+
+                    if(mode == 1) {
+                        add_assoc_string(&key_value_line_arr, "line", buffer);
+                    }
+
+                    add_assoc_long(&key_value_line_arr, "offset", select_pos);
+                    add_assoc_long(&key_value_line_arr, "length", select_size);
+                    add_assoc_long(&key_value_line_arr, "add_count", add_count);
+                    add_next_index_zval(return_value, &key_value_line_arr);
+
+                    add_count++;
+
+                    efree(buffer);
+                }
+            }
+        } ZEND_HASH_FOREACH_END();
+    }
+
+    fclose(fp);
+
+    // Если массив пуст, возвращаем FALSE
+    if (Z_TYPE_P(return_value) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(return_value)) == 0) {
+        zval_ptr_dtor(return_value);
+        RETURN_FALSE;
+    }
+}
+
+
