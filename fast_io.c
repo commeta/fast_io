@@ -862,7 +862,6 @@ PHP_FUNCTION(file_search_data) {
             RETURN_FALSE;
         }
 
-
         dataBuffer[bytesRead] = '\0';
         RETVAL_STRING(dataBuffer);
         efree(dataBuffer);
@@ -2991,7 +2990,7 @@ PHP_FUNCTION(file_select_array) {
                     }
                 } ZEND_HASH_FOREACH_END();
 
-                if(select_pos != -1 && select_size != -1 && file_size > select_pos + select_size){ // добавить проверки в других функциях
+                if(select_pos != -1 && select_size != -1 && file_size > select_pos + select_size){
                     found_match = false;
 
                     char *buffer = (char *)emalloc(select_size + 1);
@@ -3010,6 +3009,8 @@ PHP_FUNCTION(file_select_array) {
                         efree(buffer);
                         RETURN_FALSE;
                     }
+
+                    buffer[bytesRead] = '\0';
 
                     zval key_value_line_arr;
                     array_init(&key_value_line_arr);
