@@ -2260,7 +2260,8 @@ PHP_FUNCTION(file_replace_line) {
                 efree(dynamic_buffer);
                 fclose(data_fp);
                 fclose(temp_fp);
-                unlink(temp_filename);
+
+                rename(temp_filename, filename);
                 RETURN_LONG(-4);
             }
 
@@ -2273,7 +2274,8 @@ PHP_FUNCTION(file_replace_line) {
             efree(dynamic_buffer);
             fclose(data_fp);
             fclose(temp_fp);
-            unlink(temp_filename);
+
+            rename(temp_filename, filename);
             RETURN_LONG(-5);
         }
 
