@@ -2059,6 +2059,14 @@ PHP_FUNCTION(file_get_keys) {
                 array_init(&key_value_line_arr);
 
                 if(mode == 1) add_assoc_string(&key_value_line_arr, "line", lineStart);
+                if(mode == 2) {
+                    // Обрезка пробелов справа и символа перевода строки
+                    for (int i = lineLength - 2; i >= 0; --i) {
+                        if(lineStart[i] == ' ' || lineStart[i] == '\n') lineStart[i] = '\0';
+                        else break;
+                    }
+                    add_assoc_string(&key_value_line_arr, "line", lineStart);
+                }
 
                 char *spacePos = strchr(lineStart, ' ');
                 if (spacePos) *spacePos = '\0';
@@ -2950,7 +2958,7 @@ PHP_FUNCTION(file_select_array) {
     array_init(return_value);
 
 
-    if(mode > 9){
+    if(mode > 19){
         PCRE2_SIZE erroffset;
         int errorcode;
         re = pcre2_compile((PCRE2_SPTR)pattern, PCRE2_ZERO_TERMINATED, 0, &errorcode, &erroffset, NULL);
@@ -3020,7 +3028,7 @@ PHP_FUNCTION(file_select_array) {
                         add_assoc_string(&key_value_line_arr, "line", buffer);
                     }
 
-                    if(mode == 20) {
+                    if(mode > 19) {
                         zval return_matched;
                         array_init(&return_matched);
 
@@ -3061,6 +3069,10 @@ PHP_FUNCTION(file_select_array) {
                             RETURN_FALSE;
                         }
 
+                        if(mode == 21) {
+                            add_assoc_string(&key_value_line_arr, "line", buffer);
+                        }
+
                         if(found_match) add_assoc_zval(&key_value_line_arr, "matches", &return_matched);
                     }
 
@@ -3077,9 +3089,8 @@ PHP_FUNCTION(file_select_array) {
     }
 
     fclose(fp);
-    if (mode > 9 && re != NULL) pcre2_code_free(re);
-    if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
-
+    if (mode > 19 && re != NULL) pcre2_code_free(re);
+    if (mode > 19 && match_data != NULL) pcre2_match_data_free(match_data);
 
     // Если массив пуст, возвращаем FALSE
     if (Z_TYPE_P(return_value) == IS_ARRAY && zend_hash_num_elements(Z_ARRVAL_P(return_value)) == 0) {
