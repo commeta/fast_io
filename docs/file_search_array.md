@@ -88,8 +88,6 @@ for($i=0; $i <=500; $i++){
 ```
 
 
-
-
 ```
 print_r([
 	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 0, 0, 2),
@@ -126,6 +124,7 @@ Array
 print_r([
 	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 10, 0, 2)
 ]);
+
 Array
 (
     [0] => Array
@@ -226,11 +225,62 @@ Array
                 )
         )
 )
-
-
 ```
 
+```
+print_r([
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 22, 0, 2),
+]);
 
+Array
+(
+    [0] => Array
+        (
+            [0] => Array
+                (
+                    [line_matches] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [line_match] => index_0
+                                    [match_offset] => 0
+                                    [match_length] => 7
+                                )
+                            [1] => Array
+                                (
+                                    [line_match] => file_insert_line_0
+                                    [match_offset] => 7
+                                    [match_length] => 18
+                                )
+                        )
+                    [line_offset] => 0
+                    [line_length] => 8192
+                    [line_count] => 1
+                )
+            [1] => Array
+                (
+                    [line_matches] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [line_match] => index_1
+                                    [match_offset] => 0
+                                    [match_length] => 7
+                                )
+                            [1] => Array
+                                (
+                                    [line_match] => file_insert_line_1
+                                    [match_offset] => 7
+                                    [match_length] => 18
+                                )
+                        )
+                    [line_offset] => 8192
+                    [line_length] => 8192
+                    [line_count] => 2
+                )
+        )
+)
+```
 
 
 
