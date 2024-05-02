@@ -137,7 +137,7 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_pop_line, 1, 1, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, align, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
@@ -191,6 +191,7 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_matches_pcre2, 0, 2, IS_ARRAY, 0)
     ZEND_ARG_TYPE_INFO(0, pattern, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, subject, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_replicate_file, 1, 2, IS_LONG, 0)
@@ -297,7 +298,6 @@ PHP_FUNCTION(file_search_array) {
     if(position > 0){
         if(position >= file_size){
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
-
             fclose(fp);
             RETURN_FALSE;
         }
@@ -564,8 +564,6 @@ PHP_FUNCTION(file_search_array) {
 
     if (mode > 9 && re != NULL) pcre2_code_free(re);
     if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
-
-    return;
 }
 
 
@@ -1633,10 +1631,10 @@ PHP_FUNCTION(file_defrag_data) {
 PHP_FUNCTION(file_pop_line) {
     char *filename;
     size_t filename_len;
-    zend_long align = -1; // Значение по умолчанию для необязательного аргумента
+    zend_long offset = -1; // Значение по умолчанию для необязательного аргумента
     zend_long mode = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|ll", &filename, &filename_len, &align, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|ll", &filename, &filename_len, &offset, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1662,7 +1660,7 @@ PHP_FUNCTION(file_pop_line) {
 
     // Получаем текущее смещение в файле данных
     off_t file_size = ftell(fp);
-    if (file_size <= 0 || (align != -1 && file_size < align)) {
+    if (file_size <= 0 || (offset != -1 && file_size < offset)) {
         php_error_docref(NULL, E_WARNING, "Failed to pop line from file: %s", filename);
         fclose(fp);
         RETURN_FALSE;
@@ -1671,20 +1669,20 @@ PHP_FUNCTION(file_pop_line) {
     off_t pos = file_size;
     ssize_t bytesRead;
 
-    if (align != -1) {
-        pos -= align;
+    if (offset != -1) {
+        pos -= offset;
         fseek(fp, pos , SEEK_SET);
 
         // Увеличиваем размер буфера на 1 для возможного символа перевода строки
-        char *buffer = (char *)emalloc(align + 1); // +1 для '\0'
+        char *buffer = (char *)emalloc(offset + 1); // +1 для '\0'
         if (!buffer) {
             php_error_docref(NULL, E_WARNING, "Out of memory");
             fclose(fp);
             RETURN_FALSE;
         }
 
-        bytesRead = fread(buffer, 1, align, fp);
-        if(bytesRead != align){
+        bytesRead = fread(buffer, 1, offset, fp);
+        if(bytesRead != offset){
             efree(buffer);
             fclose(fp);
             php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
@@ -2740,9 +2738,10 @@ PHP_FUNCTION(find_matches_pcre2) {
     size_t pattern_len;
     char *subject;
     size_t subject_len;
+    zend_long mode = 0;
 
     /* Парсинг аргументов, переданных из PHP */
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss", &pattern, &pattern_len, &subject, &subject_len) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &pattern, &pattern_len, &subject, &subject_len, &mode) == FAILURE) {
         return;
     }
 
@@ -2775,7 +2774,18 @@ PHP_FUNCTION(find_matches_pcre2) {
         for (int i = 0; i < rc; i++) {
             PCRE2_SIZE start = ovector[2*i];
             PCRE2_SIZE end = ovector[2*i+1];
-            add_next_index_stringl(&return_matched, subject + start, end - start);
+
+            if(mode == 1){
+                zval match_arr;
+                array_init(&match_arr);
+
+                add_assoc_stringl(&match_arr, "line_match", subject + start, end - start);
+                add_assoc_long(&match_arr, "match_offset", start_offset);
+                add_assoc_long(&match_arr, "match_length", end - start);
+                add_next_index_zval(&return_matched, &match_arr);
+            } else {
+                add_next_index_stringl(&return_matched, subject + start, end - start);
+            }
         }
 
         // Изменение для предотвращения потенциального бесконечного цикла
