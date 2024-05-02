@@ -3070,11 +3070,8 @@ PHP_FUNCTION(file_select_array) {
                     array_init(&line_arr);
                     if(
                         mode == 0 ||
-                        mode == 21 ||
-                        (
-                            (mode == 5 || mode == 6) &&
-                            strstr(buffer, pattern) != NULL
-                        )
+                        mode == 20 ||
+                        mode == 5
                     ) {
                         // Обрезка пробелов справа и символа перевода строки
                         for (int i = bytesRead - 1; i >= 0; --i) {
@@ -3084,7 +3081,8 @@ PHP_FUNCTION(file_select_array) {
                     }
 
                     if(mode == 0) {
-                        add_assoc_string(&line_arr, "line", buffer);
+                        add_assoc_string(&line_arr, "trim_line", buffer);
+                        add_assoc_long(&line_arr, "trim_length", strlen(buffer));
                         found_match = true;
                     }
 
@@ -3093,17 +3091,18 @@ PHP_FUNCTION(file_select_array) {
                         found_match = true;
                     }
 
-                    if(mode == 5) {
+                    if(mode == 6) {
                         add_assoc_string(&line_arr, "line", buffer);
                         found_match = true;
                     }
 
 
                     if(
-                        (mode == 5 || mode == 6) &&
+                        mode == 5 &&
                         strstr(buffer, pattern) != NULL
                     ){
-                        add_assoc_string(&line_arr, "line", buffer);
+                        add_assoc_string(&line_arr, "trim_line", buffer);
+                        add_assoc_long(&line_arr, "trim_length", strlen(buffer));
                         found_match = true;
                     }
 
@@ -3162,7 +3161,7 @@ PHP_FUNCTION(file_select_array) {
                         }
 
 
-                        if(mode == 21) {
+                        if(mode == 20) {
                             add_assoc_string(&line_arr, "trim_line", buffer);
                             add_assoc_long(&line_arr, "trim_length", strlen(buffer));
                         }
