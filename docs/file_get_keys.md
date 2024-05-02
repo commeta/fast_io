@@ -24,10 +24,11 @@ array file_get_keys(string $filename[, int search_start = 0][, int search_length
 
 
 #### Режимы поиска
-- 0: Добавить ключ строки key в результат выборки.
-- 1: Добавить строку line в результат выборки.
-- 2: Добавить строку line в результат выборки. Обрезка пробелов справа и символа перевода строки.
-- 3: Только данные о строке offset, length, count в результате выборки.
+
+- 0: Возвращает ассоциативный массив: key, line_offset, line_length, line_count.
+- 1: Возвращает ассоциативный массив: line, line_offset, line_length, line_count.
+- 2: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length, line_count.
+- 3: Возвращает ассоциативный массив: line_offset, line_length, line_count.
 
 ##### Log mode
 - +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим mode - 100 но не будет блокировать файл.
@@ -36,12 +37,15 @@ array file_get_keys(string $filename[, int search_start = 0][, int search_length
 
 ### Возвращаемое значение
 
+
 Функция возвращает ассоциативный массив
-- key - Ключ строки, в режиме mode = 0
-- line - Строка, в режиме mode = 1
-- offset - Смещение строки (с учетом смещения начала поиска в файле)
-- length - Длина строки
-- count - Счетчик строк от начала поиска
+- key - Ключ строки (начало строки до первого пробела)
+- line - Строка.
+- trim_line - Строка без пробелов справа и символа перевода строки.
+- trim_length - Длина обрезанной строки.
+- line_offset - Смещение строки (с учетом смещения начала поиска в файле).
+- line_length - Длина строки.
+- line_count - Счетчик строк от начала поиска.
 
 
 Чтение по смещению позиции position позволяет избежать лишних чтений файла при выборке с окном пагинации.
@@ -59,58 +63,64 @@ for($i=0; $i <=500; $i++){
 	);
 }
 
+```
+
+
+```
 print_r([
-	file_get_keys(__DIR__ . '/fast_io1.dat', 1, 5)
+	file_get_keys(__DIR__ . '/fast_io1.dat', 0, 2, 0, 0),
 ]);
 
-0, 1, 2, 3, 4, Array
+Array
 (
     [0] => Array
         (
             [0] => Array
                 (
-                    [key] => index_1
-                    [offset] => 8192
-                    [length] => 8192
-                    [count] => 2
+                    [key] => index_0
+                    [line_offset] => 0
+                    [line_length] => 8192
+                    [line_count] => 1
                 )
-
             [1] => Array
                 (
-                    [key] => index_2
-                    [offset] => 16384
-                    [length] => 8192
-                    [count] => 3
+                    [key] => index_1
+                    [line_offset] => 8192
+                    [line_length] => 8192
+                    [line_count] => 2
                 )
-
-            [2] => Array
-                (
-                    [key] => index_3
-                    [offset] => 24576
-                    [length] => 8192
-                    [count] => 4
-                )
-
-            [3] => Array
-                (
-                    [key] => index_4
-                    [offset] => 32768
-                    [length] => 8192
-                    [count] => 5
-                )
-
-            [4] => Array
-                (
-                    [key] => index_5
-                    [offset] => 40960
-                    [length] => 8192
-                    [count] => 6
-                )
-
         )
-
 )
+```
 
+
+```
+print_r([
+	file_get_keys(__DIR__ . '/fast_io1.dat', 0, 2, 0, 2),
+]);
+
+Array
+(
+    [0] => Array
+        (
+            [0] => Array
+                (
+                    [trim_line] => index_0 file_insert_line_0 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 8192
+                    [line_offset] => 0
+                    [line_length] => 8192
+                    [line_count] => 1
+                )
+            [1] => Array
+                (
+                    [trim_line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 8192
+                    [line_offset] => 8192
+                    [line_length] => 8192
+                    [line_count] => 2
+                )
+        )
+)
 ```
 
 
