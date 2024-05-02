@@ -9,6 +9,9 @@
 Далее происходит запись указанного блока в файл.
 
 
+Страница описания прокта [Fast_IO Engine](https://github.com/commeta/fast_io).
+
+
 ## Синтаксис
 
 int file_update_array(string $filename, array $query[, int $mode = 0])
