@@ -29,22 +29,7 @@ int file_push_data(string $filename, string $line_key, string $line_value)
 ## Пример использования
 
 Для использования этой функции необходимо, чтобы ваше PHP-окружение поддерживало соответствующее расширение.
-```
-<?php
-$filename = 'path/to/datafile';
-$key = 'unique_key';
-$value = 'data_value';
 
-$result = file_push_data($filename, $key, $value);
-
-if($result < 0){
-    echo "Произошла ошибка.";
-} else {
-    echo "Запись успешно выполнена";
-}
-
-?>
-```
 
 Еще [пример](/test/readme.md): Тесты.
 
