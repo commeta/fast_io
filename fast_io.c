@@ -379,14 +379,14 @@ PHP_FUNCTION(file_search_array) {
                     zval line_arr;
                     array_init(&line_arr);
                     
-                    if(mode == 1){
+                    if(mode == 0){
                         for (int i = lineLength - 2; i >= 0; --i) {
                             if(lineStart[i] == ' ') lineStart[i] = '\0';
                             else break;
                         }
 
                         add_assoc_string(&line_arr, "trim_line", lineStart);
-                        add_assoc_long(&line_arr, "trim_length", lineLength);
+                        add_assoc_long(&line_arr, "trim_length", strlen(lineStart));
                     } else {
                         add_assoc_string(&line_arr, "line", lineStart);
                     }
@@ -404,7 +404,7 @@ PHP_FUNCTION(file_search_array) {
                 found_count++;
             }
 
-            if(mode < 12 && pcre2_match(re, lineStart, lineLength - 1, 0, 0, match_data, NULL) > 0){
+            if(mode > 9 && mode < 12 && pcre2_match(re, lineStart, lineLength - 1, 0, 0, match_data, NULL) > 0){
                 found_count++;
 
                 if(search_start < found_count){
@@ -413,7 +413,7 @@ PHP_FUNCTION(file_search_array) {
                     zval line_arr;
                     array_init(&line_arr);
 
-                    if(mode == 11){
+                    if(mode == 10){
                         for (int i = lineLength - 2; i >= 0; --i) {
                             if(lineStart[i] == ' ') lineStart[i] = '\0';
                             else break;
@@ -440,7 +440,7 @@ PHP_FUNCTION(file_search_array) {
 
 
             
-            if(mode < 24 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){ // Сделать возврат совпадений
+            if(mode > 19 && mode < 24 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){ // Сделать возврат совпадений
                 found_count++;
 
                 if(search_start < found_count){
@@ -497,7 +497,7 @@ PHP_FUNCTION(file_search_array) {
                     zval line_arr;
                     array_init(&line_arr);
 
-                    if(mode == 21) {
+                    if(mode == 20) {
                         for (int i = lineLength - 2; i >= 0; --i) {
                             if(lineStart[i] == ' ') lineStart[i] = '\0';
                             else break;
@@ -508,7 +508,7 @@ PHP_FUNCTION(file_search_array) {
                     }
 
 
-                    if(mode == 22) {
+                    if(mode == 21) {
                         add_assoc_string(&line_arr, "line", lineStart);
                     }
 
@@ -556,6 +556,11 @@ PHP_FUNCTION(file_search_array) {
 
     fclose(fp);
     efree(dynamic_buffer);
+
+    if(mode == 3 || mode == 13){      
+        add_assoc_long(return_value, "line_count", line_count);
+        add_assoc_long(return_value, "found_count", found_count);
+    }
 
     if (mode > 9 && re != NULL) pcre2_code_free(re);
     if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
