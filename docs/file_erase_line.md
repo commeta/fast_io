@@ -8,7 +8,7 @@
 
 ## Синтаксис
 
-int file_erase_line(string $filename, string $line_key[, int position = 0])
+int file_erase_line(string $filename, string $line_key[, int $position = 0])
 
 ### Параметры
 
