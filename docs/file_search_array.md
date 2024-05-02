@@ -22,21 +22,26 @@ string file_search_array(string $filename, string $line_key[, int mode = 0][, in
 - **search_limit** (int, optional) - Ограничение массива выборки.
 - **position** (int, optional) - Позиция начала поиска в файле.
 
+Чтение по смещению позиции position позволяет избежать лишних чтений файла при выборке с окном пагинации.
+Чтение файла идет всегда с нулевой позиции position = 0, и если search_start больше нуля то функция просто пропускает строки у которых номер меньше search_start.
+
 
 #### Режимы поиска
 
-- 0: Поиск line_key в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: line, offset, length, count.
+- 0: Поиск line_key в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length, line_count.
+- 1: Поиск line_key в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: line, line_offset, line_length, line_count.
 - 3: Поиск line_key в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: line_count, found_count.
-- 10: Поиск по регулярному выражению [PCRE2](https://pcre2project.github.io/pcre2/doc/html/index.html) в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: line, offset, length, count.
+- 10: Поиск по регулярному выражению [PCRE2](https://pcre2project.github.io/pcre2/doc/html/index.html) в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length, line_count.
+- 11: Поиск по регулярному выражению PCRE2 в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: line, line_offset, line_length, line_count.
 - 13: Поиск по регулярному выражению PCRE2 в каждой строке, возвращает ассоциативный массив: line_count, found_count.
-- 20: Поиск по регулярному выражению PCRE2 в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: matches, offset, length, count.
+- 20: Поиск по регулярному выражению PCRE2 в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: line_matches, line_offset, line_length, line_count.
+- 21: Поиск по регулярному выражению PCRE2 в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: trim_line, trim_length, line_matches, line_offset, line_length, line_count.
+- 22: Поиск по регулярному выражению PCRE2 в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: line, line_matches, line_match, match_offset, match_length, line_offset, line_length, line_count.
+- 23: Поиск по регулярному выражению PCRE2 в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: line_matches, line_match, match_offset, match_length, line_offset, line_length, line_count.
 - +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим mode -= 100 но не будет блокировать файл.
 
-Чтение по смещению позиции position позволяет избежать лишних чтений файла при выборке с окном пагинации.
 
-Чтение файла идет всегда с нулевой позиции position = 0, и если search_start больше нуля то функция просто пропускает строки у которых номер меньше search_start.
-
-Режимы +100 Log mode подходят для работы с файлами журналов.
+Режимы +100 Log mode подходят для работы с файлами журналов. Подробнее: [алгоритм реализации транзакции с помощью блокировки файла](/test/transaction/README.md).
 
 
 
@@ -45,10 +50,17 @@ string file_search_array(string $filename, string $line_key[, int mode = 0][, in
 Функция возвращает ассоциативный массив
 
 - line - Строка.
-- matches - Подстроки совпавшие с регулярным выражением (в режиме 20).
-- offset - Смещение строки (с учетом смещения начала поиска в файле).
-- length - Длина строки.
-- count - Счетчик строк от начала поиска.
+- trim_line - Строка без пробелов справа и символа перевода строки.
+- trim_length - Длина обрезанной строки.
+- line_matches - Подстроки совпавшие с регулярным выражением (в режиме 20).
+
+- line_match - Подстрока совпавшая с регулярным выражением.
+- match_offset - Смещение подстроки от начала строки
+- match_length - Длина подстроки
+
+- line_offset - Смещение строки (с учетом смещения начала поиска в файле).
+- line_length - Длина строки.
+- line_count - Счетчик строк от начала поиска.
 
 или
 
@@ -69,71 +81,70 @@ for($i=0; $i <=500; $i++){
 }
 ```
 
+
+
+
 ```
 print_r([
-	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+', 10, 2, 5),
-	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 0),
+	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 0, 0, 2),
 ]);
 
+Array
 (
     [0] => Array
         (
             [0] => Array
                 (
-                    [line] => index_2 file_insert_line_2 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [offset] => 16384
-                    [length] => 8192
-                    [count] => 3
+                    [trim_line] => index_3 file_insert_line_3 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 119
+                    [line_offset] => 24576
+                    [line_length] => 8192
+                    [line_count] => 4
                 )
 
             [1] => Array
                 (
-                    [line] => index_3 file_insert_line_3 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [offset] => 24576
-                    [length] => 8192
-                    [count] => 4
+                    [trim_line] => index_30 file_insert_line_30 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 121
+                    [line_offset] => 245760
+                    [line_length] => 8192
+                    [line_count] => 31
                 )
-
-            [2] => Array
-                (
-                    [line] => index_4 file_insert_line_4 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [offset] => 32768
-                    [length] => 8192
-                    [count] => 5
-                )
-
-            [3] => Array
-                (
-                    [line] => index_5 file_insert_line_5 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [offset] => 40960
-                    [length] => 8192
-                    [count] => 6
-                )
-
-            [4] => Array
-                (
-                    [line] => index_6 file_insert_line_6 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [offset] => 49152
-                    [length] => 8192
-                    [count] => 7
-                )
-
         )
+)
 
-    [1] => Array
+```
+
+
+```
+print_r([
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 10, 0, 2)
+]);
+Array
+(
+    [0] => Array
         (
             [0] => Array
                 (
-                    [line] => index_3 file_insert_line_3 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [offset] => 24576
-                    [length] => 8192
-                    [count] => 4
+                    [trim_line] => index_0 file_insert_line_0 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 8192
+                    [line_offset] => 0
+                    [line_length] => 8192
+                    [line_count] => 1
+                )
+
+            [1] => Array
+                (
+                    [trim_line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 8192
+                    [line_offset] => 8192
+                    [line_length] => 8192
+                    [line_count] => 2
                 )
 
         )
 
 )
-
 ```
 
 ```
@@ -171,7 +182,7 @@ Array
 
 ```
 print_r([
-	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 20, 0, 3),
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 20, 0, 2),
 ]);
 
 Array
@@ -180,46 +191,36 @@ Array
         (
             [0] => Array
                 (
-                    [matches] => Array
+                    [trim_line] => index_0 file_insert_line_0 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 119
+                    [line_matches] => Array
                         (
                             [0] => index_0
                             [1] => file_insert_line_0
                         )
 
-                    [offset] => 0
-                    [length] => 8192
-                    [count] => 1
+                    [line_offset] => 0
+                    [line_length] => 8192
+                    [line_count] => 1
                 )
 
             [1] => Array
                 (
-                    [matches] => Array
+                    [trim_line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 119
+                    [line_matches] => Array
                         (
                             [0] => index_1
                             [1] => file_insert_line_1
                         )
 
-                    [offset] => 8192
-                    [length] => 8192
-                    [count] => 2
+                    [line_offset] => 8192
+                    [line_length] => 8192
+                    [line_count] => 2
                 )
-
-            [2] => Array
-                (
-                    [matches] => Array
-                        (
-                            [0] => index_2
-                            [1] => file_insert_line_2
-                        )
-
-                    [offset] => 16384
-                    [length] => 8192
-                    [count] => 3
-                )
-
         )
-
 )
+
 
 ```
 
