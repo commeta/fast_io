@@ -3198,9 +3198,9 @@ PHP_FUNCTION(file_update_array) {
                 char *found_value = NULL;
 
                 ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(elem), value) {
-                    if(Z_TYPE_P(value) == IS_LONG && num_elem == 0) update_pos = Z_LVAL_P(value);
-                    if(Z_TYPE_P(value) == IS_LONG && num_elem == 1) update_size = Z_LVAL_P(value);
-                    if(Z_TYPE_P(value) == IS_STRING && num_elem == 2) found_value = Z_STRVAL_P(value);
+                    if(Z_TYPE_P(value) == IS_STRING && num_elem == 0) found_value = Z_STRVAL_P(value);
+                    if(Z_TYPE_P(value) == IS_LONG && num_elem == 1) update_pos = Z_LVAL_P(value);
+                    if(Z_TYPE_P(value) == IS_LONG && num_elem == 2) update_size = Z_LVAL_P(value);
                     num_elem++;
                 } ZEND_HASH_FOREACH_END();
 
