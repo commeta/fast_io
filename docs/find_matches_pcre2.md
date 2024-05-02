@@ -4,23 +4,60 @@
 Функция find_matches_pcre2 предназначена для поиска всех совпадений в строке с использованием регулярного выражения, основанного на библиотеке [PCRE2](https://pcre2project.github.io/pcre2/doc/html/index.html). Это расширение PHP позволяет выполнить поиск по заданному шаблону и вернуть все найденные совпадения в виде массива.
 
 #### Использование
-mixed find_matches_pcre2(string $pattern, string $subject)
+mixed find_matches_pcre2(string $pattern, string $subject[, int $mode = 0])
 
 
 - **$pattern** - регулярное выражение, по которому будет осуществляться поиск.
 - **$subject** - строка, в которой будет производиться поиск.
+- **$mode** - Режим работы, 0 - массив: matched, 1 - ассоциативный массив: line_match, match_offset, match_length.
+
 
 #### Возвращаемые значения
 Функция возвращает массив, содержащий все найденные совпадения. Если совпадений не найдено, возвращается пустой массив. В случае ошибки при компиляции регулярного выражения или другой ошибки выполнения функция возвращает FALSE.
 
 #### Пример
 ```
-$pattern = "/test(\d+)/i";
-$subject = "This is test1 and test2";
+for($i=0; $i <=500; $i++){
+	print_r(
+		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 92, '1234567890'), 8192) . ', '
+	);
+}
 
-$result = find_matches_pcre2($pattern, $subject);
+print_r([
+	file_select_line(__DIR__ . '/fast_io1.dat', 0, 1391, 0),
+	find_matches_pcre2('\\w+_', file_select_line(__DIR__ . '/fast_io1.dat', 0, 8192, 1), 0),
+	find_matches_pcre2('\\w+_', file_select_line(__DIR__ . '/fast_io1.dat', 0, 8192, 1), 1),
+]);
 
-print_r($result);
+Array
+(
+    [0] => index_0 file_insert_line_0 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+    [1] => Array
+        (
+            [0] => index_
+            [1] => file_insert_line_
+        )
+
+    [2] => Array
+        (
+            [0] => Array
+                (
+                    [line_match] => index_
+                    [match_offset] => 0
+                    [match_length] => 6
+                )
+
+            [1] => Array
+                (
+                    [line_match] => file_insert_line_
+                    [match_offset] => 6
+                    [match_length] => 17
+                )
+
+        )
+
+)
+
 ```
 
 #### Ошибки и предупреждения
