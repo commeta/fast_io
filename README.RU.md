@@ -255,7 +255,7 @@ echo PCRE_VERSION; // 10.42 2022-12-11
 ```
 Версия на момент разработки PCRE2 10.42 - документация есть в сети:
 
-- [Краткий обзор лучших и быстрых типов регулярных выражений в PHP8](/docs/replicate_file.md)
+- [Краткий обзор лучших и быстрых типов регулярных выражений в PHP8](/docs/find_matches_pcre2.md)
 - [Perl-compatible Regular Expressions (revised API: PCRE2)](https://pcre2project.github.io/pcre2/doc/html/index.html)
 
 
