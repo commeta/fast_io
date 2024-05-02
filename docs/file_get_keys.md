@@ -7,6 +7,9 @@
 Функция file_get_keys проходит по всему файлу, читая его содержимое и извлекая ключи из каждой строки. Ключи собираются в массив. Результатом работы функции является массив ключей.
 
 
+Страница описания прокта [Fast_IO Engine](https://github.com/commeta/fast_io).
+
+
 ## Синтаксис
 
 array file_get_keys(string $filename[, int search_start = 0][, int search_length = 1][, int position = 0][, int mode = 0])
