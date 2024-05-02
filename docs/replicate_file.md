@@ -2,6 +2,10 @@
 
 Функция replicate_file предназначена для копирования содержимого одного файла в другой. 
 
+
+Страница описания прокта [Fast_IO Engine](https://github.com/commeta/fast_io).
+
+
 ### Синтаксис
 
 int replicate_file(string $source, string $destination [, int mode = 0])
