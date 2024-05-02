@@ -5,7 +5,7 @@
 В Fast_IO Engine Версия на момент разработки PCRE2 10.42
 Страница описания прокта [Fast_IO Engine](https://github.com/commeta/fast_io)
 
-Fast_IO Engine реализована функция find_matches_pcre2
+В Fast_IO Engine реализована функция find_matches_pcre2
 [Описание функции find_matches_pcre2](#описание-функции-find_matches_pcre2)
 
 
