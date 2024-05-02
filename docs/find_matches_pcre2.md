@@ -37,7 +37,6 @@ Array
             [0] => index_
             [1] => file_insert_line_
         )
-
     [2] => Array
         (
             [0] => Array
@@ -46,16 +45,13 @@ Array
                     [match_offset] => 0
                     [match_length] => 6
                 )
-
             [1] => Array
                 (
                     [line_match] => file_insert_line_
                     [match_offset] => 6
                     [match_length] => 17
                 )
-
         )
-
 )
 
 ```
