@@ -51,9 +51,9 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - file_push_data, file_push_line, file_insert_line - always cancel the last record and exit with an error.
 - file_replace_line, file_defrag_data, file_defrag_line - if there is an error during writeback, it renames temporary files and data remains intact. If a parallel copy of the Fast_IO function is waiting for the file lock to be released, it will fail with a lock error.
 - file_erase_line - checks the number of written bytes; if there is an error writing a file (-3), this operation cannot be undone!
-- file_update_line - checks the number of written bytes; if there is an error writing a file (-4), this operation cannot be undone!
+- file_update_line, file_update_array - checks the number of written bytes; if there is an error writing a file (-4), this operation cannot be undone!
 
-An error when writing to the file_update_line function can occur when updating the last sectors of the file if there is no more space on the disk and the length of the string exceeds the file size.
+An error when writing to the file_update_line or file_update_array function can occur when updating the last sectors of the file if there is no more space on the disk and the length of the string exceeds the file size.
 
 An error when writing to the file_erase_line function can only indicate hardware failure.
 
@@ -203,6 +203,8 @@ The table of function call costs in ascending order:
 
 - file_select_line Very low consumption, sector-based reading of a file segment.
 - file_update_line Very low consumption, sector-based writing of a file segment.
+- file_select_array Average consumption, low when reading linearly or if the file window is in the buffer.
+- file_update_array Average consumption, low when writing linearly or if the file window is in the buffer.
 - file_pop_line Low consumption, with very low alignment, reading from the end of the file, truncating the file.
 - file_push_line Very low consumption, writing a line at the end of the file.
 - file_insert_line Very low consumption, writing a line at the end of the file.
