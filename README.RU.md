@@ -226,6 +226,38 @@ file_pop_line: 0.3167359828949 (0.00003167)
 - file_replace_line Очень высокое потребление, полное чтение\запись всего файла.
 - file_defrag_data Очень высокое потребление, полное чтение\запись файлов индекса и данных.
 
+
+#### PCRE2
+Регулярные выражения на Ubuntu 24.04 были установлены в пакетах:
+```
+root@api:/home/commeta/project/kernel/fast_io# dpkg -l | grep pcre2
+ii  libpcre2-16-0:amd64                              10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library - 16 bit runtime files
+ii  libpcre2-32-0:amd64                              10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library - 32 bit runtime files
+ii  libpcre2-8-0:amd64                               10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library- 8 bit runtime files
+ii  libpcre2-dev:amd64                               10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library - development files
+ii  libpcre2-posix3:amd64                            10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library - posix-compatible runtime files
+```
+
+```
+root@api:/home/commeta/project/kernel/fast_io# ldconfig -p | grep pcre2
+	libpcre2-32.so.0 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-32.so.0
+	libpcre2-32.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-32.so
+	libpcre2-16.so.0 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-16.so.0
+	libpcre2-16.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-16.so
+	libpcre2-8.so.0 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-8.so.0
+	libpcre2-8.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-8.so
+	libpcre2-posix.so.3 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-posix.so.3
+	libpcre2-posix.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-posix.so
+```
+
+Версия на момент разработки PCRE2 10.42 - документация есть в сети:
+
+- [PHP 8.4: Обновление PCRE2 и изменения в регулярных выражениях](https://www.dev-notes.ru/articles/php/8.4/pcre2-regexp-syntax-changes/)
+- [Perl-compatible Regular Expressions (revised API: PCRE2)](https://pcre2project.github.io/pcre2/doc/html/index.html)
+
+
+
+
 #### Примеры
 
 - [Тесты](test/readme.md)
