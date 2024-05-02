@@ -44,6 +44,9 @@ array file_select_array(string $filename, array $query[, int $mode = 0][, string
 - 22: Возвращает ассоциативный массив: line, line_matches, line_match, match_offset, match_length, line_offset, line_length.
 - 23: Возвращает ассоциативный массив: line_matches, line_match, match_offset, match_length, line_offset, line_length.
 
+В режимах 20+ функция вернет только выборки в которых присутствует совпадение по регулярному выражению pattern.
+
+
 ##### Log mode
 - +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим mode -= 100 но не будет блокировать файл.
 
