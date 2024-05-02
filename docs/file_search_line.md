@@ -7,6 +7,10 @@
 
 Функция написана на C и доступна в PHP через специализированное расширение Fast_IO.
 
+
+Страница описания прокта [Fast_IO Engine](https://github.com/commeta/fast_io).
+
+
 ## Синтаксис
 
 string file_search_line(string $filename, string $line_key[, int mode = 0][, int position = 0] )
