@@ -85,6 +85,7 @@ PHP_FUNCTION(file_analize);
 PHP_FUNCTION(find_matches_pcre2);
 PHP_FUNCTION(replicate_file);
 PHP_FUNCTION(file_select_array);
+PHP_FUNCTION(file_update_array);
 
 
 
@@ -205,6 +206,12 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_select_array, 1, 2, IS_ARRA
     ZEND_ARG_TYPE_INFO(0, pattern, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_update_array, 1, 2, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
 
 /* Регистрация функций */
 const zend_function_entry fast_io_functions[] = {
@@ -226,6 +233,7 @@ const zend_function_entry fast_io_functions[] = {
     PHP_FE(find_matches_pcre2, arginfo_find_matches_pcre2)
     PHP_FE(replicate_file, arginfo_replicate_file)
     PHP_FE(file_select_array, arginfo_file_select_array)
+    PHP_FE(file_update_array, arginfo_file_update_array)
     PHP_FE_END
 };
 
@@ -1401,7 +1409,7 @@ PHP_FUNCTION(file_defrag_data) {
                 }
 
                 if(parsed_err == false){
-                    fseek(data_fp, position, SEEK_SET); // Проверить выход за пределы файла, тут и везде рефакторинг
+                    fseek(data_fp, position, SEEK_SET); 
                     char *dataBuffer = emalloc(size + 1);
 
                     if(dataBuffer == NULL){
@@ -1854,7 +1862,7 @@ PHP_FUNCTION(file_erase_line) {
     off_t writeOffset = 0; // Смещение для записи обновленных данных
 
     if(position > 0){
-        if(position >= file_size){
+        if(position > file_size){
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
             fclose(fp);
             RETURN_LONG(-5);
@@ -2000,7 +2008,7 @@ PHP_FUNCTION(file_get_keys) {
     off_t searchOffset = 0; // Смещение для записи обновленных данных
 
     if(position > 0){
-        if(position >= file_size){
+        if(position > file_size){
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
 
             fclose(fp);
@@ -2206,7 +2214,7 @@ PHP_FUNCTION(file_replace_line) {
             ssize_t lineLength = lineEnd - lineStart + 1;
             *lineEnd = '\0';
 
-            if (strstr(lineStart, line_key) != NULL) {
+            if (strstr(lineStart, line_key) != NULL) { 
                 char *replacement = estrndup(line, line_len + 1);
                 if(replacement == NULL){
                     php_error_docref(NULL, E_WARNING, "Out of memory");
@@ -2557,8 +2565,8 @@ PHP_FUNCTION(file_update_line) {
 
     // Запись в файл
     size_t written = fwrite(buffer, 1, align, fp);
-    efree(buffer);
     fclose(fp); // Это также разблокирует файл
+    efree(buffer);
 
     if (written != align) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
@@ -2744,6 +2752,8 @@ PHP_FUNCTION(find_matches_pcre2) {
     } else if (rc < 0) {
         /* Обработка других ошибок. */
         php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
+        if (re != NULL) pcre2_code_free(re);
+        if (match_data != NULL) pcre2_match_data_free(match_data);
         RETURN_FALSE;
     }
 
@@ -2997,6 +3007,8 @@ PHP_FUNCTION(file_select_array) {
                     if (!buffer) {
                         php_error_docref(NULL, E_WARNING, "Out of memory");
                         fclose(fp);
+                        if (re != NULL) pcre2_code_free(re);
+                        if (mode > 19 && match_data != NULL) pcre2_match_data_free(match_data);
                         RETURN_FALSE;
                     }
 
@@ -3007,6 +3019,8 @@ PHP_FUNCTION(file_select_array) {
                         php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
                         fclose(fp);
                         efree(buffer);
+                        if (re != NULL) pcre2_code_free(re);
+                        if (mode > 19 && match_data != NULL) pcre2_match_data_free(match_data);
                         RETURN_FALSE;
                     }
 
@@ -3014,14 +3028,22 @@ PHP_FUNCTION(file_select_array) {
 
                     zval key_value_line_arr;
                     array_init(&key_value_line_arr);
-
-                    if(mode == 0) {
+                    if(
+                        mode == 0 ||
+                        mode == 22 ||
+                        (
+                            (mode == 5 || mode == 6) &&
+                            strstr(buffer, pattern) != NULL
+                        )
+                    ) {
                         // Обрезка пробелов справа и символа перевода строки
                         for (int i = bytesRead - 1; i >= 0; --i) {
                             if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
                             else break;
                         }
+                    }
 
+                    if(mode == 0) {
                         add_assoc_string(&key_value_line_arr, "line", buffer);
                         found_match = true;
                     }
@@ -3041,13 +3063,6 @@ PHP_FUNCTION(file_select_array) {
                         (mode == 5 || mode == 6) &&
                         strstr(buffer, pattern) != NULL
                     ){
-                        if(mode == 5){
-                            for (int i = bytesRead - 1; i >= 0; --i) {
-                                if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
-                                else break;
-                            }
-                        }
-
                         add_assoc_string(&key_value_line_arr, "line", buffer);
                         found_match = true;
                     }
@@ -3100,10 +3115,6 @@ PHP_FUNCTION(file_select_array) {
                         }
 
                         if(mode == 22) {
-                            for (int i = bytesRead - 1; i >= 0; --i) {
-                                if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
-                                else break;
-                            }
                             add_assoc_string(&key_value_line_arr, "line", buffer);
                         }
 
@@ -3131,6 +3142,115 @@ PHP_FUNCTION(file_select_array) {
         zval_ptr_dtor(return_value);
         RETURN_FALSE;
     }
+}
+
+
+
+PHP_FUNCTION(file_update_array) {
+    char *filename;
+    size_t filename_len;
+    
+    zval  *array = NULL;
+    zend_long mode = 0;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sa|l", &filename, &filename_len, &array, &mode) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    FILE *fp = fopen(filename, "r+");
+    if (fp == NULL) {
+        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
+        RETURN_FALSE;
+    }
+
+    // Попытка установить блокирующую блокировку на запись
+    if(mode < 100){
+        if (flock(fileno(fp), LOCK_EX) < 0) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+            fclose(fp);
+            RETURN_FALSE;
+        }
+    }
+
+    if(mode > 99) mode -= 100;
+
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+
+    ssize_t bytesWrite;
+    char *buffer = NULL;
+    
+    size_t written = 0;
+    size_t len = 0;
+
+    zval *elem, *value;
+
+
+    // Если массив был передан, обходим его
+    if (array) {
+        ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(array), elem) {
+            if (Z_TYPE_P(elem) == IS_ARRAY) {
+                int num_elem = 0;
+                len = 0;
+                zend_long update_pos = -1; // Позиция
+                zend_long update_size = -1;
+                char *found_value = NULL;
+
+                ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(elem), value) {
+                    if(Z_TYPE_P(value) == IS_LONG && num_elem == 0) update_pos = Z_LVAL_P(value);
+                    if(Z_TYPE_P(value) == IS_LONG && num_elem == 1) update_size = Z_LVAL_P(value);
+                    if(Z_TYPE_P(value) == IS_STRING && num_elem == 2) found_value = Z_STRVAL_P(value);
+                    num_elem++;
+                } ZEND_HASH_FOREACH_END();
+
+                if(update_pos != -1 && update_size != -1 && file_size > update_pos && update_size > 0 && found_value != NULL){
+                    len = strlen(found_value);
+                    buffer = (char *)emalloc(update_size + 1); // +1 для '\0'
+
+                    if (!buffer) {
+                        php_error_docref(NULL, E_WARNING, "Out of memory");
+                        fclose(fp);
+                        RETURN_LONG(-8);
+                    }
+
+                    if(mode == 0 || mode == 1){
+                        memset(buffer, ' ', update_size); // Заполнение пробелами
+                        buffer[update_size - 1] = '\n'; // Добавление перевода строки
+                        buffer[update_size] = '\0'; // Нуль-терминатор
+                    } else {
+                        memset(buffer, ' ', update_size); // Заполнение пробелами
+                        buffer[update_size] = '\0'; // Нуль-терминатор
+                    }
+
+                    // Копирование в буфер с учетом выравнивания
+                    strncpy(buffer, found_value, len);
+
+                    if (fseek(fp, update_pos, SEEK_SET) != 0) {
+                        php_error_docref(NULL, E_WARNING, "Failed to seek in the file: %s", filename);
+                        fclose(fp);
+                        efree(buffer);
+                        RETURN_LONG(-3);
+                    }
+
+                    // Запись в файл
+                    bytesWrite = fwrite(buffer, 1, update_size, fp);
+                    
+                    if (bytesWrite != update_size) {
+                        php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
+                        efree(buffer);
+                        RETURN_LONG(-4);
+                    }
+
+                    written += bytesWrite;
+                    efree(buffer);
+                }
+            }
+        } ZEND_HASH_FOREACH_END();
+    }
+
+    fclose(fp);
+    RETURN_LONG(written);
 }
 
 
