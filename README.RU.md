@@ -250,6 +250,9 @@ root@api:/home/commeta/project/kernel/fast_io# ldconfig -p | grep pcre2
 	libpcre2-posix.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-posix.so
 ```
 
+```
+echo PCRE_VERSION; // 10.42 2022-12-11
+```
 Версия на момент разработки PCRE2 10.42 - документация есть в сети:
 
 - [PHP 8.4: Обновление PCRE2 и изменения в регулярных выражениях](https://www.dev-notes.ru/articles/php/8.4/pcre2-regexp-syntax-changes/)
