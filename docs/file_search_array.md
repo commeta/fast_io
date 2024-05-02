@@ -16,7 +16,7 @@ string file_search_array(string $filename, string $line_key[, int mode = 0][, in
 ### Параметры
 
 - **filename** - Путь к файлу, в котором будет производиться поиск.
-- **line_key** - Ключ, по которому осуществляется поиск значения.
+- **line_key** - Подстрока, по которой осуществляется поиск строки.
 - **mode** (int, optional) - Режим поиска.
 - **search_start** (int, optional) - Стартовая строка начала выборки.
 - **search_limit** (int, optional) - Ограничение массива выборки.
