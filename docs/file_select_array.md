@@ -9,6 +9,9 @@
 Далее происходит чтение указанного блока из файла, и добавление в результирующий массив.
 
 
+Страница описания прокта [Fast_IO Engine](https://github.com/commeta/fast_io).
+
+
 ## Синтаксис
 
 array file_select_array(string $filename, array $query[, int $mode = 0][, string $pattern])
