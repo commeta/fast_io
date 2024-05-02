@@ -16,7 +16,7 @@ array file_select_array(string $filename, array $query[, int $mode = 0][, string
 ### Параметры
 
 - **filename** (string): Путь к файлу, из которого необходимо извлечь ключи.
-- **query** - Массив адресов строк.
+- **query** - Массив: [[offset, size],]
 - **mode** (int, optional) - Режим.
 - **pattern** - регулярное выражение, по которому будет осуществляться выборка.
 
