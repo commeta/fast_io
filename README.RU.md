@@ -26,8 +26,8 @@ Fast_IO - это высокопроизводительное расширени
 - [file_replace_line](/docs/file_replace_line.md) - Замена строки по ключу.
 - [file_insert_line](/docs/file_insert_line.md) - Вставка строк с выравниванием в файл.
 - [file_select_line](/docs/file_select_line.md) - Выборка строки из файла, по указанному номеру или смещению.
-- [file_select_array](/docs/file_select_array.md) - Массовая выборка строк из файла, по указанному номеру или смещению.
-- [file_update_line](/docs/file_update_line.md) - Обновление строки в файле.
+- [file_select_array](/docs/file_select_array.md) - Массовая выборка строк из файла, по указанному смещению и размеру.
+- [file_update_line](/docs/file_update_line.md) - Обновление строки в файле, по указанному смещению и размеру.
 - [file_update_array](/docs/file_update_array.md) - Массовое обновление строк в файле.
 - [file_analize](/docs/file_analize.md) - Возвращает максимальную длину строки в файле.
 - [replicate_file](/docs/replicate_file.md) - Репликация файла данных.
