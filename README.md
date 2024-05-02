@@ -47,6 +47,18 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - The cost of calling low-consumption functions in case of hitting the cache is comparable to the speed of cache memory access.
 
 
+### Structure of the file
+The line is divided into substrings: line_key, line_value.
+Lines may consist of any characters except: space, character ASCII Code 127, and line feed character ASCII Code 10.
+
+The line_key can be any printable character, reserved symbols:
+- ASCII Code 32 space (space) - substring delimiter.
+- ASCII Code 127 delete (non-printable) - empty frame marker, placed at the beginning of a string filled with spaces.
+- ASCII Code 10 line feed (enter) - line separator.
+
+Functions: file_defrag_data, file_defrag_lines, file_erase_line, file_get_keys, file_push_data, file_replace_line, file_search_data - when indexing lines, they analyze the first substring, considering any printable character as the line key. The key must always end with a space.
+
+
 ### Behavior of the Fast_IO function in case of transaction abort
 - file_push_data, file_push_line, file_insert_line - always cancel the last record and exit with an error.
 - file_replace_line, file_defrag_data, file_defrag_line - if there is an error during writeback, it renames temporary files and data remains intact. If a parallel copy of the Fast_IO function is waiting for the file lock to be released, it will fail with a lock error.
