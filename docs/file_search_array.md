@@ -29,9 +29,9 @@ string file_search_array(string $filename, string $line_key[, int mode = 0][, in
 #### Режимы поиска
 
 ##### Поиск line_key в каждой строке
-- 0: Поиск line_key в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length, line_count.
-- 1: Поиск line_key в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: line, line_offset, line_length, line_count.
-- 3: Поиск line_key в каждой строке, полнотекстовый поиск, возвращает ассоциативный массив: line_count, found_count.
+- 0: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length, line_count.
+- 1: Возвращает ассоциативный массив: line, line_offset, line_length, line_count.
+- 3: Возвращает ассоциативный массив: line_count, found_count.
 
 ##### Поиск по регулярному выражению [PCRE2](https://pcre2project.github.io/pcre2/doc/html/index.html) в каждой строке
 - 10: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length, line_count.
@@ -44,9 +44,8 @@ string file_search_array(string $filename, string $line_key[, int mode = 0][, in
 - 22: Возвращает ассоциативный массив: line, line_matches, line_match, match_offset, match_length, line_offset, line_length, line_count.
 - 23: Возвращает ассоциативный массив: line_matches, line_match, match_offset, match_length, line_offset, line_length, line_count.
 
-
+##### Log mode
 - +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим mode -= 100 но не будет блокировать файл.
-
 
 Режимы +100 Log mode подходят для работы с файлами журналов. Подробнее: [алгоритм реализации транзакции с помощью блокировки файла](/test/transaction/README.md).
 
