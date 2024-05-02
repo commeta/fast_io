@@ -10,7 +10,7 @@
 
 ## Синтаксис
 
-string file_search_array(string $filename, string $line_key[, int mode = 0][, int search_start = 0][, int search_length = 1][, int position = 0] )
+string file_search_array(string $filename, string $line_key[, int mode = 0][, int search_start = 0][, int search_length = 1][, int position = 0])
 
 
 ### Параметры
