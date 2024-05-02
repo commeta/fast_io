@@ -25,32 +25,50 @@ array file_select_array(string $filename, array $query[, int $mode = 0][, string
 
 
 #### Режимы
-- 0: Обрезка пробелов справа и символа перевода строки.
-- 1: Возврат сырой строки.
-- 5, 6: Возврат совпадений по подстроке в каждой строке, в режиме 6 возврат сырой строки. 
-- 20, 21, 22: Возврат совпадений по регулярному выражению PCRE2 в каждой строке, в режиме 21 возврат сырой строки. 
-- +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим mode -= 100 но не будет блокировать файл.
+
+##### Выборка каждой строки
+- 0: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length.
+- 1: Возвращает ассоциативный массив: line, line_offset, line_length.
+
+
+##### Выборка совпадений по подстроке
+- 5: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length.
+- 6: Возвращает ассоциативный массив: line, line_offset, line_length.
 
 В режиме 5 и 6 функция вернет только выборки в которых присутствует подстрока pattern. В этих режимах pattern это обычная подстрока.
 
-В режиме 20, 21, 22 функция вернет только выборки с совпадением по регулярному выражению pattern.
 
-Режимы +100 Log mode подходят для работы с файлами журналов.
+##### Выборка совпадений по регулярному выражению PCRE2
+- 20: Возвращает ассоциативный массив: trim_line, trim_length, line_matches, line_offset, line_length, line_count.
+- 21: Возвращает ассоциативный массив: line_matches, line_offset, line_length, line_count.
+- 22: Возвращает ассоциативный массив: line, line_matches, line_match, match_offset, match_length, line_offset, line_length.
+- 23: Возвращает ассоциативный массив: line_matches, line_match, match_offset, match_length, line_offset, line_length.
+
+##### Log mode
+- +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим mode -= 100 но не будет блокировать файл.
+
+Режимы +100 Log mode подходят для работы с файлами журналов. Подробнее: [алгоритм реализации транзакции с помощью блокировки файла](/test/transaction/README.md).
 
 
 ### Возвращаемые значения
 
 Функция возвращает ассоциативный массив
 
-- line - Строка (в режимах 0, 1, 5, 6, 21, 22).
-- matches - Подстроки совпавшие с регулярным выражением (в режиме 20, 21, 22).
-- offset - Смещение строки.
-- length - Длина строки.
+- line - Строка.
+- trim_line - Строка без пробелов справа и символа перевода строки.
+- trim_length - Длина обрезанной строки.
+- line_matches - Подстроки совпавшие с регулярным выражением (в режиме 20).
+
+- line_match - Подстрока совпавшая с регулярным выражением.
+- match_offset - Смещение подстроки от начала строки
+- match_length - Длина подстроки
+
+- line_offset - Смещение строки (с учетом смещения начала поиска в файле).
+- line_length - Длина строки.
+- line_count - Счетчик строк от начала поиска.
 
 
-Функция возвращает ассоциативный массив, содержащий строку line или совпадения matches.
-
-Вслучае, если ключ не найден или произошла ошибка (например, файл не может быть прочитан), функция возвращает пустой массив или NULL.
+Вслучае, если произошла ошибка (например, файл не может быть прочитан), функция возвращает пустой массив или NULL.
 
 
 ## Особенности работы
@@ -82,95 +100,165 @@ $array=[
 	[16384, 8192], // Адрес и размер строки 2 в файле
 	[24576, 8192] // Адрес и размер строки 3 в файле
 ];
+```
 
+```
 print_r([
-	file_select_array(__DIR__ . '/fast_io1.dat', $array, 0)
+	file_select_array(__DIR__ . '/fast_io1.dat', $array, 0, 'index')
 ]);
-```
 
-
-```
 Array
 (
     [0] => Array
         (
             [0] => Array
                 (
-                    [line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [offset] => 8192
-                    [length] => 8192
+                    [trim_line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 119
+                    [line_offset] => 8192
+                    [line_length] => 8192
                 )
-
             [1] => Array
                 (
-                    [line] => index_2 file_insert_line_2 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [offset] => 16384
-                    [length] => 8192
+                    [trim_line] => index_2 file_insert_line_2 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 119
+                    [line_offset] => 16384
+                    [line_length] => 8192
                 )
-
             [2] => Array
                 (
-                    [line] => index_3 file_insert_line_3 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [offset] => 24576
-                    [length] => 8192
+                    [trim_line] => index_3 file_insert_line_3 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 119
+                    [line_offset] => 24576
+                    [line_length] => 8192
                 )
-
         )
-
 )
 ```
 
 
-
 ```
 print_r([
-	file_select_array(__DIR__ . '/fast_io1.dat', $array, 20, '\\w+_\\d+')
+	file_select_array(__DIR__ . '/fast_io1.dat', $array, 20, '\\w+_\\d+'),
 ]);
-```
 
-```
 Array
 (
     [0] => Array
         (
             [0] => Array
                 (
-                    [matches] => Array
+                    [trim_line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 119
+                    [line_matches] => Array
                         (
                             [0] => index_1
                             [1] => file_insert_line_1
                         )
-
-                    [offset] => 8192
-                    [length] => 8192
+                    [line_offset] => 8192
+                    [line_length] => 8192
                 )
-
             [1] => Array
                 (
-                    [matches] => Array
+                    [trim_line] => index_2 file_insert_line_2 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 119
+                    [line_matches] => Array
                         (
                             [0] => index_2
                             [1] => file_insert_line_2
                         )
-
-                    [offset] => 16384
-                    [length] => 8192
+                    [line_offset] => 16384
+                    [line_length] => 8192
                 )
-
             [2] => Array
                 (
-                    [matches] => Array
+                    [trim_line] => index_3 file_insert_line_3 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+                    [trim_length] => 119
+                    [line_matches] => Array
                         (
                             [0] => index_3
                             [1] => file_insert_line_3
                         )
+                    [line_offset] => 24576
+                    [line_length] => 8192
+                )
+        )
+)
+```
 
-                    [offset] => 24576
-                    [length] => 8192
+
+```
+print_r([
+	file_select_array(__DIR__ . '/fast_io1.dat', $array, 23, '\\w+_\\d+'),
+]);
+
+Array
+(
+    [0] => Array
+        (
+            [0] => Array
+                (
+                    [line_matches] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [line_match] => index_1
+                                    [match_offset] => 0
+                                    [match_length] => 7
+                                )
+                            [1] => Array
+                                (
+                                    [line_match] => file_insert_line_1
+                                    [match_offset] => 7
+                                    [match_length] => 18
+                                )
+                        )
+                    [line_offset] => 8192
+                    [line_length] => 8192
+                )
+            [1] => Array
+                (
+                    [line_matches] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [line_match] => index_2
+                                    [match_offset] => 0
+                                    [match_length] => 7
+                                )
+                            [1] => Array
+                                (
+                                    [line_match] => file_insert_line_2
+                                    [match_offset] => 7
+                                    [match_length] => 18
+                                )
+                        )
+                    [line_offset] => 16384
+                    [line_length] => 8192
                 )
 
-        )
+            [2] => Array
+                (
+                    [line_matches] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [line_match] => index_3
+                                    [match_offset] => 0
+                                    [match_length] => 7
+                                )
+                            [1] => Array
+                                (
+                                    [line_match] => file_insert_line_3
+                                    [match_offset] => 7
+                                    [match_length] => 18
+                                )
 
+                        )
+                    [line_offset] => 24576
+                    [line_length] => 8192
+                )
+        )
 )
 
 ```
