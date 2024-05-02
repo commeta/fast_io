@@ -12,15 +12,15 @@
 
 ## Синтаксис
 
-array file_get_keys(string $filename[, int search_start = 0][, int search_length = 1][, int position = 0][, int mode = 0])
+array file_get_keys(string $filename[, int $search_start = 0][, int $search_length = 1][, int $position = 0][, int $mode = 0])
 
 ### Параметры
 
-- **filename** (string): Путь к файлу, из которого необходимо извлечь ключи.
-- **search_start** (int, optional) - Стартовая строка начала выборки.
-- **search_limit** (int, optional) - Ограничение массива выборки.
-- **position** (int, optional) - Позиция начала поиска в файле.
-- **mode** (int, optional) - Режим поиска.
+- **$filename** (string): Путь к файлу, из которого необходимо извлечь ключи.
+- **$search_start** (int, optional) - Стартовая строка начала выборки.
+- **$search_limit** (int, optional) - Ограничение массива выборки.
+- **$position** (int, optional) - Позиция начала поиска в файле.
+- **$mode** (int, optional) - Режим поиска.
 
 
 #### Режимы поиска
@@ -31,7 +31,7 @@ array file_get_keys(string $filename[, int search_start = 0][, int search_length
 - 3: Возвращает ассоциативный массив: line_offset, line_length, line_count.
 
 ##### Log mode
-- +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим mode - 100 но не будет блокировать файл.
+- +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим $mode - 100 но не будет блокировать файл.
 
 Режимы +100 Log mode подходят для работы с файлами журналов. Подробнее: [алгоритм реализации транзакции с помощью блокировки файла](/test/transaction/README.md).
 
@@ -51,7 +51,7 @@ array file_get_keys(string $filename[, int search_start = 0][, int search_length
 Чтение по смещению позиции position позволяет избежать лишних чтений файла при выборке с окном пагинации.
 Может потребоваться для пагинации таблицы ключей или пагинации таблицы распределения косвенной адресации строк в файле.
 
-Чтение файла идет всегда с нулевой позиции position = 0, и если search_start больше нуля то функция просто пропускает строки у которых номер меньше search_start.
+Чтение файла идет всегда с нулевой позиции $position = 0, и если $search_start больше нуля то функция просто пропускает строки у которых номер меньше $search_start.
 
 
 ### Примеры возвращаемых массивов
