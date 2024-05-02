@@ -5,6 +5,9 @@
 Если ключ найден, обновляется вся строка. Функция написана на языке C и доступна в PHP через расширение Fast_IO.
 
 
+Страница описания прокта [Fast_IO Engine](https://github.com/commeta/fast_io).
+
+
 ## Синтаксис
 
 int file_replace_line(string $filename, string $line_key, string $line [, int $mode])
