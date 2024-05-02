@@ -8,16 +8,16 @@
 
 ## Синтаксис
 
-int file_insert_line(string $filename, string $line, int $line_align)
+int file_insert_line(string $filename, string $line, int $line_length)
 
 
 ## Параметры
 
 Функция принимает три аргумента:
 
-- filename (string): Путь к файлу, в который будет производиться запись.
-- line (string): Строка, которую необходимо записать в файл.
-- line_align (int): Число, определяющее выравнивание строки в файле (длину строки в символах).
+- $filename (string): Путь к файлу, в который будет производиться запись.
+- $line (string): Строка, которую необходимо записать в файл.
+- $line_length (int): Число, определяющее выравнивание строки в файле (длину строки в символах).
 
 ## Возвращаемые значения
 
@@ -33,9 +33,9 @@ int file_insert_line(string $filename, string $line, int $line_align)
 <?php
 $filename = "/path/to/your/file.txt";
 $line = "exampleKey";
-$index_align = 100; // Допустим, мы хотим, чтобы каждая строка занимала 100 символов
+$line_length = 100; // Допустим, мы хотим, чтобы каждая строка занимала 100 символов
 
-$result = file_insert_line($filename, $line, $index_align);
+$result = file_insert_line($filename, $line, $line_length);
 
 if ($result >= 0) {
     echo "Запись успешно добавлена. Номер строки: $result";
@@ -64,7 +64,7 @@ index_2 data_insert_key_value_2
 
 - Файл автоматически блокируется на время записи для предотвращения одновременного доступа.
 - Если файл не существует, он будет создан.
-- Длина line может быть меньше line_align. В этом случае оставшаяся часть строки будет заполнена пробелами. Если line длиннее line_align, строка будет обрезана до нужной длины.
+- Длина line может быть меньше line_align. В этом случае оставшаяся часть строки будет заполнена пробелами. Если $line длиннее $line_length, строка будет обрезана до нужной длины.
 
 
 ## Стоимость вызова
