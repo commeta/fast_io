@@ -5,7 +5,7 @@
 В Fast_IO Engine Версия на момент разработки PCRE2 10.42
 Страница описания прокта [Fast_IO Engine](https://github.com/commeta/fast_io)
 
-В Fast_IO Engine реализована функция find_matches_pcre2
+В Fast_IO Engine реализована функция find_matches_pcre2, во всех функциях чтения файла подсистема PCRE2 инициализируется однократно при массовых операциях.
 [Описание функции find_matches_pcre2](#описание-функции-find_matches_pcre2)
 
 
