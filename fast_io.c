@@ -2678,12 +2678,9 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     size_t total_characters = 0;
     zend_long flow_interruption = 0;
 
-
     array_init(return_value);
     zval line_arr;
     array_init(&line_arr);
-
-    bool isEOF;
 
     while ((bytes_read = fread(buffer, 1, ini_buffer_size, fp)) > 0) {
         for (ssize_t i = 0; i < bytes_read; ++i) {
@@ -2711,7 +2708,8 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
                     add_assoc_long(&line_arr, "line_count", line_count);
                     add_assoc_long(&line_arr, "total_characters", total_characters);
                     add_assoc_long(&line_arr, "last_symbol", last_symbol);
-                    
+                    add_assoc_long(&line_arr, "file_size", file_size);
+
                     add_next_index_zval(return_value, &line_arr);
                     return;
                 }
@@ -2735,6 +2733,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     if(file_size > total_characters) flow_interruption = file_size - total_characters;
     add_assoc_long(&line_arr, "flow_interruption", flow_interruption);
     add_assoc_long(&line_arr, "last_symbol", last_symbol);
+    add_assoc_long(&line_arr, "file_size", file_size);
 
     add_next_index_zval(return_value, &line_arr);
 }
