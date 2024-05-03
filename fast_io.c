@@ -2650,6 +2650,11 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
+
+    char last_symbol;
+    fseek(fp, file_size - 1, SEEK_SET);
+    last_symbol = fgetc(fp);
+
     fseek(fp, 0, SEEK_SET);
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
@@ -2671,7 +2676,8 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     size_t min_length = SIZE_MAX;
     size_t line_count = 0;
     size_t total_characters = 0;
-    int flow_interruption = 0;
+    zend_long flow_interruption = 0;
+
 
     array_init(return_value);
     zval line_arr;
@@ -2680,13 +2686,6 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     bool isEOF;
 
     while ((bytes_read = fread(buffer, 1, ini_buffer_size, fp)) > 0) {
-        // Проверяем, достигли ли мы конца файла (EOF)
-        isEOF = feof(fp);
-        
-        if (isEOF && buffer[bytes_read - 1] != '\n') {
-            flow_interruption = 1;
-        }
-
         for (ssize_t i = 0; i < bytes_read; ++i) {
             if (buffer[i] == '\n') { // Конец текущей строки
                 line_count++;
@@ -2711,7 +2710,8 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
                     add_assoc_double(&line_arr, "avg_length", avg_length);
                     add_assoc_long(&line_arr, "line_count", line_count);
                     add_assoc_long(&line_arr, "total_characters", total_characters);
-
+                    add_assoc_long(&line_arr, "last_symbol", last_symbol);
+                    
                     add_next_index_zval(return_value, &line_arr);
                     return;
                 }
@@ -2734,6 +2734,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
 
     if(file_size > total_characters) flow_interruption = file_size - total_characters;
     add_assoc_long(&line_arr, "flow_interruption", flow_interruption);
+    add_assoc_long(&line_arr, "last_symbol", last_symbol);
 
     add_next_index_zval(return_value, &line_arr);
 }
