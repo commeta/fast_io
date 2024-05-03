@@ -64,6 +64,17 @@ Fast_IO представляет собой мощное расширение д
 Ошибка записи в функции file_erase_line может говорить только об отказе оборудования.
 
 
+### Регулярные выражения PCRE2
+
+Версия на момент разработки PCRE2 10.42
+
+В Fast_IO Engine реализована функция [find_matches_pcre2](/docs/find_matches_pcre2.md#описание-функции-find_matches_pcre2), во всех функциях чтения файла подсистема PCRE2 инициализируется однократно при массовых операциях, это позволяет сэкономить системные ресурсы на инициализацию и компиляцию паттернов.
+
+- [Краткий обзор лучших и быстрых типов регулярных выражений в PHP8](/docs/find_matches_pcre2.md)
+- [Perl-compatible Regular Expressions (revised API: PCRE2)](https://pcre2project.github.io/pcre2/doc/html/index.html)
+
+
+
 ## Примеры использования
 
 Для каждой функции расширения Fast_IO предоставлены подробные описания с примерами на PHP. Эти примеры помогут разработчикам быстро начать работу с расширением и эффективно использовать его возможности в своих проектах.
@@ -225,41 +236,6 @@ file_pop_line: 0.3167359828949 (0.00003167)
 - file_defrag_lines Очень высокое потребление, полное чтение\запись всего файла.
 - file_replace_line Очень высокое потребление, полное чтение\запись всего файла.
 - file_defrag_data Очень высокое потребление, полное чтение\запись файлов индекса и данных.
-
-
-#### PCRE2
-Регулярные выражения на Ubuntu 24.04 были установлены в пакетах:
-```
-root@api:/home/commeta/project/kernel/fast_io# dpkg -l | grep pcre2
-ii  libpcre2-16-0:amd64                              10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library - 16 bit runtime files
-ii  libpcre2-32-0:amd64                              10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library - 32 bit runtime files
-ii  libpcre2-8-0:amd64                               10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library- 8 bit runtime files
-ii  libpcre2-dev:amd64                               10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library - development files
-ii  libpcre2-posix3:amd64                            10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library - posix-compatible runtime files
-```
-
-```
-root@api:/home/commeta/project/kernel/fast_io# ldconfig -p | grep pcre2
-	libpcre2-32.so.0 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-32.so.0
-	libpcre2-32.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-32.so
-	libpcre2-16.so.0 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-16.so.0
-	libpcre2-16.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-16.so
-	libpcre2-8.so.0 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-8.so.0
-	libpcre2-8.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-8.so
-	libpcre2-posix.so.3 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-posix.so.3
-	libpcre2-posix.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-posix.so
-```
-
-```
-echo PCRE_VERSION; // 10.42 2022-12-11
-```
-Версия на момент разработки PCRE2 10.42 - документация есть в сети:
-
-- [Краткий обзор лучших и быстрых типов регулярных выражений в PHP8](/docs/find_matches_pcre2.md)
-- [Perl-compatible Regular Expressions (revised API: PCRE2)](https://pcre2project.github.io/pcre2/doc/html/index.html)
-
-
-
 
 
 #### Примеры
