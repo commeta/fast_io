@@ -484,7 +484,6 @@ PHP_FUNCTION(file_search_array) {
                     if(is_matched){
                         add_count++;
 
-
                         if (rc == PCRE2_ERROR_NOMATCH) {
                             /* Если совпадений нет, возвращаем пустой массив. */
                         } else if (rc < 0) {
@@ -510,7 +509,6 @@ PHP_FUNCTION(file_search_array) {
                             add_assoc_long(&line_arr, "trim_length", strlen(lineStart));
                         }
 
-
                         if(mode == 21) {
                             add_assoc_string(&line_arr, "line", lineStart);
                         }
@@ -524,7 +522,6 @@ PHP_FUNCTION(file_search_array) {
                     }
 
                     found_count++;
-
                 }
             }
             
@@ -2668,10 +2665,12 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     }
 
     ssize_t bytes_read;
-    zend_long max_length = 0, current_length = 0, avg_length = 0;
-    zend_long min_length = LONG_MAX;
-    zend_long line_count = 0;
-    int total_characters = 0;
+    size_t max_length = 0, current_length = 0;
+    double avg_length = 0.0;
+
+    size_t min_length = SIZE_MAX;
+    size_t line_count = 0;
+    size_t total_characters = 0;
     int flow_interruption = 0;
 
     array_init(return_value);
@@ -2709,10 +2708,9 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
 
                     add_assoc_long(&line_arr, "min_length", min_length);
                     add_assoc_long(&line_arr, "max_length", max_length);
-                    add_assoc_long(&line_arr, "avg_length", avg_length);
+                    add_assoc_double(&line_arr, "avg_length", avg_length);
                     add_assoc_long(&line_arr, "line_count", line_count);
                     add_assoc_long(&line_arr, "total_characters", total_characters);
-                    add_assoc_long(&line_arr, "flow_interruption", flow_interruption);
 
                     add_next_index_zval(return_value, &line_arr);
                     return;
@@ -2730,9 +2728,11 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
 
     add_assoc_long(&line_arr, "min_length", min_length);
     add_assoc_long(&line_arr, "max_length", max_length);
-    add_assoc_long(&line_arr, "avg_length", avg_length);
+    add_assoc_double(&line_arr, "avg_length", avg_length);
     add_assoc_long(&line_arr, "line_count", line_count);
     add_assoc_long(&line_arr, "total_characters", total_characters);
+
+    if(file_size > total_characters) flow_interruption = file_size - total_characters;
     add_assoc_long(&line_arr, "flow_interruption", flow_interruption);
 
     add_next_index_zval(return_value, &line_arr);
