@@ -693,3 +693,31 @@ root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full --show
 Однако, Valgrind указывает на то, что 77,809 байт памяти остаются доступными (still reachable) в 1,349 блоках. Это может быть связано с тем, что некоторые объекты или структуры данных остаются в памяти на момент завершения программы, но при этом на них все еще есть указатели и они могут быть освобождены позже. 
 
 В целом, результаты анализа Valgrind говорят о том, что программа завершилась без явных ошибок работы с памятью и без утечек памяти, но есть некоторые блоки памяти, которые остаются доступными и не были освобождены к моменту завершения программы. Эти блоки используются модулями из стандартной поставки, без загруженного fast_io.so (на пустом test.php) отчет не меняется.
+
+
+#### PCRE2
+Регулярные выражения на Ubuntu 24.04 были установлены в пакетах:
+```
+root@api:/home/commeta/project/kernel/fast_io# dpkg -l | grep pcre2
+ii  libpcre2-16-0:amd64                              10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library - 16 bit runtime files
+ii  libpcre2-32-0:amd64                              10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library - 32 bit runtime files
+ii  libpcre2-8-0:amd64                               10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library- 8 bit runtime files
+ii  libpcre2-dev:amd64                               10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library - development files
+ii  libpcre2-posix3:amd64                            10.42-4ubuntu2                                amd64        New Perl Compatible Regular Expression Library - posix-compatible runtime files
+```
+
+```
+root@api:/home/commeta/project/kernel/fast_io# ldconfig -p | grep pcre2
+	libpcre2-32.so.0 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-32.so.0
+	libpcre2-32.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-32.so
+	libpcre2-16.so.0 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-16.so.0
+	libpcre2-16.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-16.so
+	libpcre2-8.so.0 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-8.so.0
+	libpcre2-8.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-8.so
+	libpcre2-posix.so.3 (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-posix.so.3
+	libpcre2-posix.so (libc6,x86-64) => /lib/x86_64-linux-gnu/libpcre2-posix.so
+```
+
+```
+echo PCRE_VERSION; // 10.42 2022-12-11
+```
