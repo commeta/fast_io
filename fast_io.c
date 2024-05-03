@@ -439,19 +439,16 @@ PHP_FUNCTION(file_search_array) {
             }
 
 
-            
-            if(mode > 19 && mode < 24 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){ // Сделать возврат совпадений
-                found_count++;
-
-                if(search_start < found_count){
-                    add_count++;
-
+            if(mode > 19 && mode < 24){
+                if(search_start < found_count + 1){
                     zval return_matched;
                     array_init(&return_matched);
 
                     int rc;
                     PCRE2_SIZE *ovector;
                     size_t start_offset = 0;
+
+                    bool is_matched = false;
 
                     while ((rc = pcre2_match(re, (PCRE2_SPTR)lineStart, lineLength, start_offset, 0, match_data, NULL)) > 0) {
                         ovector = pcre2_get_ovector_pointer(match_data);
@@ -480,44 +477,54 @@ PHP_FUNCTION(file_search_array) {
                             start_offset++; // Для продолжения поиска следующего совпадения
                             if (start_offset >= lineLength) break; // Выходим из цикла, если достигнут конец строки
                         }
+
+                        is_matched = true;
                     }
 
-                    if (rc == PCRE2_ERROR_NOMATCH) {
-                        /* Если совпадений нет, возвращаем пустой массив. */
-                    } else if (rc < 0) {
-                        /* Обработка других ошибок. */
-                        php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
-                        fclose(fp);
-                        if (dynamic_buffer) efree(dynamic_buffer);
-                        if (re != NULL) pcre2_code_free(re);
-                        if (match_data != NULL) pcre2_match_data_free(match_data);
-                        RETURN_FALSE;
-                    }
+                    if(is_matched){
+                        add_count++;
 
-                    zval line_arr;
-                    array_init(&line_arr);
 
-                    if(mode == 20) {
-                        for (int i = lineLength - 2; i >= 0; --i) {
-                            if(lineStart[i] == ' ') lineStart[i] = '\0';
-                            else break;
+                        if (rc == PCRE2_ERROR_NOMATCH) {
+                            /* Если совпадений нет, возвращаем пустой массив. */
+                        } else if (rc < 0) {
+                            /* Обработка других ошибок. */
+                            php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
+                            fclose(fp);
+                            if (dynamic_buffer) efree(dynamic_buffer);
+                            if (re != NULL) pcre2_code_free(re);
+                            if (match_data != NULL) pcre2_match_data_free(match_data);
+                            RETURN_FALSE;
                         }
 
-                        add_assoc_string(&line_arr, "trim_line", lineStart);
-                        add_assoc_long(&line_arr, "trim_length", strlen(lineStart));
+                        zval line_arr;
+                        array_init(&line_arr);
+
+                        if(mode == 20) {
+                            for (int i = lineLength - 2; i >= 0; --i) {
+                                if(lineStart[i] == ' ') lineStart[i] = '\0';
+                                else break;
+                            }
+
+                            add_assoc_string(&line_arr, "trim_line", lineStart);
+                            add_assoc_long(&line_arr, "trim_length", strlen(lineStart));
+                        }
+
+
+                        if(mode == 21) {
+                            add_assoc_string(&line_arr, "line", lineStart);
+                        }
+
+                        add_assoc_zval(&line_arr, "line_matches", &return_matched);
+                        add_assoc_long(&line_arr, "line_offset", search_offset);
+                        add_assoc_long(&line_arr, "line_length", lineLength);
+                        add_assoc_long(&line_arr, "line_count", line_count);
+
+                        add_next_index_zval(return_value, &line_arr);
                     }
 
+                    found_count++;
 
-                    if(mode == 21) {
-                        add_assoc_string(&line_arr, "line", lineStart);
-                    }
-
-                    add_assoc_zval(&line_arr, "line_matches", &return_matched);
-                    add_assoc_long(&line_arr, "line_offset", search_offset);
-                    add_assoc_long(&line_arr, "line_length", lineLength);
-                    add_assoc_long(&line_arr, "line_count", line_count);
-
-                    add_next_index_zval(return_value, &line_arr);
                 }
             }
             
