@@ -74,7 +74,7 @@ An error when writing to the file_erase_line function can only indicate hardware
 
 PCRE2 Version at the Time of Development: 10.42
 
-In the Fast_IO Engine, the function  is implemented, and in all file reading functions, the PCRE2 subsystem is initialized once during mass operations, which saves system resources for initialization and pattern compilation.
+In the Fast_IO Engine, the function find_matches_pcre2 is implemented, and in all file reading functions, the PCRE2 subsystem is initialized once during mass operations, which saves system resources for initialization and pattern compilation.
 
 - [A brief overview of the best and fastest regular expression types in PHP8](/docs/find_matches_pcre2.md)
 - [Perl-compatible Regular Expressions (revised API: PCRE2)](https://pcre2project.github.io/pcre2/doc/html/index.html)
