@@ -41,6 +41,7 @@ array file_analize(string $filename [, int $mode = 0])
 - line_count - Количество прочитанных строк.
 - total_characters - Всего символов в обнаруженных строках.
 - flow_interruption - Больше 0 если произошла ошибка прерванной записи в файле, когда в конце файла нет перевода строки.
+- last_symbol - Код последнего символа в файле.
 
 Поле flow_interruption показывает размер байт последнего кадра в файле.
 		    
@@ -90,6 +91,7 @@ print_r([
                     [line_count] => 501
                     [total_characters] => 4104192
                     [flow_interruption] => 0
+                    [last_symbol] => 10
                 )
         )
 
@@ -102,6 +104,7 @@ print_r([
                     [avg_length] => 8192
                     [line_count] => 1
                     [total_characters] => 8192
+                    [last_symbol] => 10
                 )
         )
 
