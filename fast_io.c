@@ -336,8 +336,6 @@ PHP_FUNCTION(file_search_array) {
 
     array_init(return_value);
 
-    bool isEOF;
-
     if(mode > 9){
         PCRE2_SIZE erroffset;
         int errorcode;
@@ -358,8 +356,6 @@ PHP_FUNCTION(file_search_array) {
 
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
-        // Проверяем, достигли ли мы конца файла (EOF)
-        isEOF = feof(fp);
        
         dynamic_buffer[current_size] = '\0';
 
@@ -538,23 +534,21 @@ PHP_FUNCTION(file_search_array) {
         if (found_match) break;
 
         // Подготавливаем буфер к следующему чтению, если это не конец файла
-        if (!isEOF) {
-            current_size -= (lineStart - dynamic_buffer);
-            memmove(dynamic_buffer, lineStart, current_size);
+        current_size -= (lineStart - dynamic_buffer);
+        memmove(dynamic_buffer, lineStart, current_size);
 
-            if (current_size + ini_buffer_size > dynamic_buffer_size) {
-                dynamic_buffer_size += ini_buffer_size;
-                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!temp_buffer) {
-                    php_error_docref(NULL, E_WARNING, "Out of memory");
-                    fclose(fp);
-                    if (dynamic_buffer) efree(dynamic_buffer);
-                    if (re != NULL) pcre2_code_free(re);
-                    if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
-                    RETURN_FALSE;
-                }
-                dynamic_buffer = temp_buffer;
+        if (current_size + ini_buffer_size > dynamic_buffer_size) {
+            dynamic_buffer_size += ini_buffer_size;
+            char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+            if (!temp_buffer) {
+                php_error_docref(NULL, E_WARNING, "Out of memory");
+                fclose(fp);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                if (re != NULL) pcre2_code_free(re);
+                if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
+                RETURN_FALSE;
             }
+            dynamic_buffer = temp_buffer;
         }
     }
 
@@ -636,7 +630,6 @@ PHP_FUNCTION(file_search_line) {
     pcre2_match_data *match_data;
 
     char *found_value = NULL;
-    bool isEOF;
 
     if(mode > 9){
         PCRE2_SIZE erroffset;
@@ -658,9 +651,7 @@ PHP_FUNCTION(file_search_line) {
 
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
-        // Проверяем, достигли ли мы конца файла (EOF)
-        isEOF = feof(fp);
-        
+       
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -702,24 +693,23 @@ PHP_FUNCTION(file_search_line) {
 
         if (found_match) break;
 
-        if (!isEOF) {
-            current_size -= (lineStart - dynamic_buffer);
-            memmove(dynamic_buffer, lineStart, current_size);
+        current_size -= (lineStart - dynamic_buffer);
+        memmove(dynamic_buffer, lineStart, current_size);
 
-            if (current_size + ini_buffer_size > dynamic_buffer_size) {
-                dynamic_buffer_size += ini_buffer_size;
-                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!temp_buffer) {
-                    if (dynamic_buffer) efree(dynamic_buffer);
-                    if (re != NULL) pcre2_code_free(re);
-                    if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
-                    php_error_docref(NULL, E_WARNING, "Out of memory");
-                    fclose(fp);
-                    RETURN_FALSE;
-                }
-                dynamic_buffer = temp_buffer;
+        if (current_size + ini_buffer_size > dynamic_buffer_size) {
+            dynamic_buffer_size += ini_buffer_size;
+            char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+            if (!temp_buffer) {
+                if (dynamic_buffer) efree(dynamic_buffer);
+                if (re != NULL) pcre2_code_free(re);
+                if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
+                php_error_docref(NULL, E_WARNING, "Out of memory");
+                fclose(fp);
+                RETURN_FALSE;
             }
+            dynamic_buffer = temp_buffer;
         }
+        
     }
 
     fclose(fp);
@@ -1146,14 +1136,11 @@ PHP_FUNCTION(file_defrag_lines) {
     ssize_t bytesWrite;
     size_t current_size = 0;
 
-    bool isEOF;
     bool found_match;
 
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, data_fp)) > 0) {
         current_size += bytesRead;
-        // Проверяем, достигли ли мы конца файла (EOF)
-        isEOF = feof(data_fp);
-                
+               
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -1195,24 +1182,22 @@ PHP_FUNCTION(file_defrag_lines) {
         }
 
 
-        if (!isEOF) {
-            current_size -= (lineStart - dynamic_buffer);
-            memmove(dynamic_buffer, lineStart, current_size);
+        current_size -= (lineStart - dynamic_buffer);
+        memmove(dynamic_buffer, lineStart, current_size);
 
-            if (current_size + ini_buffer_size > dynamic_buffer_size) {
-                dynamic_buffer_size += ini_buffer_size;
+        if (current_size + ini_buffer_size > dynamic_buffer_size) {
+            dynamic_buffer_size += ini_buffer_size;
 
-                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!temp_buffer) {
-                    php_error_docref(NULL, E_WARNING, "Out of memory");
-                    fclose(data_fp);
-                    fclose(temp_fp);
-                    unlink(temp_filename);
-                    if (dynamic_buffer) efree(dynamic_buffer);
-                    RETURN_LONG(-8);
-                }
-                dynamic_buffer = temp_buffer;
+            char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+            if (!temp_buffer) {
+                php_error_docref(NULL, E_WARNING, "Out of memory");
+                fclose(data_fp);
+                fclose(temp_fp);
+                unlink(temp_filename);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                RETURN_LONG(-8);
             }
+            dynamic_buffer = temp_buffer;
         }
     }
 
@@ -1367,7 +1352,6 @@ PHP_FUNCTION(file_defrag_data) {
 
     size_t current_size = 0;
 
-    bool isEOF;
     bool found_match;
 
     off_t position;
@@ -1375,8 +1359,6 @@ PHP_FUNCTION(file_defrag_data) {
 
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, index_fp)) > 0) {
         current_size += bytesRead;
-        // Проверяем, достигли ли мы конца файла (EOF)
-        isEOF = feof(index_fp);
                
         dynamic_buffer[current_size] = '\0';
 
@@ -1511,28 +1493,26 @@ PHP_FUNCTION(file_defrag_data) {
         }
 
 
-        if (!isEOF) {
-            current_size -= (lineStart - dynamic_buffer);
-            memmove(dynamic_buffer, lineStart, current_size);
+        current_size -= (lineStart - dynamic_buffer);
+        memmove(dynamic_buffer, lineStart, current_size);
 
-            if (current_size + ini_buffer_size > dynamic_buffer_size) {
-                dynamic_buffer_size += ini_buffer_size;
+        if (current_size + ini_buffer_size > dynamic_buffer_size) {
+            dynamic_buffer_size += ini_buffer_size;
 
-                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!temp_buffer) {
-                    php_error_docref(NULL, E_WARNING, "Out of memory");
-                    fclose(index_fp);
-                    fclose(data_fp);
-                    fclose(temp_fp);
-                    fclose(temp_index_fp);
-                    unlink(temp_filename);
-                    unlink(temp_index_filename);
-                    if (dynamic_buffer) efree(dynamic_buffer);
-                    RETURN_LONG(-8);
-                }
-
-                dynamic_buffer = temp_buffer;
+            char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+            if (!temp_buffer) {
+                php_error_docref(NULL, E_WARNING, "Out of memory");
+                fclose(index_fp);
+                fclose(data_fp);
+                fclose(temp_fp);
+                fclose(temp_index_fp);
+                unlink(temp_filename);
+                unlink(temp_index_filename);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                RETURN_LONG(-8);
             }
+
+            dynamic_buffer = temp_buffer;
         }
     }
 
@@ -1931,13 +1911,9 @@ PHP_FUNCTION(file_erase_line) {
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
     bool found_match = false;
 
-    bool isEOF;
-
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
-        // Проверяем, достигли ли мы конца файла (EOF)
-        isEOF = feof(fp);
-                
+               
         dynamic_buffer[current_size] = '\0';
 
         char *lineStart = dynamic_buffer;
@@ -1983,23 +1959,22 @@ PHP_FUNCTION(file_erase_line) {
 
         if (found_match) break;
 
-        if (!isEOF) {
-            current_size -= (lineStart - dynamic_buffer);
-            memmove(dynamic_buffer, lineStart, current_size);
+        current_size -= (lineStart - dynamic_buffer);
+        memmove(dynamic_buffer, lineStart, current_size);
 
-            if (current_size + ini_buffer_size > dynamic_buffer_size) {
-                dynamic_buffer_size += ini_buffer_size;
+        if (current_size + ini_buffer_size > dynamic_buffer_size) {
+            dynamic_buffer_size += ini_buffer_size;
 
-                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!temp_buffer) {
-                    php_error_docref(NULL, E_WARNING, "Out of memory");
-                    fclose(fp);
-                    if (dynamic_buffer) efree(dynamic_buffer);
-                    RETURN_LONG(-8);
-                }
-                dynamic_buffer = temp_buffer;
+            char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+            if (!temp_buffer) {
+                php_error_docref(NULL, E_WARNING, "Out of memory");
+                fclose(fp);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                RETURN_LONG(-8);
             }
+            dynamic_buffer = temp_buffer;
         }
+        
     }
 
     efree(dynamic_buffer);
@@ -2076,8 +2051,6 @@ PHP_FUNCTION(file_get_keys) {
     size_t current_size = 0; // Текущий размер данных в динамическом буфере
     bool found_match = false;
 
-    bool isEOF;
-
     zend_long add_count = 0;
     zend_long line_count = 0;
     array_init(return_value);
@@ -2085,8 +2058,6 @@ PHP_FUNCTION(file_get_keys) {
 
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
-        // Проверяем, достигли ли мы конца файла (EOF)
-        isEOF = feof(fp);
         
         dynamic_buffer[current_size] = '\0';
 
@@ -2140,22 +2111,20 @@ PHP_FUNCTION(file_get_keys) {
 
         if (found_match) break;
 
-        if (!isEOF) {
-            current_size -= (lineStart - dynamic_buffer);
-            memmove(dynamic_buffer, lineStart, current_size);
+        current_size -= (lineStart - dynamic_buffer);
+        memmove(dynamic_buffer, lineStart, current_size);
 
-            if (current_size + ini_buffer_size > dynamic_buffer_size) {
-                dynamic_buffer_size += ini_buffer_size;
+        if (current_size + ini_buffer_size > dynamic_buffer_size) {
+            dynamic_buffer_size += ini_buffer_size;
 
-                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!temp_buffer) {
-                    php_error_docref(NULL, E_WARNING, "Out of memory");
-                    fclose(fp);
-                    if (dynamic_buffer) efree(dynamic_buffer);
-                    RETURN_LONG(-8);
-                }
-                dynamic_buffer = temp_buffer;
+            char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+            if (!temp_buffer) {
+                php_error_docref(NULL, E_WARNING, "Out of memory");
+                fclose(fp);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                RETURN_LONG(-8);
             }
+            dynamic_buffer = temp_buffer;
         }
     }
 
@@ -2241,12 +2210,9 @@ PHP_FUNCTION(file_replace_line) {
     ssize_t bytesWrite;
     size_t current_size = 0;
 
-    bool isEOF;
 
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, data_fp)) > 0) {
         current_size += bytesRead;
-        // Проверяем, достигли ли мы конца файла (EOF)
-        isEOF = feof(data_fp);
 
         dynamic_buffer[current_size] = '\0';
 
@@ -2303,25 +2269,24 @@ PHP_FUNCTION(file_replace_line) {
         }
 
 
-        if (!isEOF) {
-            current_size -= (lineStart - dynamic_buffer);
-            memmove(dynamic_buffer, lineStart, current_size);
+        current_size -= (lineStart - dynamic_buffer);
+        memmove(dynamic_buffer, lineStart, current_size);
 
-            if (current_size + ini_buffer_size > dynamic_buffer_size) {
-                dynamic_buffer_size += ini_buffer_size;
+        if (current_size + ini_buffer_size > dynamic_buffer_size) {
+            dynamic_buffer_size += ini_buffer_size;
 
-                char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
-                if (!temp_buffer) {
-                    php_error_docref(NULL, E_WARNING, "Out of memory");
-                    fclose(data_fp);
-                    fclose(temp_fp);
-                    unlink(temp_filename);
-                    if (dynamic_buffer) efree(dynamic_buffer);
-                    RETURN_LONG(-8);
-                }
-                dynamic_buffer = temp_buffer;
+            char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+            if (!temp_buffer) {
+                php_error_docref(NULL, E_WARNING, "Out of memory");
+                fclose(data_fp);
+                fclose(temp_fp);
+                unlink(temp_filename);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                RETURN_LONG(-8);
             }
+            dynamic_buffer = temp_buffer;
         }
+        
     }
 
 
