@@ -29,20 +29,19 @@ string file_search_array(string $filename, string $line_key[, int search_start =
 
 #### Режимы поиска
 
-##### Поиск line_key в каждой строке
+##### Выборка строк - по совпадению с подстрокой line_key
 - 0: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length, line_count.
 - 1: Возвращает ассоциативный массив: line, line_offset, line_length, line_count.
 - 2: Возвращает массив: trim_line.
 - 3: Возвращает ассоциативный массив: line_count, found_count.
 
-##### Поиск по регулярному выражению [PCRE2](https://pcre2project.github.io/pcre2/doc/html/index.html) в каждой строке
+##### Выборка строк - по совпадению с регулярным выражением [PCRE2](https://pcre2project.github.io/pcre2/doc/html/index.html) в каждой строке
 - 10: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length, line_count.
 - 11: Возвращает ассоциативный массив: line, line_offset, line_length, line_count.
 - 12: Возвращает массив: trim_line.
 - 13: Возвращает ассоциативный массив: line_count, found_count.
 
-##### Поиск совпадений по регулярному выражению в каждой строке
-
+##### Выборка строк и совпадений - по совпадению с регулярным выражением PCRE2
 - 20: Возвращает ассоциативный массив: trim_line, trim_length, line_matches, line_offset, line_length, line_count.
 - 21: Возвращает ассоциативный массив: line, line_matches, line_offset, line_length, line_count.
 - 22: Возвращает ассоциативный массив: line_matches, line_match, match_offset, match_length, line_offset, line_length, line_count.
