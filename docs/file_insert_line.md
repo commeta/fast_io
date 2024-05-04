@@ -75,9 +75,9 @@ for($id=0; $id <=500; $id++){
 Файл будет содержать данные в формате ключ-значение, разделённые пробелом, каждая пара на новой строке. Например:
 
 ```
-index_0 data_insert_key_value_0
-index_1 data_insert_key_value_1
-index_2 data_insert_key_value_2
+index_0 file_insert_line_0
+index_1 file_insert_line_1
+index_2 file_insert_line_2
 ```
 
 
