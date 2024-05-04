@@ -2352,7 +2352,7 @@ PHP_FUNCTION(file_insert_line) {
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
 
-    if(line_length == 0) line_length = mode == 0 ? line_len + 1 : line_len;
+    if(line_length == 0) line_length = line_len + 1; 
 
     // Подготовка строки к записи с учетом выравнивания и перевода строки
     char *buffer = (char *)emalloc(line_length + 1); // +1 для '\0'
