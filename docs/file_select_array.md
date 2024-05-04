@@ -242,21 +242,38 @@ Array
         (
             [0] => Array
                 (
-                    [0] => index_1
-                    [1] => file_insert_line_1
+                    [line_matches] => Array
+                        (
+                            [0] => index_1
+                            [1] => file_insert_line_1
+                        )
+                    [line_offset] => 8192
+                    [line_length] => 8192
                 )
             [1] => Array
                 (
-                    [0] => index_2
-                    [1] => file_insert_line_2
+                    [line_matches] => Array
+                        (
+                            [0] => index_2
+                            [1] => file_insert_line_2
+                        )
+
+                    [line_offset] => 16384
+                    [line_length] => 8192
                 )
             [2] => Array
                 (
-                    [0] => index_3
-                    [1] => file_insert_line_3
+                    [line_matches] => Array
+                        (
+                            [0] => index_3
+                            [1] => file_insert_line_3
+                        )
+                    [line_offset] => 24576
+                    [line_length] => 8192
                 )
         )
 )
+
 
 ```
 
