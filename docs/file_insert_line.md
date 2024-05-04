@@ -8,7 +8,7 @@
 
 ## Синтаксис
 
-int file_insert_line(string $filename, string $line[, int $line_length = strlen($line)][, int $mode = 0])
+int file_insert_line(string $filename, string $line[, int $mode = 0][, int $line_length = strlen($line)])
 
 
 ## Параметры
@@ -17,8 +17,8 @@ int file_insert_line(string $filename, string $line[, int $line_length = strlen(
 
 - $filename (string): Путь к файлу, в который будет производиться запись.
 - $line (string): Строка, которую необходимо записать в файл.
-- $line_length (int, optional): Число, размер строки в файле (длину строки в символах).
 - $mode (int, optional) - Режим.
+- $line_length (int, optional): Число, размер кадра в файле.
 
 
 #### Режимы
