@@ -25,8 +25,10 @@ if(file_exists($data_file) && filesize($data_file) > 0){
 	$last_line_number = filesize($data_file) / $align;
 }
 
-$new_line_number = file_insert_line($data_file, 'insert_key_value_' . $last_line_number, $align); // Добавить строку в файл с выравниванием
+$new_line_number = file_insert_line($data_file, 'insert_key_value_' . $last_line_number, 0, $align); // Добавить строку в файл с выравниванием
 $str = file_select_line($data_file, $new_line_number, $align); // Получить строку из файла по номеру строки
+
+print_r([$last_line_number, $new_line_number, $str]);
 
 
 // Даннае без выравнивания
@@ -35,11 +37,10 @@ if(file_exists($data_file . '.dat') && filesize($data_file) > 0){
 	$last_offset = filesize($data_file . '.dat');
 }
 
-$new_offset = file_insert_line($data_file . '.dat', "write_key_value_pair_" . $last_offset); // Добавить строку в файл без выравнивания
+$str = "write_key_value_pair_" . $last_offset;
+$new_offset = file_insert_line($data_file . '.dat', $str, 2); // Добавить строку в файл без выравнивания
 $new_str = file_select_line($data_file . '.dat', $new_offset, mb_strlen($str), 1); // Получить строку из файла по смещению
 
-
-print_r([$last_line_number, $new_line_number, $str]);
 print_r([$last_offset, $new_offset, $new_str]);
 ```
 
