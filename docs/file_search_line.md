@@ -13,15 +13,15 @@
 
 ## Синтаксис
 
-string file_search_line(string $filename, string $line_key[, int mode = 0][, int position = 0] )
+string file_search_line(string $filename, string $line_key[, int position = 0][, int mode = 0])
 
 
 ### Параметры
 
 - **filename** - Путь к файлу, в котором будет производиться поиск.
 - **line_key** - Ключ, по которому осуществляется поиск значения.
-- **mode** (int, optional) - Режим поиска.
 - **position** (int, optional) - Позиция начала поиска в файле.
+- **mode** (int, optional) - Режим поиска.
 
 
 #### Режимы поиска
