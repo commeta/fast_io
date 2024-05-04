@@ -98,8 +98,6 @@ function get_process_io_stats() {
 
 
 
-
-
 foreach(glob('fast_io*.dat') as $file) {
 	unlink($file);
 }
@@ -109,7 +107,6 @@ foreach(glob('fast_io*.index') as $file) {
 foreach(glob('fast_io*.tmp') as $file) {
 	unlink($file);
 }
-
 
 
 $r_total= memory_get_process_usage_kernel();
@@ -123,46 +120,38 @@ for($i=0; $i <=500; $i++){
 
 
 print_r([
-	file_analize(__DIR__ . '/fast_io1.dat'),
-	file_analize(__DIR__ . '/fast_io1.dat', 1),
+	'file_get_keys',
+	file_get_keys(__DIR__ . '/fast_io1.dat')
 ]);
-
-
-
-
-
 
 
 print_r([
-	file_search_line(__DIR__ . '/fast_io1.dat', '\\w+_1', 10),
-	file_search_line(__DIR__ . '/fast_io1.dat', 'index_400', 0)
+	'file_search_array',
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 13),
+	file_search_array(__DIR__ . '/fast_io1.dat', 'index', 0, 2),
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 10),
 ]);
 
 
+$array= [
+	[8192, 8192], // Адрес и размер строки 1 в файле
+	[16384, 8192], // Адрес и размер строки 2 в файле
+	[24576, 8192] // Адрес и размер строки 3 в файле
+];
 
 print_r([
-	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+', 10, 2, 5),
-	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 0),
-	file_select_line(__DIR__ . '/fast_io1.dat', 8192, 8192, 1),
-	find_matches_pcre2('\\w+_', file_select_line(__DIR__ . '/fast_io1.dat', 16384, 191, 1))
-	
+	'file_select_array',
+	file_select_array(__DIR__ . '/fast_io1.dat', $array, '\\w+_\\d+', 10),
+	file_select_array(__DIR__ . '/fast_io1.dat', $array, 'index'),
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 23),
 ]);
-
-
-
-print_r([
-	file_select_line(__DIR__ . '/fast_io1.dat', 16384, 12, 1),
-	file_select_line(__DIR__ . '/fast_io1.dat', 1, 8192, 0),
-]);
-
-
-
-
 
 
 print_r([
 	'file_select_line',
-	file_select_line(__DIR__ . '/fast_io1.dat', 1, 8192)
+	file_select_line(__DIR__ . '/fast_io1.dat', 0, 1391, 0),
+	find_matches_pcre2('\\w+_', file_select_line(__DIR__ . '/fast_io1.dat', 0, 8192, 1), 0),
+	find_matches_pcre2('\\w+_', file_select_line(__DIR__ . '/fast_io1.dat', 0, 8192, 1), 1),
 ]);
 
 
@@ -202,12 +191,10 @@ print_r([
 
 
 
-
 print_r([
 	'file_defrag_lines',
 	file_defrag_lines(__DIR__ . '/fast_io1.dat', 'index_360')
 ]);
-
 
 
 
@@ -222,10 +209,10 @@ print_r([
 print_r([
 	'file_search_line',
 	file_search_line(__DIR__ . '/fast_io1.dat', 'index_360'),
-	file_search_line(__DIR__ . '/fast_io1.dat', 'апдейт', 0),
-	file_search_line(__DIR__ . '/fast_io1.dat', 'index', 0),
-	file_search_line(__DIR__ . '/fast_io1.dat', '^\\w+_1', 10),
-	file_search_line(__DIR__ . '/fast_io1.dat', '^\\w+_1', 10),
+	file_search_line(__DIR__ . '/fast_io1.dat', 'апдейт'),
+	file_search_line(__DIR__ . '/fast_io1.dat', 'index'),
+	file_search_line(__DIR__ . '/fast_io1.dat', '^\\w+_1', 0, 10),
+	file_search_line(__DIR__ . '/fast_io1.dat', '^\\w+_1', 0, 10),
 ]);
 
 
