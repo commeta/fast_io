@@ -10,17 +10,18 @@
 
 ## Синтаксис
 
-string file_search_array(string $filename, string $line_key[, int mode = 0][, int search_start = 0][, int search_length = 1][, int position = 0])
+string file_search_array(string $filename, string $line_key[, int search_start = 0][, int search_length = 1][, int position = 0][, int mode = 0])
 
 
 ### Параметры
 
 - **filename** - Путь к файлу, в котором будет производиться поиск.
 - **line_key** - Подстрока, по которой осуществляется поиск строки.
-- **mode** (int, optional) - Режим поиска.
 - **search_start** (int, optional) - Стартовая строка начала выборки.
 - **search_limit** (int, optional) - Ограничение массива выборки.
 - **position** (int, optional) - Позиция начала поиска в файле.
+- **mode** (int, optional) - Режим поиска.
+
 
 Чтение по смещению позиции position позволяет избежать лишних чтений файла при выборке с окном пагинации.
 Чтение файла идет всегда с нулевой позиции position = 0, и если search_start больше нуля то функция просто пропускает строки у которых номер меньше search_start.
@@ -31,24 +32,27 @@ string file_search_array(string $filename, string $line_key[, int mode = 0][, in
 ##### Поиск line_key в каждой строке
 - 0: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length, line_count.
 - 1: Возвращает ассоциативный массив: line, line_offset, line_length, line_count.
+- 2: Возвращает массив: trim_line.
 - 3: Возвращает ассоциативный массив: line_count, found_count.
 
 ##### Поиск по регулярному выражению [PCRE2](https://pcre2project.github.io/pcre2/doc/html/index.html) в каждой строке
 - 10: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length, line_count.
 - 11: Возвращает ассоциативный массив: line, line_offset, line_length, line_count.
+- 12: Возвращает массив: trim_line.
 - 13: Возвращает ассоциативный массив: line_count, found_count.
 
-##### Поиск по регулярному выражению 
-- 20: Возвращает ассоциативный массив: line_matches, line_offset, line_length, line_count.
-- 21: Возвращает ассоциативный массив: trim_line, trim_length, line_matches, line_offset, line_length, line_count.
-- 22: Возвращает ассоциативный массив: line, line_matches, line_match, match_offset, match_length, line_offset, line_length, line_count.
-- 23: Возвращает ассоциативный массив: line_matches, line_match, match_offset, match_length, line_offset, line_length, line_count.
+##### Поиск совпадений по регулярному выражению в каждой строке
+
+- 20: Возвращает ассоциативный массив: trim_line, trim_length, line_matches, line_offset, line_length, line_count.
+- 21: Возвращает ассоциативный массив: line, line_matches, line_offset, line_length, line_count.
+- 22: Возвращает ассоциативный массив: line_matches, line_match, match_offset, match_length, line_offset, line_length, line_count.
+- 23: Возвращает массив: line_matches, line_match.
+
 
 ##### Log mode
 - +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим mode -= 100 но не будет блокировать файл.
 
 Режимы +100 Log mode подходят для работы с файлами журналов. Подробнее: [алгоритм реализации транзакции с помощью блокировки файла](/test/transaction/README.md).
-
 
 
 ### Возвращаемые значения
@@ -90,7 +94,7 @@ for($i=0; $i <=500; $i++){
 
 ```
 print_r([
-	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 0, 0, 2),
+	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 0, 2),
 ]);
 
 Array
@@ -122,7 +126,7 @@ Array
 
 ```
 print_r([
-	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 10, 0, 2)
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 10)
 ]);
 
 Array
@@ -187,7 +191,7 @@ Array
 
 ```
 print_r([
-	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 20, 0, 2),
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 20),
 ]);
 
 Array
@@ -229,7 +233,7 @@ Array
 
 ```
 print_r([
-	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 22, 0, 2),
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 22),
 ]);
 
 Array
