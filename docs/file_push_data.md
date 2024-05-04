@@ -8,7 +8,7 @@
 
 ## Синтаксис
 
-int file_push_data(string $filename, string $line_key, string $line_value)
+int file_push_data(string $filename, string $line_key, string $line_value[, int $mode = 0])
 
 
 ### Параметры
@@ -16,7 +16,10 @@ int file_push_data(string $filename, string $line_key, string $line_value)
 - **$filename** - Путь к текстовому файлу данных, в который будет произведена запись значения.
 - **$line_key** - Ключ, который будет использоваться для индексации значения. 
 - **$line_value** - Значение, ассоциированное с ключом, которое будет записано в файл данных.
+- **$mode** (int, optional): Режим.
 
+##### Log mode
+- +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим $mode - 100 но не будет блокировать файл.
 
 
 ### Возвращаемые значения
