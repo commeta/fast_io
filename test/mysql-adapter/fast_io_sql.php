@@ -98,7 +98,7 @@ function fast_io_mysql_adapter(& $parser, $sql){
                     $last_id ++;
                 }
                     
-                $last_id = file_insert_line($data_file, $column_list[0] . "_" . $last_id . ' ' . $insert_values, $index_align);
+                $last_id = file_insert_line($data_file, $column_list[0] . "_" . $last_id . ' ' . $insert_values, 0, $index_align);
                 
                 flock($lock, LOCK_UN);
             }
