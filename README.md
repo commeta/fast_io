@@ -55,6 +55,7 @@ The line_key can be any printable character, reserved symbols:
 - ASCII Code 32 space (space) - substring delimiter.
 - ASCII Code 127 delete (non-printable) - empty frame marker, placed at the beginning of a string filled with spaces.
 - ASCII Code 10 line feed (enter) - line separator.
+- ASCII Code 0 null character (null) - substring separator.
 
 Functions: file_defrag_data, file_defrag_lines, file_erase_line, file_get_keys, file_push_data, file_replace_line, file_search_data - when indexing lines, they analyze the first substring, considering any printable character as the line key. The key must always end with a space.
 
