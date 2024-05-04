@@ -150,51 +150,37 @@ Array
 
 
 ```
-print_r([
-	file_select_array(__DIR__ . '/fast_io1.dat', $array, '\\w+_\\d+', 20),
-]);
+print_r(
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 20),
+);
 
 Array
 (
     [0] => Array
         (
-            [0] => Array
+            [trim_line] => index_0 file_insert_line_0 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+            [trim_length] => 119
+            [line_matches] => Array
                 (
-                    [trim_line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [trim_length] => 119
-                    [line_matches] => Array
-                        (
-                            [0] => index_1
-                            [1] => file_insert_line_1
-                        )
-                    [line_offset] => 8192
-                    [line_length] => 8192
+                    [0] => index_0
+                    [1] => file_insert_line_0
                 )
-            [1] => Array
+            [line_offset] => 0
+            [line_length] => 8192
+            [line_count] => 1
+        )
+    [1] => Array
+        (
+            [trim_line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+            [trim_length] => 119
+            [line_matches] => Array
                 (
-                    [trim_line] => index_2 file_insert_line_2 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [trim_length] => 119
-                    [line_matches] => Array
-                        (
-                            [0] => index_2
-                            [1] => file_insert_line_2
-                        )
-
-                    [line_offset] => 16384
-                    [line_length] => 8192
+                    [0] => index_1
+                    [1] => file_insert_line_1
                 )
-            [2] => Array
-                (
-                    [trim_line] => index_3 file_insert_line_3 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [trim_length] => 119
-                    [line_matches] => Array
-                        (
-                            [0] => index_3
-                            [1] => file_insert_line_3
-                        )
-                    [line_offset] => 24576
-                    [line_length] => 8192
-                )
+            [line_offset] => 8192
+            [line_length] => 8192
+            [line_count] => 2
         )
 )
 
