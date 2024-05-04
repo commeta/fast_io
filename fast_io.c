@@ -2125,12 +2125,16 @@ PHP_FUNCTION(file_get_keys) {
 
                     add_assoc_string(&line_arr, "trim_line", lineStart);
                     if(mode != 5) add_assoc_long(&line_arr, "trim_length", lineLength);
+
+                    if(mode == 5){
+                        add_next_index_string(return_value, lineStart);
+                    }
                 }
 
                 char *spacePos = strchr(lineStart, ' ');
                 if (spacePos) *spacePos = '\0';
 
-                if(mode == 0 || mode == 4) add_assoc_string(&line_arr, "key", lineStart);
+                if(mode == 0) add_assoc_string(&line_arr, "key", lineStart);
 
                 if(mode < 4){
                     add_assoc_long(&line_arr, "line_offset", searchOffset);
@@ -2138,10 +2142,15 @@ PHP_FUNCTION(file_get_keys) {
                     add_assoc_long(&line_arr, "line_count", line_count);
                 }
 
-                add_next_index_zval(return_value, &line_arr);
+                if(mode < 5) {
+                    if(mode == 4) {
+                        add_next_index_string(return_value, lineStart);
+                    } else {
+                        add_next_index_zval(return_value, &line_arr);
+                    }
+                }
             }
             
-
             searchOffset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
 
