@@ -12,7 +12,7 @@
 
 ## Синтаксис
 
-int file_defrag_lines(string $filename, string $line_key[, int $mode])
+int file_defrag_lines(string $filename, string $line_key[, int $mode = 0])
 
 
 ### Параметры
