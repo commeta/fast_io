@@ -27,12 +27,12 @@ array file_select_array(string $filename, array $query[, string $pattern][, int 
 
 #### Режимы
 
-##### Выборка каждой строки
+##### Выборка всех строк
 - 0: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length.
 - 1: Возвращает ассоциативный массив: line, line_offset, line_length.
 - 2: Возвращает массив: trim_line.
 
-##### Выборка совпадений по подстроке
+##### Выборка строк - по совпадению с подстрокой
 - 3: Возвращает ассоциативный массив: line_count, found_count.
 - 5: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length.
 - 6: Возвращает ассоциативный массив: line, line_offset, line_length.
@@ -40,13 +40,13 @@ array file_select_array(string $filename, array $query[, string $pattern][, int 
 
 В режиме 5 и 6 функция вернет только выборки в которых присутствует подстрока pattern. В этих режимах pattern это обычная подстрока.
 
-##### Выборка совпадений по регулярному выражению [PCRE2](https://pcre2project.github.io/pcre2/doc/html/index.html) в каждой строке
+##### Выборка строк - по совпадению с регулярным выражением [PCRE2](https://pcre2project.github.io/pcre2/doc/html/index.html) в каждой строке
 - 10: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length, line_count.
 - 11: Возвращает ассоциативный массив: line, line_offset, line_length, line_count.
 - 12: Возвращает массив: trim_line.
 - 13: Возвращает ассоциативный массив: line_count, found_count.
 
-##### Выборка совпадений по регулярному выражению PCRE2
+##### Выборка строк и совпадений - по совпадению с регулярным выражением PCRE2
 - 20: Возвращает ассоциативный массив: trim_line, trim_length, line_matches, line_offset, line_length, line_count.
 - 21: Возвращает ассоциативный массив: line, line_matches, line_offset, line_length, line_count.
 - 22: Возвращает ассоциативный массив: line_matches, line_match, match_offset, match_length, line_offset, line_length, line_count.
