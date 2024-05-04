@@ -92,201 +92,193 @@ for($i=0; $i <=500; $i++){
 
 
 ```
-print_r([
+print_r(
 	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 0, 2),
-]);
+);
 
 Array
 (
     [0] => Array
         (
-            [0] => Array
-                (
-                    [trim_line] => index_3 file_insert_line_3 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [trim_length] => 119
-                    [line_offset] => 24576
-                    [line_length] => 8192
-                    [line_count] => 4
-                )
-
-            [1] => Array
-                (
-                    [trim_line] => index_30 file_insert_line_30 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [trim_length] => 121
-                    [line_offset] => 245760
-                    [line_length] => 8192
-                    [line_count] => 31
-                )
+            [trim_line] => index_3 file_insert_line_3 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+            [trim_length] => 119
+            [line_offset] => 24576
+            [line_length] => 8192
+            [line_count] => 4
         )
-)
-
-```
-
-
-```
-print_r([
-	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 10)
-]);
-
-Array
-(
-    [0] => Array
-        (
-            [0] => Array
-                (
-                    [trim_line] => index_0 file_insert_line_0 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [trim_length] => 8192
-                    [line_offset] => 0
-                    [line_length] => 8192
-                    [line_count] => 1
-                )
-
-            [1] => Array
-                (
-                    [trim_line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [trim_length] => 8192
-                    [line_offset] => 8192
-                    [line_length] => 8192
-                    [line_count] => 2
-                )
-
-        )
-
-)
-```
-
-```
-print_r([
-	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+', 13),
-	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 3),
-]);
-
-Array
-(
-    [0] => Array
-        (
-            [0] => Array
-                (
-                    [line_count] => 501
-                    [found_count] => 501
-                )
-
-        )
-
     [1] => Array
         (
-            [0] => Array
-                (
-                    [line_count] => 501
-                    [found_count] => 111
-                )
-
+            [trim_line] => index_30 file_insert_line_30 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+            [trim_length] => 121
+            [line_offset] => 245760
+            [line_length] => 8192
+            [line_count] => 31
         )
-
 )
 
 ```
 
 
 ```
+print_r(
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 10)
+);
+
+Array
+(
+    [0] => Array
+        (
+            [trim_line] => index_0 file_insert_line_0 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+            [trim_length] => 8192
+            [line_offset] => 0
+            [line_length] => 8192
+            [line_count] => 1
+        )
+    [1] => Array
+        (
+            [trim_line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+            [trim_length] => 8192
+            [line_offset] => 8192
+            [line_length] => 8192
+            [line_count] => 2
+        )
+)
+
+```
+
+```
 print_r([
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+', 0, 2, 0, 13),
+	file_search_array(__DIR__ . '/fast_io1.dat', 'index_3', 0, 2, 0, 3),
+]);
+
+Array
+(
+    [0] => Array
+        (
+            [line_count] => 501
+            [found_count] => 501
+        )
+    [1] => Array
+        (
+            [line_count] => 501
+            [found_count] => 111
+        )
+)
+
+```
+
+
+```
+print_r(
 	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 20),
-]);
+);
 
 Array
 (
     [0] => Array
         (
-            [0] => Array
+            [trim_line] => index_0 file_insert_line_0 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+            [trim_length] => 119
+            [line_matches] => Array
                 (
-                    [trim_line] => index_0 file_insert_line_0 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [trim_length] => 119
-                    [line_matches] => Array
-                        (
-                            [0] => index_0
-                            [1] => file_insert_line_0
-                        )
-
-                    [line_offset] => 0
-                    [line_length] => 8192
-                    [line_count] => 1
+                    [0] => index_0
+                    [1] => file_insert_line_0
                 )
-
-            [1] => Array
+            [line_offset] => 0
+            [line_length] => 8192
+            [line_count] => 1
+        )
+    [1] => Array
+        (
+            [trim_line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+            [trim_length] => 119
+            [line_matches] => Array
                 (
-                    [trim_line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-                    [trim_length] => 119
-                    [line_matches] => Array
-                        (
-                            [0] => index_1
-                            [1] => file_insert_line_1
-                        )
-
-                    [line_offset] => 8192
-                    [line_length] => 8192
-                    [line_count] => 2
+                    [0] => index_1
+                    [1] => file_insert_line_1
                 )
+            [line_offset] => 8192
+            [line_length] => 8192
+            [line_count] => 2
         )
 )
+
 ```
 
 ```
-print_r([
+print_r(
 	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 22),
-]);
+);
 
 Array
 (
     [0] => Array
         (
-            [0] => Array
+            [line_matches] => Array
                 (
-                    [line_matches] => Array
+                    [0] => Array
                         (
-                            [0] => Array
-                                (
-                                    [line_match] => index_0
-                                    [match_offset] => 0
-                                    [match_length] => 7
-                                )
-                            [1] => Array
-                                (
-                                    [line_match] => file_insert_line_0
-                                    [match_offset] => 7
-                                    [match_length] => 18
-                                )
+                            [line_match] => index_0
+                            [match_offset] => 0
+                            [match_length] => 7
                         )
-                    [line_offset] => 0
-                    [line_length] => 8192
-                    [line_count] => 1
+                    [1] => Array
+                        (
+                            [line_match] => file_insert_line_0
+                            [match_offset] => 7
+                            [match_length] => 18
+                        )
                 )
-            [1] => Array
+            [line_offset] => 0
+            [line_length] => 8192
+            [line_count] => 1
+        )
+    [1] => Array
+        (
+            [line_matches] => Array
                 (
-                    [line_matches] => Array
+                    [0] => Array
                         (
-                            [0] => Array
-                                (
-                                    [line_match] => index_1
-                                    [match_offset] => 0
-                                    [match_length] => 7
-                                )
-                            [1] => Array
-                                (
-                                    [line_match] => file_insert_line_1
-                                    [match_offset] => 7
-                                    [match_length] => 18
-                                )
+                            [line_match] => index_1
+                            [match_offset] => 0
+                            [match_length] => 7
                         )
-                    [line_offset] => 8192
-                    [line_length] => 8192
-                    [line_count] => 2
+                    [1] => Array
+                        (
+                            [line_match] => file_insert_line_1
+                            [match_offset] => 7
+                            [match_length] => 18
+                        )
                 )
+            [line_offset] => 8192
+            [line_length] => 8192
+            [line_count] => 2
         )
 )
 ```
 
 
+```
+print_r(
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 23),
+);
 
+Array
+(
+    [0] => Array
+        (
+            [0] => index_0
+            [1] => file_insert_line_0
+        )
+    [1] => Array
+        (
+            [0] => index_1
+            [1] => file_insert_line_1
+        )
+)
+
+```
 
 
 ## Пример использования
