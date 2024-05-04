@@ -70,7 +70,6 @@ PHP_MSHUTDOWN_FUNCTION(fast_io)
 PHP_FUNCTION(file_search_array);
 PHP_FUNCTION(file_search_line);
 PHP_FUNCTION(file_search_data);
-PHP_FUNCTION(file_push_line);
 PHP_FUNCTION(file_push_data);
 PHP_FUNCTION(file_defrag_lines);
 PHP_FUNCTION(file_defrag_data);
@@ -110,12 +109,6 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_data, 1, 2, IS_STRIN
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line_key, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, position, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_push_line, 1, 2, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, line, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
@@ -166,10 +159,10 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_replace_line, 1, 3, IS_LONG
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_insert_line, 1, 3, IS_LONG, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_insert_line, 1, 2, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, align, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, line_length, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
@@ -224,7 +217,6 @@ const zend_function_entry fast_io_functions[] = {
     PHP_FE(file_search_array, arginfo_file_search_array)
     PHP_FE(file_search_line, arginfo_file_search_line)
     PHP_FE(file_search_data, arginfo_file_search_data)
-    PHP_FE(file_push_line, arginfo_file_push_line)
     PHP_FE(file_push_data, arginfo_file_push_data)
     PHP_FE(file_defrag_lines, arginfo_file_defrag_lines)
     PHP_FE(file_defrag_data, arginfo_file_defrag_data)
@@ -945,70 +937,6 @@ PHP_FUNCTION(file_search_data) {
     fclose(data_fp);
 }
 
-
-
-/* Реализация функции */
-PHP_FUNCTION(file_push_line) {
-    char *filename, *line;
-    size_t filename_len, line_len;
-    zend_long mode = 0;
-
-    // Парсинг аргументов, переданных в функцию
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &filename, &filename_len, &line, &line_len, &mode) == FAILURE) {
-        RETURN_FALSE;
-    }
-
-    // Открытие файла для добавления; текстовый режим
-    FILE *fp = fopen(filename, "a");
-    
-    if (!fp) {
-        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
-        RETURN_LONG(-1);
-    }
-
-    // Блокировка файла для записи
-    if (flock(fileno(fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        fclose(fp); // Это также разблокирует файл
-        RETURN_LONG(-2);
-    }
-
-    long file_size = ftell(fp);
-    ssize_t bytesWrite;
-
-    char *new_line = estrndup(line, line_len + 1);
-    if(new_line == NULL){
-        php_error_docref(NULL, E_WARNING, "Out of memory");
-        fclose(fp);
-        RETURN_LONG(-8);
-    }
-
-    new_line[line_len] = '\n';
-    new_line[line_len + 1] = '\0';
-
-    bytesWrite = fwrite(new_line, 1, line_len + 1, fp);
-
-    if (bytesWrite != line_len + 1) {
-        php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
-
-        if(ftruncate(fileno(fp), file_size) < 0) {
-            zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
-            fclose(fp);
-            efree(new_line);
-            exit(EXIT_FAILURE);
-        }
-        
-        fclose(fp);
-        efree(new_line);
-        RETURN_LONG(-3);
-    }
-
-
-    fclose(fp); // Закрытие файла также разблокирует его
-    efree(new_line);
-
-    RETURN_LONG(file_size);
-}
 
 
 
@@ -2396,11 +2324,11 @@ PHP_FUNCTION(file_insert_line) {
     size_t filename_len;
     char *line;
     size_t line_len;
-    zend_long align;
+    size_t line_length = 0;
     zend_long mode = 0;
 
     // Парсинг аргументов, переданных в функцию
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssl|l", &filename, &filename_len, &line, &line_len, &align, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|ll", &filename, &filename_len, &line, &line_len, &line_length, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -2424,29 +2352,25 @@ PHP_FUNCTION(file_insert_line) {
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
 
+    if(line_length == 0) line_length = mode == 0 ? line_len + 1 : line_len;
+
     // Подготовка строки к записи с учетом выравнивания и перевода строки
-    char *buffer = (char *)emalloc(align + 1); // +1 для '\0'
+    char *buffer = (char *)emalloc(line_length + 1); // +1 для '\0'
     if (!buffer) {
         php_error_docref(NULL, E_WARNING, "Out of memory");
         fclose(fp);
         RETURN_LONG(-8);
     }
 
-    if(mode == 0){
-        memset(buffer, ' ', align); // Заполнение пробелами
-        buffer[align - 1] = '\n'; // Добавление перевода строки
-        buffer[align] = '\0'; // Нуль-терминатор
-    } else {
-        memset(buffer, ' ', align); // Заполнение пробелами
-        buffer[align] = '\0'; // Нуль-терминатор
-    }
-
+    memset(buffer, ' ', line_length); // Заполнение пробелами
     // Копирование line в буфер с учетом выравнивания
-    strncpy(buffer, line, align < line_len ? align : line_len);
+    strncpy(buffer, line, line_length < line_len ? line_length : line_len);
+    if(mode == 0) buffer[line_length - 1] = '\n';
+    buffer[line_length] = '\0'; // Нуль-терминатор
 
     // Запись в файл
-    size_t written = fwrite(buffer, sizeof(char), align, fp);
-    if (written != align) {
+    size_t written = fwrite(buffer, sizeof(char), line_length, fp);
+    if (written != line_length) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
 
         if(ftruncate(fileno(fp), file_size) < 0) {
@@ -2606,17 +2530,14 @@ PHP_FUNCTION(file_update_line) {
         RETURN_LONG(-8);
     }
 
-    if(mode == 0){
-        memset(buffer, ' ', line_length); // Заполнение пробелами
-        buffer[line_length - 1] = '\n'; // Добавление перевода строки
-        buffer[line_length] = '\0'; // Нуль-терминатор
-    } else {
-        memset(buffer, ' ', line_length); // Заполнение пробелами
-        buffer[line_length] = '\0'; // Нуль-терминатор
-    }
+
+    memset(buffer, ' ', line_length); // Заполнение пробелами
 
     // Копирование line в буфер с учетом выравнивания
     strncpy(buffer, line, line_len < line_length ? line_len : line_length);
+
+    if(mode == 0) buffer[line_length - 1] = '\n';
+    buffer[line_length] = '\0'; // Нуль-терминатор
 
     // Запись в файл
     size_t written = fwrite(buffer, 1, line_length, fp);
