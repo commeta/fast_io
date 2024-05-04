@@ -35,17 +35,26 @@ int file_erase_line(string $filename, string $line_key[, int $position = 0][, in
 Для использования функции file_erase_line в вашем PHP-приложении, следуйте примеру ниже:
 ```
 <?php
-$filename = 'path/to/your/datafile.txt';
-$line_key = 'secretKey';
-
-$result = file_erase_line($filename, $line_key);
-
-if ($result < 0) {
-    echo "Ошибка при скрытии ключа: код ошибки " . $result;
-} else {
-    echo "Ключ успешно скрыт.";
+for($i=0; $i <=500; $i++){
+	print_r(
+		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 92, '1234567890'), 0, 8192) . ', '
+	);
 }
-?>
+
+print_r([
+	file_search_line(__DIR__ . '/fast_io1.dat', 'index_123'),
+	file_erase_line(__DIR__ . '/fast_io1.dat', 'index_123'),
+	file_search_line(__DIR__ . '/fast_io1.dat', 'index_123'),
+]);
+
+Array
+(
+    [0] => file_erase_line
+    [1] => index_123 file_insert_line_123 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
+    [2] => 1007616
+    [3] => 
+)
+
 ```
 
 Еще [пример](/test/readme.md): Тесты.
