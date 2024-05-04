@@ -2404,25 +2404,27 @@ PHP_FUNCTION(file_insert_line) {
         RETURN_FALSE;
     }
 
-    FILE *fp = fopen(filename, "a+"); // Открытие файла для добавления и чтения;
+    FILE *fp = fopen(filename, "a"); // Открытие файла для добавления и чтения;
     if (!fp) {
         php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
         RETURN_LONG(-1);
     }
 
-    // Блокировка файла для записи
-    if (flock(fileno(fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        fclose(fp);
-        RETURN_LONG(-2);
+    if(mode < 100){
+        // Блокировка файла для записи
+        if (flock(fileno(fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
+            fclose(fp);
+            RETURN_LONG(-2);
+        }
     }
 
-    // Перемещение указателя в конец файла для получения его размера
+    if(mode > 99) mode -= 100;
+
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
-    long line_number = file_size / align; // Учет символа перевода строки
 
-    // Подготовка строки к записи с учетом выравнивания
+    // Подготовка строки к записи с учетом выравнивания и перевода строки
     char *buffer = (char *)emalloc(align + 1); // +1 для '\0'
     if (!buffer) {
         php_error_docref(NULL, E_WARNING, "Out of memory");
@@ -2430,9 +2432,14 @@ PHP_FUNCTION(file_insert_line) {
         RETURN_LONG(-8);
     }
 
-    memset(buffer, ' ', align); // Заполнение пробелами
-    buffer[align - 1] = '\n'; // Добавление перевода строки
-    buffer[align] = '\0';
+    if(mode == 0){
+        memset(buffer, ' ', align); // Заполнение пробелами
+        buffer[align - 1] = '\n'; // Добавление перевода строки
+        buffer[align] = '\0'; // Нуль-терминатор
+    } else {
+        memset(buffer, ' ', align); // Заполнение пробелами
+        buffer[align] = '\0'; // Нуль-терминатор
+    }
 
     // Копирование line в буфер с учетом выравнивания
     strncpy(buffer, line, align < line_len ? align : line_len);
@@ -2457,9 +2464,7 @@ PHP_FUNCTION(file_insert_line) {
     fclose(fp); // Это также разблокирует файл
     efree(buffer);
     
-    
-    // Возврат номера добавленной строки
-    RETURN_LONG(line_number); // Нумерация строк начинается с 0
+    RETURN_LONG(file_size);
 }
 
 
@@ -2559,11 +2564,11 @@ PHP_FUNCTION(file_update_line) {
     size_t filename_len;
     char *line;
     size_t line_len;
-    zend_long row, align;
+    zend_long position, line_length;
     zend_long mode = 0;
 
     // Парсинг аргументов, переданных в функцию
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssll|l", &filename, &filename_len, &line, &line_len, &row, &align, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssll|l", &filename, &filename_len, &line, &line_len, &position, &line_length, &mode) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -2584,15 +2589,6 @@ PHP_FUNCTION(file_update_line) {
 
     if(mode > 99) mode -= 100;
 
-
-    // Рассчитываем смещение для записи в файл
-    off_t position;
-
-    if(mode == 0) position = row * align;
-    if(mode == 1) position = row;
-    if(mode == 2) position = row * align;
-    if(mode == 3) position = row;
-
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
 
@@ -2603,31 +2599,31 @@ PHP_FUNCTION(file_update_line) {
     }
 
     // Подготовка строки к записи с учетом выравнивания и перевода строки
-    char *buffer = (char *)emalloc(align + 1); // +1 для '\0'
+    char *buffer = (char *)emalloc(line_length + 1); // +1 для '\0'
     if (!buffer) {
         php_error_docref(NULL, E_WARNING, "Out of memory");
         fclose(fp);
         RETURN_LONG(-8);
     }
 
-    if(mode == 0 || mode == 1){
-        memset(buffer, ' ', align); // Заполнение пробелами
-        buffer[align - 1] = '\n'; // Добавление перевода строки
-        buffer[align] = '\0'; // Нуль-терминатор
+    if(mode == 0){
+        memset(buffer, ' ', line_length); // Заполнение пробелами
+        buffer[line_length - 1] = '\n'; // Добавление перевода строки
+        buffer[line_length] = '\0'; // Нуль-терминатор
     } else {
-        memset(buffer, ' ', align); // Заполнение пробелами
-        buffer[align] = '\0'; // Нуль-терминатор
+        memset(buffer, ' ', line_length); // Заполнение пробелами
+        buffer[line_length] = '\0'; // Нуль-терминатор
     }
 
     // Копирование line в буфер с учетом выравнивания
-    strncpy(buffer, line, line_len < align ? line_len : align);
+    strncpy(buffer, line, line_len < line_length ? line_len : line_length);
 
     // Запись в файл
-    size_t written = fwrite(buffer, 1, align, fp);
+    size_t written = fwrite(buffer, 1, line_length, fp);
     fclose(fp); // Это также разблокирует файл
     efree(buffer);
 
-    if (written != align) {
+    if (written != line_length) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
         RETURN_LONG(-4);
     }
@@ -3222,9 +3218,6 @@ PHP_FUNCTION(file_select_array) {
                             for (int i = 0; i < rc; i++) {
                                 PCRE2_SIZE start = ovector[2*i];
                                 PCRE2_SIZE end = ovector[2*i+1];
-
-
-
 
                                 if(mode == 23 || mode == 20){
                                     add_next_index_stringl(&return_matched, buffer + start, end - start);
