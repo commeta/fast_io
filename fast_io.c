@@ -96,14 +96,14 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_array, 1, 2, IS_ARRA
     ZEND_ARG_TYPE_INFO(0, search_start, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, search_limit, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, position, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0) 
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_line, 1, 2, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line_key, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, position, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0) 
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_data, 1, 2, IS_STRING, 1)
@@ -209,7 +209,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_select_array, 1, 2, IS_ARRA
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
     ZEND_ARG_TYPE_INFO(0, pattern, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0) 
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_update_array, 1, 2, IS_LONG, 0)
@@ -447,12 +447,8 @@ PHP_FUNCTION(file_search_array) {
                     } else {
                         add_next_index_zval(return_value, &line_arr);
                     }
-
-
-
                 }
             }
-
 
             if(mode == 13 && pcre2_match(re, lineStart, lineLength, 0, 0, match_data, NULL) > 0){
                 found_count++;
@@ -543,8 +539,6 @@ PHP_FUNCTION(file_search_array) {
                             add_assoc_string(&line_arr, "line", lineStart);
                         }
 
-                        
-
                         if(mode != 23){
                             add_assoc_zval(&line_arr, "line_matches", &return_matched);
 
@@ -564,7 +558,6 @@ PHP_FUNCTION(file_search_array) {
                 }
             }
             
-
             search_offset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
 
@@ -3165,12 +3158,16 @@ PHP_FUNCTION(file_select_array) {
                         found_match = false;
                     }
 
+                    if(mode == 0 || mode == 5){
+                        add_assoc_long(&line_arr, "line_offset", select_pos);
+                        add_assoc_long(&line_arr, "line_length", select_size);
+                    }
+                    
                     if(mode > 9 && mode < 14){
                         int rc;
                         size_t start_offset = 0;
                     
                         if(rc = pcre2_match(re, (PCRE2_SPTR)buffer, select_size, start_offset, 0, match_data, NULL) > 0){
-
                             if(mode < 13){
                                 if(mode == 10){
                                     add_assoc_string(&line_arr, "trim_line", buffer);
@@ -3273,7 +3270,12 @@ PHP_FUNCTION(file_select_array) {
                             }
 
                             if(mode == 23){
-                                add_next_index_zval(return_value, &return_matched);
+                                add_assoc_zval(&line_arr, "line_matches", &return_matched);
+                                
+                                add_assoc_long(&line_arr, "line_offset", select_pos);
+                                add_assoc_long(&line_arr, "line_length", select_size);
+                                
+                                add_next_index_zval(return_value, &line_arr);
                                 found_match = false;
                             }
 
@@ -3283,7 +3285,6 @@ PHP_FUNCTION(file_select_array) {
                     if(found_match){
                         add_next_index_zval(return_value, &line_arr);
                     }
-
 
                     efree(buffer);
                 }
