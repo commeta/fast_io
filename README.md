@@ -210,13 +210,14 @@ Next, compile and test your extension using phpize, ./configure, make, and make 
 The Fast_IO extension was rigorously tested on Ubuntu 24.04, with a Ryzen 12 Cores CPU, 16GB RAM, and a SATA 3 SSD. Here are the results for some of the key functions when executed in a loop of 10,000 iterations, with linear index incrementation (to avoid cache hits) and repeated searches for the same index:
 
 ```
-file_search_line: 2.8793230056763 (0.00028793)
-file_search_line repeat: 0.091537952423096 (0.00000915)
-file_defrag_lines: 0.87505483627319 (0.00008751)
-file_push_data: 0.23846697807312 (0.00002385)
-file_search_data: 2.5550649166107 (0.00025551)
-file_search_data repeat: 0.17655897140503 (0.00001766)
-file_pop_line: 0.3167359828949 (0.00003167)
+file_insert_line: 0.10697793960571 (0.00001070)
+file_search_line: 2.9135210514069 (0.00029135)
+file_search_line repeat: 0.084739208221436 (0.00000847)
+file_defrag_lines: 0.65570092201233 (0.00006557)
+file_push_data: 0.21720695495605 (0.00002172)
+file_search_data: 2.353935956955 (0.00023539)
+file_search_data repeat: 0.15796780586243 (0.00001580)
+file_pop_line: 0.24059700965881 (0.00002406)
 ```
 
 ## Call Costs
