@@ -162,8 +162,8 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_insert_line, 1, 2, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, line_length, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, line_length, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_select_line, 1, 3, IS_STRING, 1)
@@ -2328,7 +2328,7 @@ PHP_FUNCTION(file_insert_line) {
     zend_long mode = 0;
 
     // Парсинг аргументов, переданных в функцию
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|ll", &filename, &filename_len, &line, &line_len, &line_length, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|ll", &filename, &filename_len, &line, &line_len, &mode, &line_length) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -2365,7 +2365,7 @@ PHP_FUNCTION(file_insert_line) {
     memset(buffer, ' ', line_length); // Заполнение пробелами
     // Копирование line в буфер с учетом выравнивания
     strncpy(buffer, line, line_length < line_len ? line_length : line_len);
-    if(mode == 0) buffer[line_length - 1] = '\n';
+    if(mode == 0 || mode == 2) buffer[line_length - 1] = '\n';
     buffer[line_length] = '\0'; // Нуль-терминатор
 
     // Запись в файл
@@ -2388,7 +2388,8 @@ PHP_FUNCTION(file_insert_line) {
     fclose(fp); // Это также разблокирует файл
     efree(buffer);
     
-    RETURN_LONG(file_size);
+    if(mode > 1) RETURN_LONG(file_size);
+    if(mode < 2) RETURN_LONG(file_size / line_length);
 }
 
 
@@ -2426,10 +2427,8 @@ PHP_FUNCTION(file_select_line) {
     ssize_t bytesRead;
     off_t position;
 
-    if(mode == 0) position = row * align;
-    if(mode == 1) position = row;
-    if(mode == 2) position = row * align;
-    if(mode == 3) position = row;
+    if(mode == 0 || mode == 2) position = row * align;
+    if(mode == 1 || mode == 3) position = row;
 
 
     fseek(fp, 0, SEEK_END);
