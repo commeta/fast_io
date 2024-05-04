@@ -48,7 +48,6 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 
 ### Structure of the file
 The line is divided into substrings: line_key, line_value.
-Substrings line_key may consist of any characters except: space, character ASCII Code 127, and line feed character ASCII Code 10.
 
 The line_key can be any printable character, reserved symbols:
 - ASCII Code 32 space (space) - substring delimiter.
