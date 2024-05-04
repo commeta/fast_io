@@ -186,6 +186,31 @@ Array
 ```
 
 
+
+```
+print_r([
+	file_select_array(__DIR__ . '/fast_io1.dat', $array, 'index', 3),
+	file_select_array(__DIR__ . '/fast_io1.dat', $array, '\\w+_\\d+', 13)
+]);
+
+Array
+(
+    [0] => Array
+        (
+            [line_count] => 3
+            [found_count] => 3
+        )
+
+    [1] => Array
+        (
+            [line_count] => 3
+            [found_count] => 3
+        )
+
+)
+```
+
+
 ```
 print_r(
 	file_select_array(__DIR__ . '/fast_io1.dat', $array, '\\w+_\\d+', 20)
