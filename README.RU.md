@@ -50,7 +50,7 @@ Fast_IO представляет собой мощное расширение д
 - ASCII Code 32 space (пробел) - разделитель подстрок.
 - ASCII Code 127 delete (не печатный) - метка пустого кадра, ставится в начале строки заполненной пробелами.
 - ASCII Code 10 line feed (перевод строки) - разделитель строк.
-- ASCII Code 0 null character (null) - разделитель подстрок.
+- ASCII Code 0 null character (нулевой символ) - разделитель подстрок.
 
 Функции: file_defrag_data, file_defrag_lines, file_erase_line, file_get_keys, file_push_data, file_replace_line, file_search_data - при индексации строк проводят анализ первой подстроки, рассматривая любой печатный символ как ключ строки. Ключ всегда должен заканчиваться пробелом.
 
