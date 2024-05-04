@@ -231,6 +231,9 @@ Array
 ```
 
 
+
+
+
 ```
 print_r([
 	file_select_array(__DIR__ . '/fast_io1.dat', $array, '\\w+_\\d+', 23),
