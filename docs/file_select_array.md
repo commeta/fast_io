@@ -164,18 +164,8 @@ Array
                     [trim_length] => 119
                     [line_matches] => Array
                         (
-                            [0] => Array
-                                (
-                                    [line_match] => index_1
-                                    [match_offset] => 0
-                                    [match_length] => 7
-                                )
-                            [1] => Array
-                                (
-                                    [line_match] => file_insert_line_1
-                                    [match_offset] => 7
-                                    [match_length] => 18
-                                )
+                            [0] => index_1
+                            [1] => file_insert_line_1
                         )
                     [line_offset] => 8192
                     [line_length] => 8192
@@ -186,19 +176,10 @@ Array
                     [trim_length] => 119
                     [line_matches] => Array
                         (
-                            [0] => Array
-                                (
-                                    [line_match] => index_2
-                                    [match_offset] => 0
-                                    [match_length] => 7
-                                )
-                            [1] => Array
-                                (
-                                    [line_match] => file_insert_line_2
-                                    [match_offset] => 7
-                                    [match_length] => 18
-                                )
+                            [0] => index_2
+                            [1] => file_insert_line_2
                         )
+
                     [line_offset] => 16384
                     [line_length] => 8192
                 )
@@ -208,26 +189,15 @@ Array
                     [trim_length] => 119
                     [line_matches] => Array
                         (
-                            [0] => Array
-                                (
-                                    [line_match] => index_3
-                                    [match_offset] => 0
-                                    [match_length] => 7
-                                )
-
-                            [1] => Array
-                                (
-                                    [line_match] => file_insert_line_3
-                                    [match_offset] => 7
-                                    [match_length] => 18
-                                )
-
+                            [0] => index_3
+                            [1] => file_insert_line_3
                         )
                     [line_offset] => 24576
                     [line_length] => 8192
                 )
         )
 )
+
 ```
 
 
@@ -245,39 +215,21 @@ Array
         (
             [0] => Array
                 (
-                    [line_matches] => Array
-                        (
-                            [0] => index_1
-                            [1] => file_insert_line_1
-                        )
-                    [line_offset] => 8192
-                    [line_length] => 8192
+                    [0] => index_1
+                    [1] => file_insert_line_1
                 )
             [1] => Array
                 (
-                    [line_matches] => Array
-                        (
-                            [0] => index_2
-                            [1] => file_insert_line_2
-                        )
-
-                    [line_offset] => 16384
-                    [line_length] => 8192
+                    [0] => index_2
+                    [1] => file_insert_line_2
                 )
             [2] => Array
                 (
-                    [line_matches] => Array
-                        (
-                            [0] => index_3
-                            [1] => file_insert_line_3
-                        )
-                    [line_offset] => 24576
-                    [line_length] => 8192
+                    [0] => index_3
+                    [1] => file_insert_line_3
                 )
         )
 )
-
-
 ```
 
 
