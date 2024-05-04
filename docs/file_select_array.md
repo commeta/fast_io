@@ -200,36 +200,88 @@ Array
 
 ```
 
-
-
-
-
 ```
-print_r([
-	file_select_array(__DIR__ . '/fast_io1.dat', $array, '\\w+_\\d+', 23),
-]);
+print_r(
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 22),
+);
 
 Array
 (
     [0] => Array
         (
-            [0] => Array
+            [line_matches] => Array
                 (
-                    [0] => index_1
-                    [1] => file_insert_line_1
+                    [0] => Array
+                        (
+                            [line_match] => index_0
+                            [match_offset] => 0
+                            [match_length] => 7
+                        )
+
+                    [1] => Array
+                        (
+                            [line_match] => file_insert_line_0
+                            [match_offset] => 7
+                            [match_length] => 18
+                        )
+
                 )
-            [1] => Array
+
+            [line_offset] => 0
+            [line_length] => 8192
+            [line_count] => 1
+        )
+
+    [1] => Array
+        (
+            [line_matches] => Array
                 (
-                    [0] => index_2
-                    [1] => file_insert_line_2
+                    [0] => Array
+                        (
+                            [line_match] => index_1
+                            [match_offset] => 0
+                            [match_length] => 7
+                        )
+
+                    [1] => Array
+                        (
+                            [line_match] => file_insert_line_1
+                            [match_offset] => 7
+                            [match_length] => 18
+                        )
+
                 )
-            [2] => Array
-                (
-                    [0] => index_3
-                    [1] => file_insert_line_3
-                )
+
+            [line_offset] => 8192
+            [line_length] => 8192
+            [line_count] => 2
+        )
+
+)
+
+```
+
+
+
+```
+print_r(
+	file_search_array(__DIR__ . '/fast_io1.dat', '\\w+_\\d+', 0, 2, 0, 23),
+);
+
+Array
+(
+    [0] => Array
+        (
+            [0] => index_0
+            [1] => file_insert_line_0
+        )
+    [1] => Array
+        (
+            [0] => index_1
+            [1] => file_insert_line_1
         )
 )
+
 ```
 
 
