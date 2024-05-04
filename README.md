@@ -225,10 +225,10 @@ The table of function call costs in ascending order:
 
 - file_select_line Very low consumption, sector-based reading of a file segment.
 - file_update_line Very low consumption, sector-based writing of a file segment.
+- file_insert_line Very low consumption, writing a line at the end of the file.
 - file_select_array Average consumption, low when reading linearly or if the file window is in the buffer.
 - file_update_array Average consumption, low when writing linearly or if the file window is in the buffer.
 - file_pop_line Low consumption, with very low alignment, reading from the end of the file, truncating the file.
-- file_insert_line Very low consumption, writing a line at the end of the file.
 - file_push_data Low consumption, writing a line at the end of the index file and a block at the end of the data file.
 - file_search_line Medium consumption, reading the entire file.
 - file_search_array Medium consumption, reading the entire file.
