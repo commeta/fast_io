@@ -8,7 +8,7 @@
 
 ## Синтаксис
 
-string file_search_data(string $filename, string $line_key[, int position = 0])
+string file_search_data(string $filename, string $line_key[, int position = 0][, int $mode = 0])
 
 
 ### Параметры
@@ -16,6 +16,10 @@ string file_search_data(string $filename, string $line_key[, int position = 0])
 - **filename** - Путь к текстовому файлу, в котором будет производиться поиск.
 - **line_key** - Ключ, по которому осуществляется поиск значения.
 - **position** (int, optional) - Позиция начала поиска в файле индекса.
+- **$mode** (int, optional): Режим.
+
+##### Log mode
+- +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим $mode - 100 но не будет блокировать файл.
 
 
 ### Возвращаемые значения
