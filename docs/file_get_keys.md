@@ -20,7 +20,7 @@ array file_get_keys(string $filename[, int $search_start = 0][, int $search_leng
 - **$search_start** (int, optional) - Стартовая строка начала выборки.
 - **$search_limit** (int, optional) - Ограничение массива выборки.
 - **$position** (int, optional) - Позиция начала поиска в файле.
-- **$mode** (int, optional) - Режим поиска.
+- **$mode** (int, optional) - Режим выборки.
 
 
 #### Режимы поиска
@@ -29,6 +29,9 @@ array file_get_keys(string $filename[, int $search_start = 0][, int $search_leng
 - 1: Возвращает ассоциативный массив: line, line_offset, line_length, line_count.
 - 2: Возвращает ассоциативный массив: trim_line, trim_length, line_offset, line_length, line_count.
 - 3: Возвращает ассоциативный массив: line_offset, line_length, line_count.
+- 4: Возвращает ассоциативный массив: key.
+- 5: Возвращает ассоциативный массив: trim_line.
+
 
 ##### Log mode
 - +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим $mode - 100 но не будет блокировать файл.
@@ -68,7 +71,7 @@ for($i=0; $i <=500; $i++){
 
 ```
 print_r([
-	file_get_keys(__DIR__ . '/fast_io1.dat', 0, 2, 0, 0),
+	file_get_keys(__DIR__ . '/fast_io1.dat', 0, 2),
 ]);
 
 Array
