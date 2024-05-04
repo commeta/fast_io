@@ -96,14 +96,14 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_array, 1, 2, IS_ARRA
     ZEND_ARG_TYPE_INFO(0, search_start, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, search_limit, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, position, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0) 
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_line, 1, 2, IS_STRING, 1)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line_key, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, position, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0) 
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_search_data, 1, 2, IS_STRING, 1)
@@ -209,7 +209,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_select_array, 1, 2, IS_ARRA
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, array, IS_ARRAY, 0)
     ZEND_ARG_TYPE_INFO(0, pattern, IS_STRING, 0)
-    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0) 
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_update_array, 1, 2, IS_LONG, 0)
@@ -3214,7 +3214,10 @@ PHP_FUNCTION(file_select_array) {
                                 PCRE2_SIZE start = ovector[2*i];
                                 PCRE2_SIZE end = ovector[2*i+1];
 
-                                if(mode == 23){
+
+
+
+                                if(mode == 23 || mode == 20){
                                     add_next_index_stringl(&return_matched, buffer + start, end - start);
                                 } else {
                                     zval match_arr;
@@ -3223,6 +3226,7 @@ PHP_FUNCTION(file_select_array) {
                                     add_assoc_stringl(&match_arr, "line_match", buffer + start, end - start);
                                     add_next_index_zval(&return_matched, &match_arr);
 
+                                    
                                     add_assoc_long(&match_arr, "match_offset", start_offset);
                                     add_assoc_long(&match_arr, "match_length", end - start);
                                 }
@@ -3270,15 +3274,9 @@ PHP_FUNCTION(file_select_array) {
                             }
 
                             if(mode == 23){
-                                add_assoc_zval(&line_arr, "line_matches", &return_matched);
-                                
-                                add_assoc_long(&line_arr, "line_offset", select_pos);
-                                add_assoc_long(&line_arr, "line_length", select_size);
-                                
-                                add_next_index_zval(return_value, &line_arr);
+                                add_next_index_zval(return_value, &return_matched);
                                 found_match = false;
                             }
-
                         }
                     }
 
