@@ -114,7 +114,7 @@ $r_total= memory_get_process_usage_kernel();
 
 for($i=0; $i <=500; $i++){
 	print_r(
-		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 92, '1234567890'), 8192) . ', '
+		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 92, '1234567890'), 8192) / 8192 . ', '
 	);
 }
 
@@ -157,10 +157,9 @@ print_r([
 
 print_r([
 	'file_update_line',
-	file_update_line(__DIR__ . '/fast_io1.dat', 'file_update_line mode 1', 8192, 8192, 1),
-	file_update_line(__DIR__ . '/fast_io1.dat', 'file_update_line mode 0', 3, 8192),
-	file_update_line(__DIR__ . '/fast_io1.dat', chr(127), 2, 8192),
+	file_update_line(__DIR__ . '/fast_io1.dat', 'file_update_line mode 0', 3 * 8192, 8192),
 ]);
+
 
 
 print_r([
@@ -201,7 +200,7 @@ print_r([
 
 print_r([
 	'file_update_line',
-	file_update_line(__DIR__ . '/fast_io1.dat', 'update апдейт', 50, 8192),
+	file_update_line(__DIR__ . '/fast_io1.dat', 'update апдейт', 50 * 8192, 8192),
 ]);
 
 
@@ -219,7 +218,7 @@ print_r([
 
 for($i=0; $i <=20; $i++){
 	print_r(
-		file_push_data(__DIR__ . '/fast_io2.dat', 'index_' . $i, 'data_file_push_line_' . $i . "\n") . ", "
+		file_push_data(__DIR__ . '/fast_io2.dat', 'index_' . $i, 'data_file_push_data_' . $i . "\n") . ", "
 	);
 }
 
@@ -254,10 +253,12 @@ print_r([
 print_r(__DIR__ . '/fast_io3.dat' . "\n");
 for($i=0; $i <=10; $i++){
 	print_r(
-		file_push_line(__DIR__ . '/fast_io3.dat', 'index_' . $i . ' data_file_push_line_' . $i) . ','
+		file_insert_line(
+			__DIR__ . '/fast_io3.dat', 
+			'index_' . $i . ' data_file_insert_line_' . $i
+		) . ','
 	);
 }
-
 
 
 
@@ -334,10 +335,10 @@ sleep(10);
 
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
-	file_push_line(__DIR__ . '/fast_io5.dat', 'index_' . $i . ' data_file_push_line_' . $i);
+	file_insert_line(__DIR__ . '/fast_io5.dat', 'index_' . $i . ' data_file_insert_line_' . $i);
 }
 $time= microtime(true) - $start;
-echo "file_push_line: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
+echo "file_insert_line: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
 
 
 sleep(10);
@@ -370,7 +371,7 @@ echo "file_defrag_lines: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")", 
 sleep(10);
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
-	file_push_data(__DIR__ . '/fast_io6.dat', 'index_' . $i, 'data_file_push_line_' . $i . "\n");
+	file_push_data(__DIR__ . '/fast_io6.dat', 'index_' . $i, 'data_file_insert_line_' . $i . "\n");
 }
 $time= microtime(true) - $start;
 echo "file_push_data: ", $time, " (", sprintf('%.8f', ($time / 10000)), ")",  "\n";
@@ -399,7 +400,7 @@ echo "file_search_data repeat: ", $time, " (", sprintf('%.8f', ($time / 10000)),
 
 sleep(10);
 for($i=0; $i <=10000; $i++){
-	file_push_line(__DIR__ . '/fast_io7.dat', 'index_' . $i . ' data_file_push_line_' . $i);
+	file_insert_line(__DIR__ . '/fast_io7.dat', 'index_' . $i . ' data_file_insert_line_' . $i);
 }
 $start= microtime(true);
 for($i=0; $i <=10000; $i++){
