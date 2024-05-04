@@ -18,7 +18,7 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 
 ## Function List
 
-- [file_push_line](/docs/file_push_line.md): Adding a line to a text file.
+- [file_insert_line](/docs/file_insert_line.md): Inserting lines with alignment into the file.
 - [file_pop_line](/docs/file_pop_line.md): Extracting and deleting the last line from the file.
 - [file_defrag_data](/docs/file_defrag_data.md): Defragmenting the data file and its corresponding index file.
 - [file_push_data](/docs/file_push_data.md): Adding a portion of binary data to the data file and its corresponding index file.
@@ -29,7 +29,6 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - [file_defrag_lines](/docs/file_defrag_lines.md): Removing lines from the data file.
 - [file_get_keys](/docs/file_get_keys.md): Extracting unique keys from a text file.
 - [file_replace_line](/docs/file_replace_line.md): Replacing a line by key.
-- [file_insert_line](/docs/file_insert_line.md): Inserting lines with alignment into the file.
 - [file_select_line](/docs/file_select_line.md): Selecting a line from the file, based on a specified number or offset.
 - [file_select_array](/docs/file_select_array.md) - Bulk selection of lines from a file, according to the specified offset and size.
 - [file_update_line](/docs/file_update_line.md): Updating a line in the file.
@@ -61,7 +60,7 @@ Functions: file_defrag_data, file_defrag_lines, file_erase_line, file_get_keys, 
 
 
 ### Behavior of the Fast_IO function in case of transaction abort
-- file_push_data, file_push_line, file_insert_line - always cancel the last record and exit with an error.
+- file_push_data, file_insert_line - always cancel the last record and exit with an error.
 - file_replace_line, file_defrag_data, file_defrag_line - if there is an error during writeback, it renames temporary files and data remains intact. If a parallel copy of the Fast_IO function is waiting for the file lock to be released, it will fail with a lock error.
 - file_erase_line - checks the number of written bytes; if there is an error writing a file (-3), this operation cannot be undone!
 - file_update_line, file_update_array - checks the number of written bytes; if there is an error writing a file (-4), this operation cannot be undone!
@@ -211,7 +210,6 @@ Next, compile and test your extension using phpize, ./configure, make, and make 
 The Fast_IO extension was rigorously tested on Ubuntu 24.04, with a Ryzen 12 Cores CPU, 16GB RAM, and a SATA 3 SSD. Here are the results for some of the key functions when executed in a loop of 10,000 iterations, with linear index incrementation (to avoid cache hits) and repeated searches for the same index:
 
 ```
-file_push_line: 0.13037991523743 (0.00001304)
 file_search_line: 2.8793230056763 (0.00028793)
 file_search_line repeat: 0.091537952423096 (0.00000915)
 file_defrag_lines: 0.87505483627319 (0.00008751)
@@ -230,7 +228,6 @@ The table of function call costs in ascending order:
 - file_select_array Average consumption, low when reading linearly or if the file window is in the buffer.
 - file_update_array Average consumption, low when writing linearly or if the file window is in the buffer.
 - file_pop_line Low consumption, with very low alignment, reading from the end of the file, truncating the file.
-- file_push_line Very low consumption, writing a line at the end of the file.
 - file_insert_line Very low consumption, writing a line at the end of the file.
 - file_push_data Low consumption, writing a line at the end of the index file and a block at the end of the data file.
 - file_search_line Medium consumption, reading the entire file.
