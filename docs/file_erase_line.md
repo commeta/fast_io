@@ -8,13 +8,17 @@
 
 ## Синтаксис
 
-int file_erase_line(string $filename, string $line_key[, int $position = 0])
+int file_erase_line(string $filename, string $line_key[, int $position = 0][, int $mode = 0])
 
 ### Параметры
 
 - **filename** - Путь к файлу, в котором требуется скрыть ключ.
 - **line_key** - Ключ, который необходимо скрыть в файле.
 - **position** (int, optional) - Позиция начала поиска в файле.
+- **$mode** (int, optional): Режим.
+
+##### Log mode
+- +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим $mode - 100 но не будет блокировать файл.
 
 
 ### Возвращаемые значения
