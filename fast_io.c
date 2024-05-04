@@ -808,19 +808,22 @@ PHP_FUNCTION(file_search_data) {
         RETURN_FALSE;
     }
 
-    if (flock(fileno(data_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        fclose(data_fp);
-        fclose(index_fp);
-        RETURN_FALSE;
-    }
-    if (flock(fileno(index_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_filename);
-        fclose(data_fp);
-        fclose(index_fp);
-        RETURN_FALSE;
+    if(mode < 100){
+        if (flock(fileno(data_fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
+            fclose(data_fp);
+            fclose(index_fp);
+            RETURN_FALSE;
+        }
+        if (flock(fileno(index_fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_filename);
+            fclose(data_fp);
+            fclose(index_fp);
+            RETURN_FALSE;
+        }
     }
 
+    if(mode > 99) mode -= 100;
 
     zend_long ini_buffer_size = FAST_IO_G(buffer_size);
 
@@ -968,20 +971,25 @@ PHP_FUNCTION(file_push_data) {
         RETURN_LONG(-1);
     }
 
-    // Блокировка файла для записи
-    if (flock(fileno(data_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        fclose(data_fp); // Это также разблокирует файл
-        fclose(index_fp); 
-        RETURN_LONG(-2);
+
+    if(mode < 100){
+        // Блокировка файла для записи
+        if (flock(fileno(data_fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
+            fclose(data_fp); // Это также разблокирует файл
+            fclose(index_fp); 
+            RETURN_LONG(-2);
+        }
+        // Блокировка файла для записи
+        if (flock(fileno(index_fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_filename);
+            fclose(index_fp); // Это также разблокирует файл
+            fclose(data_fp);
+            RETURN_LONG(-2);
+        }
     }
-    // Блокировка файла для записи
-    if (flock(fileno(index_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_filename);
-        fclose(index_fp); // Это также разблокирует файл
-        fclose(data_fp);
-        RETURN_LONG(-2);
-    }
+
+    if(mode > 99) mode -= 100;
 
     // Запись значения в файл данных
     fseek(data_fp, 0, SEEK_END); // Перемещаем указатель в конец файла
@@ -1075,7 +1083,6 @@ PHP_FUNCTION(file_defrag_lines) {
         }
     }
  
-
     if(mode > 99) mode -= 100;
 
     // Перемещение указателя в конец файла для получения его размера
@@ -1267,26 +1274,31 @@ PHP_FUNCTION(file_defrag_data) {
         RETURN_LONG(-1);
     }
 
-    if (flock(fileno(data_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
-        fclose(index_fp);
-        fclose(data_fp);
-        fclose(temp_fp);
-        fclose(temp_index_fp);
-        unlink(temp_filename);
-        unlink(temp_index_filename);
-        RETURN_LONG(-2);
+    if(mode < 100){
+        if (flock(fileno(data_fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
+            fclose(index_fp);
+            fclose(data_fp);
+            fclose(temp_fp);
+            fclose(temp_index_fp);
+            unlink(temp_filename);
+            unlink(temp_index_filename);
+            RETURN_LONG(-2);
+        }
+        if (flock(fileno(index_fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_filename);
+            fclose(index_fp);
+            fclose(data_fp);
+            fclose(temp_fp);
+            fclose(temp_index_fp);
+            unlink(temp_filename);
+            unlink(temp_index_filename);
+            RETURN_LONG(-2);
+        }
     }
-    if (flock(fileno(index_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_filename);
-        fclose(index_fp);
-        fclose(data_fp);
-        fclose(temp_fp);
-        fclose(temp_index_fp);
-        unlink(temp_filename);
-        unlink(temp_index_filename);
-        RETURN_LONG(-2);
-    }
+ 
+
+    if(mode > 99) mode -= 100;
 
     // Перемещение указателя в конец файла для получения его размера
     fseek(index_fp, 0, SEEK_END);
@@ -1834,12 +1846,17 @@ PHP_FUNCTION(file_erase_line) {
         RETURN_LONG(-1);
     }
 
-    // Попытка установить блокирующую блокировку на запись
-    if (flock(fileno(fp), LOCK_EX) < 0) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
-        fclose(fp);
-        RETURN_LONG(-2);
+    if(mode < 100){
+        // Попытка установить блокирующую блокировку на запись
+        if (flock(fileno(fp), LOCK_EX) < 0) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+            fclose(fp);
+            RETURN_LONG(-2);
+        }
     }
+
+    if(mode > 99) mode -= 100;
+
 
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
@@ -1981,6 +1998,8 @@ PHP_FUNCTION(file_get_keys) {
             RETURN_FALSE;
         }
     }
+
+    if(mode > 99) mode -= 100;
 
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
@@ -2781,13 +2800,17 @@ PHP_FUNCTION(replicate_file) {
         RETURN_LONG(-2);
     }
 
-    if (flock(fileno(source_fp), LOCK_EX) == -1) {
-        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", source);
-        fclose(source_fp);
-        fclose(destination_fp);
-        unlink(destination);
-        RETURN_LONG(-3);
+
+    if(mode < 100){
+        if (flock(fileno(source_fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", source);
+            fclose(source_fp);
+            fclose(destination_fp);
+            unlink(destination);
+            RETURN_LONG(-3);
+        }
     }
+
 
     FILE *index_source_fp;
     FILE *index_destination_fp;
@@ -2818,17 +2841,22 @@ PHP_FUNCTION(replicate_file) {
             RETURN_LONG(-2);
         }
 
-        if (flock(fileno(index_source_fp), LOCK_EX) == -1) {
-            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_source);
-            fclose(index_source_fp);
-            fclose(index_destination_fp);
-            fclose(source_fp);
-            fclose(destination_fp);
-            unlink(destination);
-            unlink(index_destination);
-            RETURN_LONG(-3);
+        if(mode < 100){
+            if (flock(fileno(index_source_fp), LOCK_EX) == -1) {
+                php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_source);
+                fclose(index_source_fp);
+                fclose(index_destination_fp);
+                fclose(source_fp);
+                fclose(destination_fp);
+                unlink(destination);
+                unlink(index_destination);
+                RETURN_LONG(-3);
+            }
         }
     }
+
+    if(mode > 99) mode -= 100;
+
 
     // Перемещение указателя в конец файла для получения его размера
     fseek(source_fp, 0, SEEK_END);
