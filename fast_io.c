@@ -2801,15 +2801,14 @@ PHP_FUNCTION(replicate_file) {
     }
 
 
-    if(mode < 100){
-        if (flock(fileno(source_fp), LOCK_EX) == -1) {
-            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", source);
-            fclose(source_fp);
-            fclose(destination_fp);
-            unlink(destination);
-            RETURN_LONG(-3);
-        }
+    if (flock(fileno(source_fp), LOCK_EX) == -1) {
+        php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", source);
+        fclose(source_fp);
+        fclose(destination_fp);
+        unlink(destination);
+        RETURN_LONG(-3);
     }
+    
 
 
     FILE *index_source_fp;
@@ -2841,22 +2840,18 @@ PHP_FUNCTION(replicate_file) {
             RETURN_LONG(-2);
         }
 
-        if(mode < 100){
-            if (flock(fileno(index_source_fp), LOCK_EX) == -1) {
-                php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_source);
-                fclose(index_source_fp);
-                fclose(index_destination_fp);
-                fclose(source_fp);
-                fclose(destination_fp);
-                unlink(destination);
-                unlink(index_destination);
-                RETURN_LONG(-3);
-            }
+        if (flock(fileno(index_source_fp), LOCK_EX) == -1) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", index_source);
+            fclose(index_source_fp);
+            fclose(index_destination_fp);
+            fclose(source_fp);
+            fclose(destination_fp);
+            unlink(destination);
+            unlink(index_destination);
+            RETURN_LONG(-3);
         }
+        
     }
-
-    if(mode > 99) mode -= 100;
-
 
     // Перемещение указателя в конец файла для получения его размера
     fseek(source_fp, 0, SEEK_END);
