@@ -12,7 +12,7 @@
 
 ### Синтаксис
 
-array file_analize(string $filename [, int $mode = 0])
+array file_analize(string $filename[, int $mode = 0])
 
 
 #### Параметры
