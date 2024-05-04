@@ -202,7 +202,6 @@ make test
 Результат тестирования: Ubuntu 24.04, Ryzen 12 Cores, 16GB RAM, SATA 3 SSD.
 
 ```
-file_push_line: 0.13037991523743 (0.00001304)
 file_search_line: 2.8793230056763 (0.00028793)
 file_search_line repeat: 0.091537952423096 (0.00000915)
 file_defrag_lines: 0.87505483627319 (0.00008751)
