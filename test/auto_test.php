@@ -82,6 +82,7 @@ for($ii = 0; $ii < 100; $ii++){
         $analize['total_characters'] == $last_offset &&
         $analize['last_symbol'] == 10 &&
         $analize['file_size'] == $last_offset &&
+        $analize['file_size'] == filesize($db_file) &&
         $analize['flow_interruption'] == 0 &&
         $analize['min_length'] == $analize['max_length'] &&
         $analize['min_length'] == $analize['avg_length'] &&
