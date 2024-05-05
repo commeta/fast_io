@@ -78,6 +78,7 @@ for($ii = 0; $ii < 100; $ii++){
     $analize = file_analize($db_file);
      
     if(
+        $file_insert_line_passed &&
         $last_offset - $align == $file_offset &&
         $analize['total_characters'] == $last_offset &&
         $analize['last_symbol'] == 10 &&
