@@ -116,7 +116,7 @@ for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
     $align = mt_rand(16, 65534);
 
-    ini_set('fast_io.buffer_size', mt_rand(4096, 65534));
+    ini_set('fast_io.buffer_size', mt_rand(1024, 65534));
 
     $last_offset = 0;
 
@@ -163,7 +163,7 @@ for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
     $align = mt_rand(16, 65534);
 
-    ini_set('fast_io.buffer_size', mt_rand(4096, 65534));
+    ini_set('fast_io.buffer_size', mt_rand(1024, 65534));
 
     $last_offset = 0;
 
@@ -180,6 +180,7 @@ for($ii = 0; $ii < 100; $ii++){
         $trim_line = mb_substr($str, 0, $align - 1);
         $insert_string[$i] = [
             'trim_line' => $trim_line,
+            'trim_length' => mb_strlen($trim_line),
             'line_offset' => $file_offset,
             'line_length' => $align,
             'line_count' => $i
@@ -189,9 +190,9 @@ for($ii = 0; $ii < 100; $ii++){
     }
 
 
+    $file_array = file_get_keys($db_file, 0, $c + 1, 0, 1);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
     foreach($insert_string as $row_num=>$line_arr){
-        $file_array = file_get_keys($db_file, 0, $c + 1, 0, 1);
-
         if(
             $file_array[$row_num]['line_count'] - 1 !== $line_arr['line_count'] ||
             $file_array[$row_num]['line_offset'] !== $line_arr['line_offset'] ||
@@ -204,6 +205,7 @@ for($ii = 0; $ii < 100; $ii++){
     }
 
     $file_array = file_get_keys($db_file, 0, $c + 1, 0, 0);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
     foreach($file_array as $row_num=>$line_arr){
         $str_array = explode(' ', $insert_string[$row_num]['trim_line']);
 
@@ -219,12 +221,13 @@ for($ii = 0; $ii < 100; $ii++){
     }
 
     $file_array = file_get_keys($db_file, 0, $c + 1, 0, 2);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
     foreach($file_array as $row_num=>$line_arr){
         if(
             $line_arr['line_count'] - 1 !== $insert_string[$row_num]['line_count'] ||
             $line_arr['line_length'] !== $insert_string[$row_num]['line_length'] ||
             $line_arr['line_offset'] !== $insert_string[$row_num]['line_offset'] ||
-            $line_arr['trim_length'] !== strlen($insert_string[$row_num]['trim_line']) ||
+            $line_arr['trim_length'] !== $insert_string[$row_num]['trim_length'] ||
             $line_arr['trim_line'] !== $insert_string[$row_num]['trim_line']
         ){
             $file_get_keys_passed = false;
@@ -233,6 +236,7 @@ for($ii = 0; $ii < 100; $ii++){
     }
 
     $file_array = file_get_keys($db_file, 0, $c + 1, 0, 3);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
     foreach($file_array as $row_num=>$line_arr){
         if(
             $line_arr['line_count'] - 1 !== $insert_string[$row_num]['line_count'] ||
@@ -245,6 +249,7 @@ for($ii = 0; $ii < 100; $ii++){
     }
 
     $file_array = file_get_keys($db_file, 0, $c + 1, 0, 4);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
     foreach($file_array as $row_num=>$line_arr){
         $str_array = explode(' ', $insert_string[$row_num]['trim_line']);
         
@@ -257,6 +262,143 @@ for($ii = 0; $ii < 100; $ii++){
     }
 
     $file_array = file_get_keys($db_file, 0, $c + 1, 0, 5);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
+    foreach($file_array as $row_num=>$line_arr){       
+        if(
+            $line_arr !== $insert_string[$row_num]['trim_line']
+        ){
+            $file_get_keys_passed = false;
+            break;
+        }
+    }
+}
+
+
+if($file_get_keys_passed) echo "Check file_get_keys - PASS\n";
+else echo "Check file_get_keys - ERROR\n";
+
+
+
+
+// #########################
+// Check file_search_array
+$file_search_array_passed = true;
+
+for($ii = 0; $ii < 100; $ii++){
+    if(file_exists($db_file)) unlink($db_file);
+    $align = mt_rand(16, 65534);
+
+    ini_set('fast_io.buffer_size', mt_rand(1024, 65534));
+
+    $last_offset = 0;
+
+    $c = mt_rand(10, 100);
+
+    $insert_string = [];
+    
+    for($i=0; $i <= $c; $i++){
+        $shuffle = mt_rand(1, $align * 2);
+
+        $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
+        $file_offset = file_insert_line($db_file, $str, 2, $align);
+
+        $trim_line = mb_substr($str, 0, $align - 1);
+        $insert_string[$i] = [
+            'trim_line' => $trim_line,
+            'trim_length' => mb_strlen($trim_line),
+            'line_offset' => $file_offset,
+            'line_length' => $align,
+            'line_count' => $i
+        ];
+
+        if($file_offset == $last_offset) $last_offset += $align;  
+    }
+
+
+
+    $file_array = file_search_array($db_file, 'index_', 0, $c + 1, 0, 0);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
+    foreach($insert_string as $row_num=>$line_arr){
+        if(
+            $file_array[$row_num]['trim_line'] !== $line_arr['trim_line'] ||
+            $file_array[$row_num]['trim_length'] !== $line_arr['trim_length'] ||
+            $file_array[$row_num]['line_offset'] !== $line_arr['line_offset'] ||
+            $file_array[$row_num]['line_length'] !== $line_arr['line_length'] ||
+            $file_array[$row_num]['line_count'] - 1 !== $line_arr['line_count']
+        ){
+            $file_search_array_passed = false;
+            break;
+        }
+    }
+
+
+    $file_array = file_search_array($db_file, 'index_', 0, $c + 1, 0, 1);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
+    foreach($file_array as $row_num=>$line_arr){
+        if(
+            $line_arr['line_count'] - 1 !== $insert_string[$row_num]['line_count'] ||
+            $line_arr['line_length'] !== $insert_string[$row_num]['line_length'] ||
+            $line_arr['line_offset'] !== $insert_string[$row_num]['line_offset'] ||
+            trim($line_arr['line']) !== $insert_string[$row_num]['trim_line']
+        ){
+            $file_search_array_passed = false;
+            break;
+        }
+    }
+    
+    $file_array = file_search_array($db_file, 'index_', 0, $c + 1, 0, 2);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
+    foreach($file_array as $row_num=>$line_arr){       
+        if(
+            $line_arr !== $insert_string[$row_num]['trim_line']
+        ){
+            $file_get_keys_passed = false;
+            break;
+        }
+    }
+    
+    $file_array = file_search_array($db_file, 'index_', 0, $c + 1, 0, 3);
+    if(
+        empty($file_array['line_count']) ||
+        empty($file_array['found_count']) ||
+        $file_array['line_count'] !== $file_array['found_count'] ||
+        $file_array['line_count'] !== $c + 1
+    ){
+        $file_search_array_passed = false;
+        break;
+    }
+
+    $file_array = file_search_array($db_file, '\\w+_\\d+', 0, $c + 1, 0, 10);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
+    foreach($insert_string as $row_num=>$line_arr){
+        if(
+            $file_array[$row_num]['trim_line'] !== $line_arr['trim_line'] ||
+            $file_array[$row_num]['trim_length'] !== $line_arr['trim_length'] ||
+            $file_array[$row_num]['line_offset'] !== $line_arr['line_offset'] ||
+            $file_array[$row_num]['line_length'] !== $line_arr['line_length'] ||
+            $file_array[$row_num]['line_count'] - 1 !== $line_arr['line_count']
+        ){
+            $file_search_array_passed = false;
+            break;
+        }
+    }
+
+    $file_array = file_search_array($db_file, '\\w+_\\d+', 0, $c + 1, 0, 11);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
+    foreach($file_array as $row_num=>$line_arr){
+        if(
+            $line_arr['line_count'] - 1 !== $insert_string[$row_num]['line_count'] ||
+            $line_arr['line_length'] !== $insert_string[$row_num]['line_length'] ||
+            $line_arr['line_offset'] !== $insert_string[$row_num]['line_offset'] ||
+            trim($line_arr['line']) !== $insert_string[$row_num]['trim_line']
+        ){
+            $file_search_array_passed = false;
+            break;
+        }
+    }
+
+    $file_array = file_search_array($db_file, '\\w+_\\d+', 0, $c + 1, 0, 12);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
     foreach($file_array as $row_num=>$line_arr){       
         if(
             $line_arr !== $insert_string[$row_num]['trim_line']
@@ -266,10 +408,97 @@ for($ii = 0; $ii < 100; $ii++){
         }
     }
 
+
+    $file_array = file_search_array($db_file, '\\w+_\\d+', 0, $c + 1, 0, 13);
+    if(
+        empty($file_array['line_count']) ||
+        empty($file_array['found_count']) ||
+        $file_array['line_count'] !== $file_array['found_count'] ||
+        $file_array['line_count'] !== $c + 1
+    ){
+        $file_search_array_passed = false;
+        break;
+    }
+
+
+    $file_array = file_search_array($db_file, '\\w+_\\d+', 0, $c + 1, 0, 20);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
+    foreach($insert_string as $row_num=>$line_arr){
+        $str_array = explode(' ', $insert_string[$row_num]['trim_line']);
+
+        if(
+            $file_array[$row_num]['trim_line'] !== $line_arr['trim_line'] ||
+            $file_array[$row_num]['trim_length'] !== $line_arr['trim_length'] ||
+            $file_array[$row_num]['line_offset'] !== $line_arr['line_offset'] ||
+            $file_array[$row_num]['line_length'] !== $line_arr['line_length'] ||
+            $file_array[$row_num]['line_count'] - 1 !== $line_arr['line_count'] ||
+            $file_array[$row_num]['line_matches'][0] !== $str_array[0] ||
+            $file_array[$row_num]['line_matches'][1] !== $str_array[1]
+        ){
+            $file_search_array_passed = false;
+            break;
+        }
+    }
+
+    $file_array = file_search_array($db_file, '\\w+_\\d+', 0, $c + 1, 0, 21);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
+    foreach($insert_string as $row_num=>$line_arr){
+        $str_array = explode(' ', $insert_string[$row_num]['trim_line']);
+
+        if(
+            trim($file_array[$row_num]['line']) !== $line_arr['trim_line'] ||
+            $file_array[$row_num]['line_offset'] !== $line_arr['line_offset'] ||
+            $file_array[$row_num]['line_length'] !== $line_arr['line_length'] ||
+            $file_array[$row_num]['line_count'] - 1 !== $line_arr['line_count'] ||
+            $file_array[$row_num]['line_matches'][0] !== $str_array[0] ||
+            $file_array[$row_num]['line_matches'][1] !== $str_array[1]
+        ){
+            $file_search_array_passed = false;
+            break;
+        }
+    }
+
+
+    $file_array = file_search_array($db_file, '\\w+_\\d+', 0, $c + 1, 0, 22);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
+    foreach($insert_string as $row_num=>$line_arr){
+        $str_array = explode(' ', $insert_string[$row_num]['trim_line']);
+
+        if(
+            $file_array[$row_num]['line_offset'] !== $line_arr['line_offset'] ||
+            $file_array[$row_num]['line_length'] !== $line_arr['line_length'] ||
+            $file_array[$row_num]['line_count'] - 1 !== $line_arr['line_count'] ||
+            $file_array[$row_num]['line_matches'][0]['line_match'] !== $str_array[0] ||
+            $file_array[$row_num]['line_matches'][0]['match_offset'] !== strpos($insert_string[$row_num]['trim_line'], $str_array[0]) ||
+            $file_array[$row_num]['line_matches'][0]['match_length'] !== mb_strlen($str_array[0]) ||
+            $file_array[$row_num]['line_matches'][1]['line_match'] !== $str_array[1] ||
+            $file_array[$row_num]['line_matches'][1]['match_offset'] !== strpos($insert_string[$row_num]['trim_line'], $str_array[1]) ||
+            $file_array[$row_num]['line_matches'][1]['match_length'] !== mb_strlen($str_array[1]) 
+
+        ){
+            $file_search_array_passed = false;
+            break;
+        }
+    }
+
+
+    $file_array = file_search_array($db_file, '\\w+_\\d+', 0, $c + 1, 0, 23);
+    if(count($file_array) != count($insert_string)) $file_search_array_passed = false;
+    foreach($insert_string as $row_num=>$line_arr){
+        $str_array = explode(' ', $insert_string[$row_num]['trim_line']);
+
+        if(
+            $file_array[$row_num][0] !== $str_array[0] ||
+            $file_array[$row_num][1] !== $str_array[1]
+        ){
+            $file_search_array_passed = false;
+            break;
+        }
+    }
+
 }
 
 
-if($file_get_keys_passed) echo "Check file_get_keys - PASS\n";
-else echo "Check file_get_keys - ERROR\n";
-
+if($file_search_array_passed) echo "Check file_search_array - PASS\n";
+else echo "Check file_search_array - ERROR\n";
 
