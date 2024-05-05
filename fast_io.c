@@ -372,8 +372,10 @@ PHP_FUNCTION(file_search_array) {
                     zval line_arr;
                     array_init(&line_arr);
 
+                    int i;
+
                     if(mode == 0 || mode == 2){
-                        for (int i = lineLength - 2; i >= 0; --i) {
+                        for (i = lineLength - 2; i >= 0; --i) {
                             if(lineStart[i] == ' ') lineStart[i] = '\0';
                             else break;
                         }
@@ -383,7 +385,7 @@ PHP_FUNCTION(file_search_array) {
 
 
                     if(mode == 0){
-                        add_assoc_long(&line_arr, "trim_length", strlen(lineStart));
+                        add_assoc_long(&line_arr, "trim_length", i + 1);
                     }
 
                     if(mode == 1){
@@ -414,8 +416,10 @@ PHP_FUNCTION(file_search_array) {
                     zval line_arr;
                     array_init(&line_arr);
 
+                    int i;
+
                     if(mode == 10 || mode == 12){
-                        for (int i = lineLength - 2; i >= 0; --i) {
+                        for (i = lineLength - 2; i >= 0; --i) {
                             if(lineStart[i] == ' ') lineStart[i] = '\0';
                             else break;
                         }
@@ -423,7 +427,7 @@ PHP_FUNCTION(file_search_array) {
                     
                     if(mode == 10){
                         add_assoc_string(&line_arr, "trim_line", lineStart);
-                        add_assoc_long(&line_arr, "trim_length", strlen(lineStart));
+                        add_assoc_long(&line_arr, "trim_length", i + 1);
                     } else {
                         add_assoc_string(&line_arr, "line", lineStart);
                     }
@@ -477,7 +481,7 @@ PHP_FUNCTION(file_search_array) {
 
                                 if(mode != 23){
                                     add_next_index_zval(&return_matched, &match_arr);
-                                    add_assoc_long(&match_arr, "match_offset", start_offset);
+                                    add_assoc_long(&match_arr, "match_offset", start);
                                     add_assoc_long(&match_arr, "match_length", end - start);
                                 }
                                 
@@ -518,13 +522,15 @@ PHP_FUNCTION(file_search_array) {
                         array_init(&line_arr);
 
                         if(mode == 20) {
-                            for (int i = lineLength - 2; i >= 0; --i) {
+                            int i;
+
+                            for (i = lineLength - 2; i >= 0; --i) {
                                 if(lineStart[i] == ' ') lineStart[i] = '\0';
                                 else break;
                             }
 
                             add_assoc_string(&line_arr, "trim_line", lineStart);
-                            add_assoc_long(&line_arr, "trim_length", strlen(lineStart));
+                            add_assoc_long(&line_arr, "trim_length", i + 1);
                         }
 
                         if(mode == 21) {
@@ -2065,13 +2071,15 @@ PHP_FUNCTION(file_get_keys) {
 
                 if(mode == 2 || mode == 5) {
                     // Обрезка пробелов справа и символа перевода строки
-                    for (int i = lineLength - 2; i >= 0; --i) {
+                    int i;
+
+                    for (i = lineLength - 2; i >= 0; --i) {
                         if(lineStart[i] == ' ' || lineStart[i] == '\n') lineStart[i] = '\0';
                         else break;
                     }
 
                     add_assoc_string(&line_arr, "trim_line", lineStart);
-                    if(mode != 5) add_assoc_long(&line_arr, "trim_length", strlen(lineStart));
+                    if(mode != 5) add_assoc_long(&line_arr, "trim_length", i + 1);
 
                     if(mode == 5){
                         add_next_index_string(return_value, lineStart);
@@ -2733,7 +2741,7 @@ PHP_FUNCTION(find_matches_pcre2) {
                 array_init(&match_arr);
 
                 add_assoc_stringl(&match_arr, "line_match", subject + start, end - start);
-                add_assoc_long(&match_arr, "match_offset", start_offset);
+                add_assoc_long(&match_arr, "match_offset", start);
                 add_assoc_long(&match_arr, "match_length", end - start);
                 add_next_index_zval(&return_matched, &match_arr);
             } else {
@@ -3164,7 +3172,7 @@ PHP_FUNCTION(file_select_array) {
                                     add_next_index_zval(&return_matched, &match_arr);
 
                                     
-                                    add_assoc_long(&match_arr, "match_offset", start_offset);
+                                    add_assoc_long(&match_arr, "match_offset", start);
                                     add_assoc_long(&match_arr, "match_length", end - start);
                                 }
                             }
