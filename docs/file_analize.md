@@ -81,34 +81,29 @@ print_r([
 ```
 
 ```
+Array
 (
     [0] => Array
         (
-            [0] => Array
-                (
-                    [min_length] => 8192
-                    [max_length] => 8192
-                    [avg_length] => 8192
-                    [line_count] => 501
-                    [total_characters] => 4104192
-                    [flow_interruption] => 0
-                    [last_symbol] => 10
-                    [file_size] => 4104192
-                )
+            [min_length] => 8192
+            [max_length] => 8192
+            [avg_length] => 8192
+            [line_count] => 998
+            [total_characters] => 8175616
+            [flow_interruption] => 0
+            [last_symbol] => 10
+            [file_size] => 8175616
         )
 
     [1] => Array
         (
-            [0] => Array
-                (
-                    [min_length] => 8192
-                    [max_length] => 8192
-                    [avg_length] => 8192
-                    [line_count] => 1
-                    [total_characters] => 8192
-                    [last_symbol] => 10
-                    [file_size] => 4104192
-                )
+            [min_length] => 8192
+            [max_length] => 8192
+            [avg_length] => 8192
+            [line_count] => 1
+            [total_characters] => 8192
+            [last_symbol] => 10
+            [file_size] => 8175616
         )
 
 )
