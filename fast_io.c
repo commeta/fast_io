@@ -3045,6 +3045,7 @@ PHP_FUNCTION(file_select_array) {
                     zval line_arr;
                     array_init(&line_arr);
 
+                    int i;
 
                     if(
                         mode == 0 ||
@@ -3057,7 +3058,7 @@ PHP_FUNCTION(file_select_array) {
                         mode == 24                        
                     ) {
                         // Обрезка пробелов справа и символа перевода строки
-                        for (int i = bytesRead - 1; i >= 0; --i) {
+                        for (i = bytesRead - 1; i >= 0; --i) {
                             if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
                             else break;
                         }
@@ -3065,7 +3066,7 @@ PHP_FUNCTION(file_select_array) {
 
                     if(mode == 0) {
                         add_assoc_string(&line_arr, "trim_line", buffer);
-                        add_assoc_long(&line_arr, "trim_length", strlen(buffer));
+                        add_assoc_long(&line_arr, "trim_length", i + 1);
                         found_match = true;
                     }
 
@@ -3089,7 +3090,7 @@ PHP_FUNCTION(file_select_array) {
                         strstr(buffer, pattern) != NULL
                     ){
                         add_assoc_string(&line_arr, "trim_line", buffer);
-                        add_assoc_long(&line_arr, "trim_length", strlen(buffer));
+                        add_assoc_long(&line_arr, "trim_length", i + 1);
                         found_match = true;
                     }
 
@@ -3119,7 +3120,7 @@ PHP_FUNCTION(file_select_array) {
                             if(mode < 13){
                                 if(mode == 10){
                                     add_assoc_string(&line_arr, "trim_line", buffer);
-                                    add_assoc_long(&line_arr, "trim_length", strlen(buffer));
+                                    add_assoc_long(&line_arr, "trim_length", i + 1);
                                     found_match = true;
                                 }
 
@@ -3204,7 +3205,7 @@ PHP_FUNCTION(file_select_array) {
                         if(found_match){
                             if(mode == 20) {
                                 add_assoc_string(&line_arr, "trim_line", buffer);
-                                add_assoc_long(&line_arr, "trim_length", strlen(buffer));
+                                add_assoc_long(&line_arr, "trim_length", i + 1);
                             }
 
                             if(mode == 21) {
