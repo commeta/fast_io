@@ -32,6 +32,7 @@ error_reporting(E_ALL);
 $db_file = __DIR__ . '/fast_io.dat';
 
 
+// #########################
 // Check file_insert_line
 $file_insert_line_passed = true;
 
@@ -104,4 +105,51 @@ for($ii = 0; $ii < 100; $ii++){
 
 if($file_insert_line_passed) echo "Check file_insert_line alignment data - PASS\n";
 else echo "Check file_insert_line alignment data - ERROR\n";
+
+
+
+// #########################
+// Check file_analize
+$file_analize_passed = true;
+
+for($ii = 0; $ii < 100; $ii++){
+    if(file_exists($db_file)) unlink($db_file);
+    $align = mt_rand(30, 16384);
+
+    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
+
+    $last_offset = 0;
+
+    $c = mt_rand(10, 500);
+    
+    for($i=0; $i <= $c; $i++){
+        $shuffle = mt_rand(1, $align);
+
+        $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
+        $file_offset = file_insert_line($db_file, $str, 2, $align);
+
+        $analize = file_analize($db_file);
+
+        if(
+            $analize['total_characters'] == $i > 0 ? $i * $align : $align &&
+            $analize['last_symbol'] == 10 &&
+            $analize['file_size'] == $last_offset + $align &&
+            $analize['file_size'] == filesize($db_file) &&
+            $analize['flow_interruption'] == 0 &&
+            $analize['min_length'] == $analize['max_length'] &&
+            $analize['min_length'] == $analize['avg_length'] &&
+            $analize['line_count'] == $i + 1
+        ) {
+            $file_analize_passed = true;
+        } else {
+            $file_analize_passed = false;
+            break;
+        }
+        if($file_offset == $last_offset) $last_offset += $align;  
+    }
+}
+
+
+if($file_analize_passed) echo "Check file_analize - PASS\n";
+else echo "Check file_analize - ERROR\n";
 
