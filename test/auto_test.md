@@ -22,8 +22,10 @@
 
 
 #### Тестирование функций
-- file_insert_line - Тест сходимости с участием: file_get_keys, file_analize.
-- file_analize - Тест сходимости с участием: file_insert_line.
+- file_insert_line - Тест сходимости с участием: file_get_keys, file_analize, +рандомный размер буфера.
+- file_analize - Тест сходимости 1 режима, с участием: file_insert_line.
+- file_get_keys - Тест сходимости 1 режима, с участием: file_insert_line.
+
 
 
 #### Результат выполнения
