@@ -31,7 +31,6 @@ error_reporting(E_ALL);
 
 $db_file = __DIR__ . '/fast_io.dat';
 
-
 // #########################
 // Check file_insert_line
 $file_insert_line_passed = true;
@@ -180,7 +179,6 @@ for($ii = 0; $ii < 100; $ii++){
         $trim_line = mb_substr($str, 0, $align - 1);
         $insert_string[$i] = [
             'trim_line' => $trim_line,
-            'trim_length' => mb_strlen($trim_line),
             'line_offset' => $file_offset,
             'line_length' => $align,
             'line_count' => $i
@@ -203,11 +201,73 @@ for($ii = 0; $ii < 100; $ii++){
             break;
         }
     }
-    
+
+    $file_array = file_get_keys($db_file, 0, $c + 1, 0, 0);
+    foreach($file_array as $row_num=>$line_arr){
+        $str_array = explode(' ', $insert_string[$row_num]['trim_line']);
+
+        if(
+            $line_arr['line_count'] - 1 != $insert_string[$row_num]['line_count'] ||
+            $line_arr['line_length'] != $insert_string[$row_num]['line_length'] ||
+            $line_arr['line_offset'] != $insert_string[$row_num]['line_offset'] ||
+            $line_arr['key'] != $str_array[0]
+        ){
+            $file_get_keys_passed = false;
+            break;
+        }
+    }
+
+    $file_array = file_get_keys($db_file, 0, $c + 1, 0, 2);
+    foreach($file_array as $row_num=>$line_arr){
+        if(
+            $line_arr['line_count'] - 1 != $insert_string[$row_num]['line_count'] ||
+            $line_arr['line_length'] != $insert_string[$row_num]['line_length'] ||
+            $line_arr['line_offset'] != $insert_string[$row_num]['line_offset'] ||
+            $line_arr['trim_line'] != $insert_string[$row_num]['trim_line']
+        ){
+            $file_get_keys_passed = false;
+            break;
+        }
+    }
+
+    $file_array = file_get_keys($db_file, 0, $c + 1, 0, 3);
+    foreach($file_array as $row_num=>$line_arr){
+        if(
+            $line_arr['line_count'] - 1 != $insert_string[$row_num]['line_count'] ||
+            $line_arr['line_length'] != $insert_string[$row_num]['line_length'] ||
+            $line_arr['line_offset'] != $insert_string[$row_num]['line_offset'] 
+        ){
+            $file_get_keys_passed = false;
+            break;
+        }
+    }
+
+    $file_array = file_get_keys($db_file, 0, $c + 1, 0, 4);
+    foreach($file_array as $row_num=>$line_arr){
+        $str_array = explode(' ', $insert_string[$row_num]['trim_line']);
+        
+        if(
+            $line_arr != $str_array[0]
+        ){
+            $file_get_keys_passed = false;
+            break;
+        }
+    }
+
+    $file_array = file_get_keys($db_file, 0, $c + 1, 0, 5);
+    foreach($file_array as $row_num=>$line_arr){       
+        if(
+            $line_arr != $insert_string[$row_num]['trim_line']
+        ){
+            $file_get_keys_passed = false;
+            break;
+        }
+    }
+
 }
 
 
-if($file_get_keys_passed) echo "Quick check file_get_keys - PASS\n";
-else echo "Quick check file_get_keys - ERROR\n";
+if($file_get_keys_passed) echo "Check file_get_keys - PASS\n";
+else echo "Check file_get_keys - ERROR\n";
 
 
