@@ -423,7 +423,7 @@ PHP_FUNCTION(file_search_array) {
                     
                     if(mode == 10){
                         add_assoc_string(&line_arr, "trim_line", lineStart);
-                        add_assoc_long(&line_arr, "trim_length", lineLength);
+                        add_assoc_long(&line_arr, "trim_length", strlen(lineStart));
                     } else {
                         add_assoc_string(&line_arr, "line", lineStart);
                     }
@@ -2071,7 +2071,7 @@ PHP_FUNCTION(file_get_keys) {
                     }
 
                     add_assoc_string(&line_arr, "trim_line", lineStart);
-                    if(mode != 5) add_assoc_long(&line_arr, "trim_length", lineLength);
+                    if(mode != 5) add_assoc_long(&line_arr, "trim_length", strlen(lineStart));
 
                     if(mode == 5){
                         add_next_index_string(return_value, lineStart);
