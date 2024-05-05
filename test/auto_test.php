@@ -34,7 +34,7 @@ for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
     $align = mt_rand(30, 16384);
 
-    ini_set('fast_io.buffer_size', mt_rand(512, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
 
     $last_offset = 0;
     
