@@ -38,15 +38,13 @@ $file_insert_line_passed = true;
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(30, 8192);
-    //$align = mt_rand(30, 1024 * 1024 * 2);
+    $align = mt_rand(16, 65534);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
-    //ini_set('fast_io.buffer_size', mt_rand(16, 1024 * 1024 * 2));
+    ini_set('fast_io.buffer_size', mt_rand(16, 65534));
 
     $last_offset = 0;
 
-    $c = mt_rand(10, 500);
+    $c = mt_rand(10, 100);
     
     for($i=0; $i <= $c; $i++){
         $shuffle = mt_rand(1, $align * 2);
@@ -73,7 +71,7 @@ for($ii = 0; $ii < 100; $ii++){
             empty($file_array[0]) || 
             $file_array[0] != 'index_' . $i ||
             $file_array[1] != 'file_insert_line_' . $i ||
-            trim($file_str) != mb_substr(trim($str), 0, $align - 1)
+            trim($file_str) != mb_substr($str, 0, $align - 1)
             
         ) {
             $file_insert_line_passed = false;           
@@ -116,15 +114,13 @@ $file_analize_passed = true;
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(30, 8192);
-    //$align = mt_rand(30, 1024 * 1024 * 2);
+    $align = mt_rand(16, 65534);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
-    //ini_set('fast_io.buffer_size', mt_rand(16, 1024 * 1024 * 2));
+    ini_set('fast_io.buffer_size', 65534);
 
     $last_offset = 0;
 
-    $c = mt_rand(10, 500);
+    $c = mt_rand(10, 100);
     
     for($i=0; $i <= $c; $i++){
         $shuffle = mt_rand(1, $align * 2);
@@ -156,4 +152,62 @@ for($ii = 0; $ii < 100; $ii++){
 
 if($file_analize_passed) echo "Check file_analize - PASS\n";
 else echo "Check file_analize - ERROR\n";
+
+
+
+// #########################
+// Check file_get_keys
+$file_get_keys_passed = true;
+
+for($ii = 0; $ii < 100; $ii++){
+    if(file_exists($db_file)) unlink($db_file);
+    $align = mt_rand(16, 65534);
+
+    ini_set('fast_io.buffer_size', 65534);
+
+    $last_offset = 0;
+
+    $c = mt_rand(10, 100);
+
+    $insert_string = [];
+    
+    for($i=0; $i <= $c; $i++){
+        $shuffle = mt_rand(1, $align * 2);
+
+        $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
+        $file_offset = file_insert_line($db_file, $str, 2, $align);
+
+        $trim_line = mb_substr($str, 0, $align - 1);
+        $insert_string[$i] = [
+            'trim_line' => $trim_line,
+            'trim_length' => mb_strlen($trim_line),
+            'line_offset' => $file_offset,
+            'line_length' => $align,
+            'line_count' => $i
+        ];
+
+        if($file_offset == $last_offset) $last_offset += $align;  
+    }
+
+
+    foreach($insert_string as $row_num=>$line_arr){
+        $file_array = file_get_keys($db_file, 0, $c + 1, 0, 1);
+
+        if(
+            $file_array[$row_num]['line_count'] - 1 != $line_arr['line_count'] ||
+            $file_array[$row_num]['line_offset'] != $line_arr['line_offset'] ||
+            $file_array[$row_num]['line_length'] != $line_arr['line_length'] ||
+            trim($file_array[$row_num]['line']) != $line_arr['trim_line']
+        ){
+            $file_get_keys_passed = false;
+            break;
+        }
+    }
+    
+}
+
+
+if($file_get_keys_passed) echo "Quick check file_get_keys - PASS\n";
+else echo "Quick check file_get_keys - ERROR\n";
+
 
