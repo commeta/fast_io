@@ -27,9 +27,11 @@ ini_set('error_reporting', E_ALL);
 ini_set('display_errors', 1);
 ini_set('html_errors', 1);
 error_reporting(E_ALL);
+mb_internal_encoding("UTF-8");
 
 
 $db_file = __DIR__ . '/fast_io.dat';
+
 
 // #########################
 // Check file_insert_line
@@ -55,8 +57,8 @@ for($ii = 0; $ii < 100; $ii++){
 
         if(
             empty($file_line[0]) ||
-            $file_line[0]['line_length'] != $align ||
-            mb_strlen($file_line[0]['line']) + 1 != $align
+            $file_line[0]['line_length'] !== $align ||
+            mb_strlen($file_line[0]['line']) + 1 !== $align
         ){
             $file_insert_line_passed = false;
             break;
@@ -68,9 +70,9 @@ for($ii = 0; $ii < 100; $ii++){
 
         if(
             empty($file_array[0]) || 
-            $file_array[0] != 'index_' . $i ||
-            $file_array[1] != 'file_insert_line_' . $i ||
-            trim($file_str) != mb_substr($str, 0, $align - 1)
+            $file_array[0] !== 'index_' . $i ||
+            $file_array[1] !== 'file_insert_line_' . $i ||
+            trim($file_str) !== mb_substr($str, 0, $align - 1)
             
         ) {
             $file_insert_line_passed = false;           
@@ -84,15 +86,15 @@ for($ii = 0; $ii < 100; $ii++){
      
     if(
         $file_insert_line_passed &&
-        $last_offset - $align == $file_offset &&
-        $analize['total_characters'] == $last_offset &&
-        $analize['last_symbol'] == 10 &&
-        $analize['file_size'] == $last_offset &&
-        $analize['file_size'] == filesize($db_file) &&
-        $analize['flow_interruption'] == 0 &&
-        $analize['min_length'] == $analize['max_length'] &&
+        $last_offset - $align === $file_offset &&
+        $analize['total_characters'] === $last_offset &&
+        $analize['last_symbol'] === 10 &&
+        $analize['file_size'] === $last_offset &&
+        $analize['file_size'] === filesize($db_file) &&
+        $analize['flow_interruption'] === 0 &&
+        $analize['min_length'] === $analize['max_length'] &&
         $analize['min_length'] == $analize['avg_length'] &&
-        $analize['line_count'] == $c + 1
+        $analize['line_count'] === $c + 1
     ) {
         $file_insert_line_passed = true;
     } else {
@@ -131,13 +133,13 @@ for($ii = 0; $ii < 100; $ii++){
 
         if(
             $analize['total_characters'] == $i > 0 ? $i * $align : $align &&
-            $analize['last_symbol'] == 10 &&
-            $analize['file_size'] == $last_offset + $align &&
-            $analize['file_size'] == filesize($db_file) &&
-            $analize['flow_interruption'] == 0 &&
-            $analize['min_length'] == $analize['max_length'] &&
+            $analize['last_symbol'] === 10 &&
+            $analize['file_size'] === $last_offset + $align &&
+            $analize['file_size'] === filesize($db_file) &&
+            $analize['flow_interruption'] === 0 &&
+            $analize['min_length'] === $analize['max_length'] &&
             $analize['min_length'] == $analize['avg_length'] &&
-            $analize['line_count'] == $i + 1
+            $analize['line_count'] === $i + 1
         ) {
             $file_analize_passed = true;
         } else {
@@ -192,10 +194,10 @@ for($ii = 0; $ii < 100; $ii++){
         $file_array = file_get_keys($db_file, 0, $c + 1, 0, 1);
 
         if(
-            $file_array[$row_num]['line_count'] - 1 != $line_arr['line_count'] ||
-            $file_array[$row_num]['line_offset'] != $line_arr['line_offset'] ||
-            $file_array[$row_num]['line_length'] != $line_arr['line_length'] ||
-            trim($file_array[$row_num]['line']) != $line_arr['trim_line']
+            $file_array[$row_num]['line_count'] - 1 !== $line_arr['line_count'] ||
+            $file_array[$row_num]['line_offset'] !== $line_arr['line_offset'] ||
+            $file_array[$row_num]['line_length'] !== $line_arr['line_length'] ||
+            trim($file_array[$row_num]['line']) !== $line_arr['trim_line']
         ){
             $file_get_keys_passed = false;
             break;
@@ -207,10 +209,10 @@ for($ii = 0; $ii < 100; $ii++){
         $str_array = explode(' ', $insert_string[$row_num]['trim_line']);
 
         if(
-            $line_arr['line_count'] - 1 != $insert_string[$row_num]['line_count'] ||
-            $line_arr['line_length'] != $insert_string[$row_num]['line_length'] ||
-            $line_arr['line_offset'] != $insert_string[$row_num]['line_offset'] ||
-            $line_arr['key'] != $str_array[0]
+            $line_arr['line_count'] - 1 !== $insert_string[$row_num]['line_count'] ||
+            $line_arr['line_length'] !== $insert_string[$row_num]['line_length'] ||
+            $line_arr['line_offset'] !== $insert_string[$row_num]['line_offset'] ||
+            $line_arr['key'] !== $str_array[0]
         ){
             $file_get_keys_passed = false;
             break;
@@ -220,11 +222,12 @@ for($ii = 0; $ii < 100; $ii++){
     $file_array = file_get_keys($db_file, 0, $c + 1, 0, 2);
     foreach($file_array as $row_num=>$line_arr){
         if(
-            $line_arr['line_count'] - 1 != $insert_string[$row_num]['line_count'] ||
-            $line_arr['line_length'] != $insert_string[$row_num]['line_length'] ||
-            $line_arr['line_offset'] != $insert_string[$row_num]['line_offset'] ||
-            $line_arr['trim_line'] != $insert_string[$row_num]['trim_line']
+            $line_arr['line_count'] - 1 !== $insert_string[$row_num]['line_count'] ||
+            $line_arr['line_length'] !== $insert_string[$row_num]['line_length'] ||
+            $line_arr['line_offset'] !== $insert_string[$row_num]['line_offset'] ||
+            $line_arr['trim_line'] !== $insert_string[$row_num]['trim_line']
         ){
+
             $file_get_keys_passed = false;
             break;
         }
@@ -233,9 +236,9 @@ for($ii = 0; $ii < 100; $ii++){
     $file_array = file_get_keys($db_file, 0, $c + 1, 0, 3);
     foreach($file_array as $row_num=>$line_arr){
         if(
-            $line_arr['line_count'] - 1 != $insert_string[$row_num]['line_count'] ||
-            $line_arr['line_length'] != $insert_string[$row_num]['line_length'] ||
-            $line_arr['line_offset'] != $insert_string[$row_num]['line_offset'] 
+            $line_arr['line_count'] - 1 !== $insert_string[$row_num]['line_count'] ||
+            $line_arr['line_length'] !== $insert_string[$row_num]['line_length'] ||
+            $line_arr['line_offset'] !== $insert_string[$row_num]['line_offset'] 
         ){
             $file_get_keys_passed = false;
             break;
@@ -247,7 +250,7 @@ for($ii = 0; $ii < 100; $ii++){
         $str_array = explode(' ', $insert_string[$row_num]['trim_line']);
         
         if(
-            $line_arr != $str_array[0]
+            $line_arr !== $str_array[0]
         ){
             $file_get_keys_passed = false;
             break;
@@ -257,7 +260,7 @@ for($ii = 0; $ii < 100; $ii++){
     $file_array = file_get_keys($db_file, 0, $c + 1, 0, 5);
     foreach($file_array as $row_num=>$line_arr){       
         if(
-            $line_arr != $insert_string[$row_num]['trim_line']
+            $line_arr !== $insert_string[$row_num]['trim_line']
         ){
             $file_get_keys_passed = false;
             break;
