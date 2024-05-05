@@ -224,9 +224,9 @@ for($ii = 0; $ii < 100; $ii++){
             $line_arr['line_count'] - 1 !== $insert_string[$row_num]['line_count'] ||
             $line_arr['line_length'] !== $insert_string[$row_num]['line_length'] ||
             $line_arr['line_offset'] !== $insert_string[$row_num]['line_offset'] ||
+            $line_arr['trim_length'] !== strlen($insert_string[$row_num]['trim_line']) ||
             $line_arr['trim_line'] !== $insert_string[$row_num]['trim_line']
         ){
-
             $file_get_keys_passed = false;
             break;
         }
