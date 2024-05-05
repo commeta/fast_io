@@ -25,6 +25,7 @@
 - file_insert_line - Тест сходимости с участием: file_get_keys, file_analize, +рандомный размер буфера.
 - file_analize - Тест сходимости 1 режима, с участием: file_insert_line, +рандомный размер буфера.
 - file_get_keys - Тест сходимости транзакционных режимов, с участием: file_insert_line, +рандомный размер буфера.
+- file_search_array - Тест сходимости транзакционных режимов, с участием: file_insert_line, +рандомный размер буфера.
 
 
 #### Результат выполнения
@@ -33,5 +34,7 @@ root@api:/home/commeta/project/kernel/fast_io# php auto_test.php
 Check file_insert_line alignment data - PASS
 Check file_analize - PASS
 Check file_get_keys - PASS
+Check file_search_array - PASS
+
 
 ```
