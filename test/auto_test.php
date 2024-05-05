@@ -65,7 +65,7 @@ for($ii = 0; $ii < 100; $ii++){
             empty($file_array[0]) || 
             $file_array[0] != 'index_' . $i ||
             $file_array[1] != 'file_insert_line_' . $i ||
-            mb_strlen(trim($file_str)) != mb_strlen(mb_substr(trim($str), 0, $align - 1))
+            trim($file_str) != mb_substr(trim($str), 0, $align - 1)
             
         ) {
             $file_insert_line_passed = false;           
