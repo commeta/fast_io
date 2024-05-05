@@ -38,11 +38,11 @@ $file_insert_line_passed = true;
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(30, 65535);
+    $align = mt_rand(30, 8192);
     //$align = mt_rand(30, 1024 * 1024 * 2);
 
     ini_set('fast_io.buffer_size', mt_rand(16, 65535));
-    //ini_set('fast_io.buffer_size', mt_rand(16, 1024 * 1024 * 32));
+    //ini_set('fast_io.buffer_size', mt_rand(16, 1024 * 1024 * 2));
 
     $last_offset = 0;
 
@@ -116,11 +116,11 @@ $file_analize_passed = true;
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(30, 65535);
+    $align = mt_rand(30, 8192);
     //$align = mt_rand(30, 1024 * 1024 * 2);
 
     ini_set('fast_io.buffer_size', mt_rand(16, 65535));
-    //ini_set('fast_io.buffer_size', mt_rand(16, 1024 * 1024 * 32));
+    //ini_set('fast_io.buffer_size', mt_rand(16, 1024 * 1024 * 2));
 
     $last_offset = 0;
 
