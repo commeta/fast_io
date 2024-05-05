@@ -33,4 +33,6 @@
 root@api:/home/commeta/project/kernel/fast_io# php auto_test.php 
 Check file_insert_line alignment data - PASS
 Check file_analize - PASS
+Quick check file_get_keys - PASS
+
 ```
