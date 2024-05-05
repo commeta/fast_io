@@ -88,11 +88,11 @@ Array
             [min_length] => 8192
             [max_length] => 8192
             [avg_length] => 8192
-            [line_count] => 998
-            [total_characters] => 8175616
+            [line_count] => 501
+            [total_characters] => 4104192
             [flow_interruption] => 0
             [last_symbol] => 10
-            [file_size] => 8175616
+            [file_size] => 4104192
         )
 
     [1] => Array
@@ -103,11 +103,10 @@ Array
             [line_count] => 1
             [total_characters] => 8192
             [last_symbol] => 10
-            [file_size] => 8175616
+            [file_size] => 4104192
         )
 
 )
-
 ```
 
 
