@@ -38,16 +38,16 @@ $file_insert_line_passed = true;
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(30, 16384);
+    $align = mt_rand(30, 1024 * 1024 * 2);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(16, 1024 * 1024 * 32));
 
     $last_offset = 0;
 
     $c = mt_rand(10, 500);
     
     for($i=0; $i <= $c; $i++){
-        $shuffle = mt_rand(1, $align);
+        $shuffle = mt_rand(1, $align * 2);
 
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
         $file_offset = file_insert_line($db_file, $str, 2, $align);
@@ -114,16 +114,16 @@ $file_analize_passed = true;
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(30, 16384);
+    $align = mt_rand(30, 1024 * 1024 * 2);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(16, 1024 * 1024 * 32));
 
     $last_offset = 0;
 
     $c = mt_rand(10, 500);
     
     for($i=0; $i <= $c; $i++){
-        $shuffle = mt_rand(1, $align);
+        $shuffle = mt_rand(1, $align * 2);
 
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
         $file_offset = file_insert_line($db_file, $str, 2, $align);
