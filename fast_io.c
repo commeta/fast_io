@@ -2631,8 +2631,6 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     zend_long flow_interruption = 0;
 
     array_init(return_value);
-    zval line_arr;
-    array_init(&line_arr);
 
     while ((bytes_read = fread(buffer, 1, ini_buffer_size, fp)) > 0) {
         for (ssize_t i = 0; i < bytes_read; ++i) {
@@ -2654,15 +2652,13 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
                     efree(buffer);
                     fclose(fp);
 
-                    add_assoc_long(&line_arr, "min_length", min_length);
-                    add_assoc_long(&line_arr, "max_length", max_length);
-                    add_assoc_double(&line_arr, "avg_length", avg_length);
-                    add_assoc_long(&line_arr, "line_count", line_count);
-                    add_assoc_long(&line_arr, "total_characters", total_characters);
-                    add_assoc_long(&line_arr, "last_symbol", last_symbol);
-                    add_assoc_long(&line_arr, "file_size", file_size);
-
-                    add_next_index_zval(return_value, &line_arr);
+                    add_assoc_long(return_value, "min_length", min_length);
+                    add_assoc_long(return_value, "max_length", max_length);
+                    add_assoc_double(return_value, "avg_length", avg_length);
+                    add_assoc_long(return_value, "line_count", line_count);
+                    add_assoc_long(return_value, "total_characters", total_characters);
+                    add_assoc_long(return_value, "last_symbol", last_symbol);
+                    add_assoc_long(return_value, "file_size", file_size);
                     return;
                 }
 
@@ -2676,18 +2672,16 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     efree(buffer);
     fclose(fp);
 
-    add_assoc_long(&line_arr, "min_length", min_length);
-    add_assoc_long(&line_arr, "max_length", max_length);
-    add_assoc_double(&line_arr, "avg_length", avg_length);
-    add_assoc_long(&line_arr, "line_count", line_count);
-    add_assoc_long(&line_arr, "total_characters", total_characters);
+    add_assoc_long(return_value, "min_length", min_length);
+    add_assoc_long(return_value, "max_length", max_length);
+    add_assoc_double(return_value, "avg_length", avg_length);
+    add_assoc_long(return_value, "line_count", line_count);
+    add_assoc_long(return_value, "total_characters", total_characters);
 
     if(file_size > total_characters) flow_interruption = file_size - total_characters;
-    add_assoc_long(&line_arr, "flow_interruption", flow_interruption);
-    add_assoc_long(&line_arr, "last_symbol", last_symbol);
-    add_assoc_long(&line_arr, "file_size", file_size);
-
-    add_next_index_zval(return_value, &line_arr);
+    add_assoc_long(return_value, "flow_interruption", flow_interruption);
+    add_assoc_long(return_value, "last_symbol", last_symbol);
+    add_assoc_long(return_value, "file_size", file_size);
 }
 
 
@@ -2800,7 +2794,6 @@ PHP_FUNCTION(replicate_file) {
         RETURN_LONG(-2);
     }
 
-
     if (flock(fileno(source_fp), LOCK_EX) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", source);
         fclose(source_fp);
@@ -2809,7 +2802,6 @@ PHP_FUNCTION(replicate_file) {
         RETURN_LONG(-3);
     }
     
-
 
     FILE *index_source_fp;
     FILE *index_destination_fp;
