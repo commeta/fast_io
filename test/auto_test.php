@@ -37,8 +37,10 @@ for($ii = 0; $ii < 100; $ii++){
     ini_set('fast_io.buffer_size', mt_rand(16, 65535));
 
     $last_offset = 0;
+
+    $c = mt_rand(10, 500);
     
-    for($i=0; $i <= 500; $i++){
+    for($i=0; $i <= $c; $i++){
         $shuffle = mt_rand(1, $align);
 
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
@@ -83,7 +85,7 @@ for($ii = 0; $ii < 100; $ii++){
         $analize['flow_interruption'] == 0 &&
         $analize['min_length'] == $analize['max_length'] &&
         $analize['min_length'] == $analize['avg_length'] &&
-        $analize['line_count'] == 501
+        $analize['line_count'] == $c + 1
     ) {
         $file_insert_line_passed = true;
     } else {
