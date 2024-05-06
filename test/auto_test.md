@@ -33,9 +33,10 @@
 Результат тестирования: Ubuntu 24.04, Ryzen 12 Cores, 16GB RAM, SATA 3 SSD.
 ```
 root@api:/home/commeta/project/kernel/fast_io# php auto_test.php 
-Check file_insert_line: 2.59836602211 - PASS
-Check file_analize: 4.9601249694824 - PASS
-Check file_get_keys: 1.8167111873627 - PASS
-Check file_search_array: 3.0682759284973 - PASS
-Check file_select_array: 3.2911260128021 - PASS
+Check file_insert_line: time: 2.5048358440399 rchar: 716706563 wchar: 195118509 syscr: 84589 syscw: 10653 write_bytes: 195342336 cancelled_write_bytes: 194842624 - PASS
+Check file_analize: time: 4.629292011261 rchar: 6360648535 wchar: 189528394 syscr: 650632 syscw: 10754 write_bytes: 189730816 cancelled_write_bytes: 190377984 - PASS
+Check file_get_keys: time: 1.9452168941498 rchar: 867169836 wchar: 144331214 syscr: 94137 syscw: 9756 write_bytes: 144543744 cancelled_write_bytes: 141393920 - PASS
+Check file_search_array: time: 3.204206943512 rchar: 2146910724 wchar: 178712592 syscr: 175099 syscw: 11092 write_bytes: 178925568 cancelled_write_bytes: 181268480 - PASS
+Check file_select_array: time: 3.433385848999 rchar: 2819114594 wchar: 187746354 syscr: 160203 syscw: 10970 write_bytes: 187961344 cancelled_write_bytes: 186281984 - PASS
+
 ```
