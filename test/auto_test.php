@@ -1195,3 +1195,86 @@ $end_io = get_process_io_stats();
 foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
 
 
+
+// #########################
+// Check file_pop_line
+$file_pop_line_passed = true;
+$start= microtime(true);
+$start_io = get_process_io_stats();
+
+
+for($ii = 0; $ii < 100; $ii++){
+    if(file_exists($db_file)) unlink($db_file);
+    $align = mt_rand(16, 65534);
+
+    ini_set('fast_io.buffer_size', mt_rand(16, 65534));
+
+    $last_offset = 0;
+
+    $c = mt_rand(10, 100);
+
+    $insert_string = [];
+    $mode = 0;
+    
+    for($i=0; $i <= $c; $i++){
+        $shuffle = mt_rand(1, $align * 2);
+
+        if($mode == 3) $mode = 2;
+        else $mode = 3;
+
+        $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
+        $file_offset = file_insert_line($db_file, $str, 2, $align);
+
+        $trim_line = mb_substr($str, 0, $align - 1);
+        
+        $file_last_str = file_pop_line($db_file, $align, $mode);
+        if(
+            ($mode == 2 && $file_last_str !== $trim_line) ||
+            ($mode == 3 && trim($file_last_str) !== $trim_line) 
+        ){
+            $file_pop_line_passed = false;
+            break;
+        }
+        
+        $insert_string[$i] = [
+            'trim_line' => $trim_line,
+            'trim_length' => mb_strlen($trim_line),
+            'line_offset' => $file_offset,
+            'line_count' => $i
+        ];
+
+        if($file_offset == $last_offset) $last_offset += $align;  
+    }
+
+
+    $insert_string_reverse = array_reverse($insert_string, true);
+    foreach($insert_string_reverse as $row_num=>$line_arr){
+        if($mode == 0) $mode = 1;
+        else $mode = 0;
+
+        $file_last_str = file_pop_line($db_file, $align, $mode);
+
+        if($mode == 1) $file_last_str = trim($file_last_str);
+
+        if(
+            $file_last_str === false ||
+            $file_last_str !== $line_arr['trim_line']
+        ){           
+            $file_pop_line_passed = false;
+            break;
+        }
+    }
+
+    if(filesize($db_file) != 0){
+        $file_pop_line_passed = false;
+        break;
+    }
+}
+
+$time= microtime(true) - $start;
+
+if($file_pop_line_passed) echo "\nCheck file_pop_line: time: ", $time, " - PASS",  "\n";
+else echo "\nCheck file_pop_line - ERROR\n";
+
+$end_io = get_process_io_stats();
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
