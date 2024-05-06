@@ -33,11 +33,46 @@
 Результат тестирования: Ubuntu 24.04, Ryzen 12 Cores, 16GB RAM, SATA 3 SSD.
 ```
 root@api:/home/commeta/project/kernel/fast_io# php auto_test.php 
-Check file_insert_line: time: 2.5048358440399 rchar: 716706563 wchar: 195118509 syscr: 84589 syscw: 10653 write_bytes: 195342336 cancelled_write_bytes: 194842624 - PASS
-Check file_analize: time: 4.629292011261 rchar: 6360648535 wchar: 189528394 syscr: 650632 syscw: 10754 write_bytes: 189730816 cancelled_write_bytes: 190377984 - PASS
-Check file_get_keys: time: 1.9452168941498 rchar: 867169836 wchar: 144331214 syscr: 94137 syscw: 9756 write_bytes: 144543744 cancelled_write_bytes: 141393920 - PASS
-Check file_search_array: time: 3.204206943512 rchar: 2146910724 wchar: 178712592 syscr: 175099 syscw: 11092 write_bytes: 178925568 cancelled_write_bytes: 181268480 - PASS
-Check file_select_array: time: 3.433385848999 rchar: 2819114594 wchar: 187746354 syscr: 160203 syscw: 10970 write_bytes: 187961344 cancelled_write_bytes: 186281984 - PASS
+
+Check file_insert_line: time: 2.2931261062622 - PASS
+rchar: 674486417
+wchar: 173484249
+syscr: 74759
+syscw: 10601
+write_bytes: 173690880
+cancelled_write_bytes: 171610112
+
+Check file_analize: time: 4.3252830505371 - PASS
+rchar: 6276222858
+wchar: 180224033
+syscr: 607035
+syscw: 10819
+write_bytes: 180441088
+cancelled_write_bytes: 174018560
+
+Check file_get_keys: time: 2.2275409698486 - PASS
+rchar: 1156963872
+wchar: 192651264
+syscr: 108861
+syscw: 11467
+write_bytes: 192884736
+cancelled_write_bytes: 192188416
+
+Check file_search_array: time: 3.0164902210236 - PASS
+rchar: 2203209396
+wchar: 183397241
+syscr: 214181
+syscw: 11031
+write_bytes: 183603200
+cancelled_write_bytes: 175931392
+
+Check file_select_array: time: 3.0919930934906 - PASS
+rchar: 2679817694
+wchar: 178446027
+syscr: 152223
+syscw: 10348
+write_bytes: 178647040
+cancelled_write_bytes: 178601984
 
 ```
 
