@@ -32,9 +32,9 @@
 #### Результат выполнения
 ```
 root@api:/home/commeta/project/kernel/fast_io# php auto_test.php 
-Check file_insert_line alignment data - PASS
-Check file_analize - PASS
-Check file_get_keys - PASS
-Check file_search_array - PASS
-Check file_select_array - PASS
+Check file_insert_line: 2.59836602211 - PASS
+Check file_analize: 4.9601249694824 - PASS
+Check file_get_keys: 1.8167111873627 - PASS
+Check file_search_array: 3.0682759284973 - PASS
+Check file_select_array: 3.2911260128021 - PASS
 ```
