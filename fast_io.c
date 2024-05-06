@@ -3015,7 +3015,7 @@ PHP_FUNCTION(file_select_array) {
                     }
                 } ZEND_HASH_FOREACH_END();
 
-                if(select_pos != -1 && select_size != -1 && file_size > select_pos + select_size){
+                if(select_pos != -1 && select_size != -1 && file_size > select_pos + select_size - 1){
                     line_count++;
                     found_match = false;
 
@@ -3107,7 +3107,7 @@ PHP_FUNCTION(file_select_array) {
                         found_match = false;
                     }
 
-                    if(mode == 0 || mode == 5){
+                    if(mode == 0 || mode == 5 || mode == 1 || mode == 6){
                         add_assoc_long(&line_arr, "line_offset", select_pos);
                         add_assoc_long(&line_arr, "line_length", select_size);
                     }
@@ -3163,20 +3163,27 @@ PHP_FUNCTION(file_select_array) {
                                 PCRE2_SIZE start = ovector[2*i];
                                 PCRE2_SIZE end = ovector[2*i+1];
 
-                                if(mode == 23 || mode == 20){
-                                    add_next_index_stringl(&return_matched, buffer + start, end - start);
-                                } else {
+                                if(mode > 21){
                                     zval match_arr;
                                     array_init(&match_arr);
 
-                                    add_assoc_stringl(&match_arr, "line_match", buffer + start, end - start);
-                                    add_next_index_zval(&return_matched, &match_arr);
+                                    if(mode == 23){
+                                        add_next_index_stringl(&return_matched, buffer + start, end - start);
+                                    } else {
+                                        add_assoc_stringl(&match_arr, "line_match", buffer + start, end - start);
+                                    }
 
+                                    if(mode != 23){
+                                        add_next_index_zval(&return_matched, &match_arr);
+                                        add_assoc_long(&match_arr, "match_offset", start);
+                                        add_assoc_long(&match_arr, "match_length", end - start);
+                                    }
                                     
-                                    add_assoc_long(&match_arr, "match_offset", start);
-                                    add_assoc_long(&match_arr, "match_length", end - start);
+                                } else {
+                                    add_next_index_stringl(&return_matched, buffer + start, end - start);
                                 }
                             }
+
 
                             // Изменение для предотвращения потенциального бесконечного цикла
                             if (ovector[1] > start_offset) {
