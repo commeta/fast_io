@@ -57,6 +57,9 @@ error_reporting(E_ALL);
 
 
 $db_file = __DIR__ . '/fast_io.dat';
+//goto last_analize;
+
+
 
 // #########################
 // Check file_insert_line
@@ -141,7 +144,7 @@ if($file_insert_line_passed) echo "\nCheck file_insert_line: time: ", $time, " -
 else echo "\nCheck file_insert_line - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
 
 
 
@@ -193,7 +196,7 @@ if($file_analize_passed) echo "\nCheck file_analize: time: ", $time, " - PASS", 
 else echo "\nCheck file_analize - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
 
 
 
@@ -340,7 +343,7 @@ if($file_get_keys_passed) echo "\nCheck file_get_keys: time: ", $time, " - PASS"
 else echo "\nCheck file_get_keys - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
 
 
 
@@ -597,7 +600,7 @@ if($file_search_array_passed) echo "\nCheck file_search_array: time: ", $time, "
 else echo "\nCheck file_search_array - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
 
 
 
@@ -905,4 +908,173 @@ if($file_select_array_passed) echo "\nCheck file_select_array: time: ", $time, "
 else echo "\nCheck file_select_array - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
+
+
+
+
+
+
+
+// #########################
+// Check file_search_line
+$file_search_line_passed = true;
+$start= microtime(true);
+$start_io = get_process_io_stats();
+
+for($ii = 0; $ii < 100; $ii++){
+    if(file_exists($db_file)) unlink($db_file);
+    $align = mt_rand(16, 65534);
+
+    ini_set('fast_io.buffer_size', mt_rand(1024, 65534));
+
+    $last_offset = 0;
+
+    $c = mt_rand(10, 100);
+
+    $insert_string = [];
+    
+    for($i=0; $i <= $c; $i++){
+        $shuffle = mt_rand(1, $align * 2);
+
+        $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
+        $file_offset = file_insert_line($db_file, $str, 2, $align);
+
+        $trim_line = mb_substr($str, 0, $align - 1);
+        $insert_string[$i] = [
+            'key' => 'index_' . $i,
+            'trim_line' => $trim_line,
+            'line_offset' => $file_offset,
+        ];
+
+
+        if($file_offset == $last_offset) $last_offset += $align;  
+    }
+
+    
+    foreach($insert_string as $row_num=>$line_arr){
+        for($i = 0; $i < 2; $i++){
+            $file_line = file_search_line($db_file, $line_arr['key'], $i == 0 ? 0 : $line_arr['line_offset'], 0);
+
+            if(
+                $file_line === false ||
+                trim($file_line) !== $line_arr['trim_line']
+            ){           
+                $file_search_line_passed = false;
+                break;
+            }
+        }
+    }
+
+
+    foreach($insert_string as $row_num=>$line_arr){
+        for($i = 0; $i < 2; $i++){
+            $file_line = file_search_line($db_file, $line_arr['key'], $i == 0 ? 0 : $line_arr['line_offset'], 10);
+
+            if(
+                $file_line === false ||
+                trim($file_line) !== $line_arr['trim_line']
+            ){           
+                $file_search_line_passed = false;
+                break;
+            }
+        }
+
+    }
+
+}
+
+$time= microtime(true) - $start;
+
+if($file_search_line_passed) echo "\nCheck file_search_line: time: ", $time, " - PASS",  "\n";
+else echo "\nCheck file_search_line - ERROR\n";
+
+$end_io = get_process_io_stats();
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
+
+
+
+
+
+
+
+
+last_analize:
+// #########################
+// Check file_select_line
+$file_select_line_passed = true;
+$start= microtime(true);
+$start_io = get_process_io_stats();
+
+for($ii = 0; $ii < 100; $ii++){
+    if(file_exists($db_file)) unlink($db_file);
+    $align = mt_rand(16, 65534);
+
+    ini_set('fast_io.buffer_size', mt_rand(1024, 65534));
+
+    $last_offset = 0;
+
+    $c = mt_rand(10, 100);
+
+    $insert_string = [];
+    
+    for($i=0; $i <= $c; $i++){
+        $shuffle = mt_rand(1, $align * 2);
+
+        $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
+        $file_offset = file_insert_line($db_file, $str, 2, $align);
+
+        $trim_line = mb_substr($str, 0, $align - 1);
+        $insert_string[$i] = [
+            'trim_line' => $trim_line,
+            'trim_length' => mb_strlen($trim_line),
+            'line_offset' => $file_offset,
+            'line_count' => $i
+        ];
+
+
+        if($file_offset == $last_offset) $last_offset += $align;  
+    }
+
+    
+    foreach($insert_string as $row_num=>$line_arr){
+        for($i = 0; $i < 2; $i++){
+            if($i == 0) $file_line = file_select_line($db_file, $line_arr['line_count'], $align, 0);
+            if($i == 1) $file_line = file_select_line($db_file, $line_arr['line_count'], $align, 2);
+
+            if(
+                $file_line === false ||
+                trim($file_line) !== $line_arr['trim_line']
+            ){           
+                $file_select_line_passed = false;
+                break;
+            }
+        }
+    }
+
+
+    foreach($insert_string as $row_num=>$line_arr){
+        for($i = 0; $i < 2; $i++){
+            if($i == 0) $file_line = file_select_line($db_file, $line_arr['line_offset'], $line_arr['trim_length'], 1);
+            if($i == 1) $file_line = file_select_line($db_file, $line_arr['line_offset'], $line_arr['trim_length'], 3);
+
+            if(
+                $file_line === false ||
+                trim($file_line) !== $line_arr['trim_line']
+            ){           
+                $file_select_line_passed = false;
+                break;
+            }
+        }
+    }
+
+}
+
+$time= microtime(true) - $start;
+
+if($file_select_line_passed) echo "\nCheck file_select_line: time: ", $time, " - PASS",  "\n";
+else echo "\nCheck file_select_line - ERROR\n";
+
+$end_io = get_process_io_stats();
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
+
