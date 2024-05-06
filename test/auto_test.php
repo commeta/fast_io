@@ -58,7 +58,6 @@ error_reporting(E_ALL);
 
 $db_file = __DIR__ . '/fast_io.dat';
 
-
 // #########################
 // Check file_insert_line
 $file_insert_line_passed = true;
@@ -136,15 +135,13 @@ for($ii = 0; $ii < 100; $ii++){
         break;
     }
 }
-
 $time= microtime(true) - $start;
 
-$end_io = get_process_io_stats();
-$io_stats = '';
-foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) $io_stats .= strval($p) . ': ' . strval($v - $start_io[$p]) . ' ';
+if($file_insert_line_passed) echo "\nCheck file_insert_line: time: ", $time, " - PASS",  "\n";
+else echo "\nCheck file_insert_line - ERROR\n";
 
-if($file_insert_line_passed) echo "Check file_insert_line: time: ", $time, " ", $io_stats, "- PASS",  "\n";
-else echo "Check file_insert_line alignment data - ERROR\n";
+$end_io = get_process_io_stats();
+foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) echo $p, ': ', $v - $start_io[$p], "\n";
 
 
 
@@ -190,15 +187,13 @@ for($ii = 0; $ii < 100; $ii++){
         if($file_offset == $last_offset) $last_offset += $align;  
     }
 }
-
 $time= microtime(true) - $start;
 
-$end_io = get_process_io_stats();
-$io_stats = '';
-foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) $io_stats .= strval($p) . ': ' . strval($v - $start_io[$p]) . ' ';
+if($file_analize_passed) echo "\nCheck file_analize: time: ", $time, " - PASS",  "\n";
+else echo "\nCheck file_analize - ERROR\n";
 
-if($file_analize_passed) echo "Check file_analize: time: ", $time, " ", $io_stats, "- PASS",  "\n";
-else echo "Check file_analize - ERROR\n";
+$end_io = get_process_io_stats();
+foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) echo $p, ': ', $v - $start_io[$p], "\n";
 
 
 
@@ -339,16 +334,14 @@ for($ii = 0; $ii < 100; $ii++){
         }
     }
 }
-
-
 $time= microtime(true) - $start;
 
-$end_io = get_process_io_stats();
-$io_stats = '';
-foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) $io_stats .= strval($p) . ': ' . strval($v - $start_io[$p]) . ' ';
+if($file_get_keys_passed) echo "\nCheck file_get_keys: time: ", $time, " - PASS",  "\n";
+else echo "\nCheck file_get_keys - ERROR\n";
 
-if($file_get_keys_passed) echo "Check file_get_keys: time: ", $time, " ", $io_stats, "- PASS",  "\n";
-else echo "Check file_get_keys - ERROR\n";
+$end_io = get_process_io_stats();
+foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) echo $p, ': ', $v - $start_io[$p], "\n";
+
 
 
 // #########################
@@ -598,16 +591,13 @@ for($ii = 0; $ii < 100; $ii++){
     }
 
 }
-
 $time= microtime(true) - $start;
 
+if($file_search_array_passed) echo "\nCheck file_search_array: time: ", $time, " - PASS",  "\n";
+else echo "\nCheck file_search_array - ERROR\n";
+
 $end_io = get_process_io_stats();
-$io_stats = '';
-
-foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) $io_stats .= strval($p) . ': ' . strval($v - $start_io[$p]) . ' ';
-
-if($file_search_array_passed) echo "Check file_search_array: time: ", $time, " ", $io_stats, "- PASS",  "\n";
-else echo "Check file_search_array - ERROR\n";
+foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) echo $p, ': ', $v - $start_io[$p], "\n";
 
 
 
@@ -911,9 +901,8 @@ for($ii = 0; $ii < 100; $ii++){
 }
 $time= microtime(true) - $start;
 
-$end_io = get_process_io_stats();
-$io_stats = '';
-foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) $io_stats .= strval($p) . ': ' . strval($v - $start_io[$p]) . ' ';
+if($file_select_array_passed) echo "\nCheck file_select_array: time: ", $time, " - PASS",  "\n";
+else echo "\nCheck file_select_array - ERROR\n";
 
-if($file_select_array_passed) echo "Check file_select_array: time: ", $time, " ", $io_stats, "- PASS",  "\n";
-else echo "Check file_select_array - ERROR\n";
+$end_io = get_process_io_stats();
+foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) echo $p, ': ', $v - $start_io[$p], "\n";
