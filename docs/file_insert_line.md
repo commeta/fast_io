@@ -102,13 +102,13 @@ index_2 file_insert_line_2
 
 ```
 file_put_contents time: 0.00001717
-rchar: 106
-wchar: 19
-syscr: 3
-syscw: 1
-read_bytes: 0
-write_bytes: 0
-cancelled_write_bytes: 0
+rchar: 106 // количество прочитанных символов
+wchar: 19 // количество записанных символов
+syscr: 3 // количество системных вызовов чтения
+syscw: 1 // количество системных вызовов записи
+read_bytes: 0 // общее количество байт, прочитанных процессом с диска
+write_bytes: 0 // общее количество байт, записанных процессом на диск
+cancelled_write_bytes: 0 // количество байт, которые были отменены процессом при записи на диск
 
 file_insert_line time: 0.00002384
 rchar: 106
