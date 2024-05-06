@@ -122,14 +122,15 @@ cancelled_write_bytes: 0
 
 Тот же метод, вызов `file_put_contents(__DIR__ . '/fast_io1.dat', 'id file_insert_line', FILE_APPEND);`
 ```
-time: 0.00004315 // Высокая погрешность т.к. это единичный вызов
+time: 0.00004101 // Высокая погрешность т.к. это единичный вызов
 rchar: 97
 wchar: 36
 syscr: 3
 syscw: 4
 read_bytes: 0
-write_bytes: 4096
+write_bytes: 0
 cancelled_write_bytes: 0
+
 ```
 
 
