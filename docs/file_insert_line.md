@@ -120,4 +120,19 @@ write_bytes: 0
 cancelled_write_bytes: 0
 ```
 
+Тот же результат вызова `file_put_contents(__DIR__ . '/fast_io1.dat', 'id file_insert_line', FILE_APPEND);`
+```
+time: 0.00004315
+rchar: 97
+wchar: 36
+syscr: 3
+syscw: 4
+read_bytes: 0
+write_bytes: 4096
+cancelled_write_bytes: 0
+```
+
+
 Подробнее в разделе: [Авто тест базы данных](/test/auto_test.md)
+
+
