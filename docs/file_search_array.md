@@ -129,19 +129,21 @@ Array
     [0] => Array
         (
             [trim_line] => index_0 file_insert_line_0 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-            [trim_length] => 8192
+            [trim_length] => 119
             [line_offset] => 0
             [line_length] => 8192
             [line_count] => 1
         )
+
     [1] => Array
         (
             [trim_line] => index_1 file_insert_line_1 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-            [trim_length] => 8192
+            [trim_length] => 119
             [line_offset] => 8192
             [line_length] => 8192
             [line_count] => 2
         )
+
 )
 
 ```
@@ -223,17 +225,21 @@ Array
                             [match_offset] => 0
                             [match_length] => 7
                         )
+
                     [1] => Array
                         (
                             [line_match] => file_insert_line_0
-                            [match_offset] => 7
+                            [match_offset] => 8
                             [match_length] => 18
                         )
+
                 )
+
             [line_offset] => 0
             [line_length] => 8192
             [line_count] => 1
         )
+
     [1] => Array
         (
             [line_matches] => Array
@@ -244,18 +250,23 @@ Array
                             [match_offset] => 0
                             [match_length] => 7
                         )
+
                     [1] => Array
                         (
                             [line_match] => file_insert_line_1
-                            [match_offset] => 7
+                            [match_offset] => 8
                             [match_length] => 18
                         )
+
                 )
+
             [line_offset] => 8192
             [line_length] => 8192
             [line_count] => 2
         )
+
 )
+
 ```
 
 
