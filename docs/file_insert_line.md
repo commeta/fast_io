@@ -110,7 +110,7 @@ foreach($end_io as $p=>$v) echo $p, ': ', $v - $start_io[$p], "\n";
 ```
 
 ```
-time: 0.00005198
+time: 0.00005198 // Высокая погрешность т.к. это единичный вызов
 rchar: 97
 wchar: 37
 syscr: 3
@@ -122,7 +122,7 @@ cancelled_write_bytes: 0
 
 Тот же метод, вызов `file_put_contents(__DIR__ . '/fast_io1.dat', 'id file_insert_line', FILE_APPEND);`
 ```
-time: 0.00004315
+time: 0.00004315 // Высокая погрешность т.к. это единичный вызов
 rchar: 97
 wchar: 36
 syscr: 3
