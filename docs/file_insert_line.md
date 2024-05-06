@@ -94,3 +94,30 @@ index_2 file_insert_line_2
 - IO Bound - Запись строки в конец файла.
 
 Очень низкое потребление, запись строки в конец файла.
+
+
+```
+$start_io = get_process_io_stats();
+$start= microtime(true);
+
+file_insert_line(__DIR__ . '/fast_io1.dat', 'id file_insert_line');
+
+$time= microtime(true) - $start;
+echo "time: ", sprintf('%.8f', $time),  "\n";
+
+$end_io = get_process_io_stats();
+foreach($end_io as $p=>$v) echo $p, ': ', $v - $start_io[$p], "\n";
+```
+
+```
+time: 0.00005198
+rchar: 97
+wchar: 37
+syscr: 3
+syscw: 4
+read_bytes: 0
+write_bytes: 0
+cancelled_write_bytes: 0
+```
+
+Подробнее в разделе: [Авто тест базы данных](/test/auto_test.md)
