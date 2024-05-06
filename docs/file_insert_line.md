@@ -99,16 +99,14 @@ index_2 file_insert_line_2
 Подробнее в разделе: [Авто тест базы данных](/test/auto_test.md)
 
 ```
-
 for($i = 0; $i <= 10; $i++){
     $start_io = get_process_io_stats();
     $start= microtime(true);
     file_put_contents($db_file, 'id file_insert_line', FILE_APPEND);
+    $time= microtime(true) - $start;
+    $end_io = get_process_io_stats();
     if($i == 10){
-        $time= microtime(true) - $start;
-        $end_io = get_process_io_stats();
         echo "\nfile_put_contents time: ", sprintf('%.8f', $time),  "\n";
-        
         foreach($end_io as $p=>$v) echo $p, ': ', $v - $start_io[$p], "\n";
     }
     
@@ -116,18 +114,17 @@ for($i = 0; $i <= 10; $i++){
     $start_io = get_process_io_stats();
     $start= microtime(true);
     file_insert_line($db_file, 'id file_insert_line', 103);
+    $time= microtime(true) - $start;
+    $end_io = get_process_io_stats();
     if($i == 10){
-        $time= microtime(true) - $start;
-        $end_io = get_process_io_stats();
         echo "\nfile_insert_line time: ", sprintf('%.8f', $time),  "\n";
-        
         foreach($end_io as $p=>$v) echo $p, ': ', $v - $start_io[$p], "\n";
     }
 }
 ```
 
 ```
-file_put_contents time: 0.00001311
+file_put_contents time: 0.00001717
 rchar: 106
 wchar: 19
 syscr: 3
@@ -136,7 +133,7 @@ read_bytes: 0
 write_bytes: 0
 cancelled_write_bytes: 0
 
-file_insert_line time: 0.00001812
+file_insert_line time: 0.00002384
 rchar: 106
 wchar: 20
 syscr: 3
