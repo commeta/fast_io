@@ -35,6 +35,7 @@ $db_file = __DIR__ . '/fast_io.dat';
 // #########################
 // Check file_insert_line
 $file_insert_line_passed = true;
+$start= microtime(true);
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
@@ -66,15 +67,19 @@ for($ii = 0; $ii < 100; $ii++){
         $file_str = $file_line[0]['line'];
         $file_array = explode(' ', $file_str);
         $str_array = explode(' ', $str);
-        $analize = file_analize($db_file, 1); // рефакторинг
-
+        $analize = file_analize($db_file, 1);
 
         if(
             empty($file_array[0]) || 
             $file_array[0] !== 'index_' . $i ||
             $file_array[1] !== 'file_insert_line_' . $i ||
-            trim($file_str) !== mb_substr($str, 0, $align - 1)
-            
+            trim($file_str) !== mb_substr($str, 0, $align - 1) ||
+            $analize['total_characters'] !== $align ||
+            $analize['last_symbol'] !== 10 ||
+            $analize['file_size'] !== ($i > 0 ? $align * ($i + 1) : $align) ||
+            $analize['min_length'] !== $analize['max_length'] ||
+            $analize['min_length'] != $analize['avg_length'] ||
+            $analize['line_count'] !== 1
         ) {
             $file_insert_line_passed = false;           
             break;
@@ -104,8 +109,9 @@ for($ii = 0; $ii < 100; $ii++){
     }
 }
 
+$time= microtime(true) - $start;
 
-if($file_insert_line_passed) echo "Check file_insert_line alignment data - PASS\n";
+if($file_insert_line_passed) echo "Check file_insert_line: ", $time, " - PASS",  "\n";
 else echo "Check file_insert_line alignment data - ERROR\n";
 
 
@@ -113,6 +119,7 @@ else echo "Check file_insert_line alignment data - ERROR\n";
 // #########################
 // Check file_analize
 $file_analize_passed = true;
+$start= microtime(true);
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
@@ -151,8 +158,9 @@ for($ii = 0; $ii < 100; $ii++){
     }
 }
 
+$time= microtime(true) - $start;
 
-if($file_analize_passed) echo "Check file_analize - PASS\n";
+if($file_analize_passed) echo "Check file_analize: ", $time, " - PASS",  "\n";
 else echo "Check file_analize - ERROR\n";
 
 
@@ -160,6 +168,7 @@ else echo "Check file_analize - ERROR\n";
 // #########################
 // Check file_get_keys
 $file_get_keys_passed = true;
+$start= microtime(true);
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
@@ -294,10 +303,10 @@ for($ii = 0; $ii < 100; $ii++){
 }
 
 
-if($file_get_keys_passed) echo "Check file_get_keys - PASS\n";
+$time= microtime(true) - $start;
+
+if($file_get_keys_passed) echo "Check file_get_keys: ", $time, " - PASS",  "\n";
 else echo "Check file_get_keys - ERROR\n";
-
-
 
 
 
@@ -305,6 +314,7 @@ else echo "Check file_get_keys - ERROR\n";
 // #########################
 // Check file_search_array
 $file_search_array_passed = true;
+$start= microtime(true);
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
@@ -548,16 +558,17 @@ for($ii = 0; $ii < 100; $ii++){
 
 }
 
+$time= microtime(true) - $start;
 
-if($file_search_array_passed) echo "Check file_search_array - PASS\n";
+if($file_search_array_passed) echo "Check file_search_array: ", $time, " - PASS",  "\n";
 else echo "Check file_search_array - ERROR\n";
-
 
 
 
 // #########################
 // Check file_select_array
 $file_select_array_passed = true;
+$start= microtime(true);
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
@@ -852,6 +863,7 @@ for($ii = 0; $ii < 100; $ii++){
 
 }
 
+$time= microtime(true) - $start;
 
-if($file_select_array_passed) echo "Check file_select_array - PASS\n";
+if($file_select_array_passed) echo "Check file_select_array: ", $time, " - PASS",  "\n";
 else echo "Check file_select_array - ERROR\n";
