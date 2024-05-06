@@ -27,8 +27,9 @@
 - file_get_keys - Тест сходимости транзакционных режимов, с участием: file_insert_line, +рандомный размер буфера.
 - file_search_array - Тест сходимости транзакционных режимов, с участием: file_insert_line, +рандомный размер буфера.
 - file_select_array - Тест сходимости транзакционных режимов, с участием: file_insert_line, +рандомный размер буфера.
-- file_search_line
-- file_select_line
+- file_search_line - Тест сходимости транзакционных режимов, с участием: file_insert_line, +рандомный размер буфера.
+- file_select_line - Тест сходимости транзакционных режимов, с участием: file_insert_line, +рандомный размер буфера.
+- file_pop_line - Тест сходимости транзакционных режимов, с участием: file_insert_line, bugfix! автомат спотыкается на низком буфере.
 
 
 #### Результат выполнения
@@ -36,68 +37,77 @@
 ```
 root@api:/home/commeta/project/kernel/fast_io# php auto_test.php 
 
-Check file_insert_line: time: 2.4278519153595 - PASS
-rchar: 712121352
-wchar: 194359745
-syscr: 76042
-syscw: 10907
+Check file_insert_line: time: 2.4595458507538 - PASS
+rchar: 735866709
+wchar: 196956466
+syscr: 81756
+syscw: 10982
 read_bytes: 0
-write_bytes: 194560000
-cancelled_write_bytes: 186003456
+write_bytes: 197177344
+cancelled_write_bytes: 189173760
 
-Check file_analize: time: 4.0404360294342 - PASS
-rchar: 6082861699
-wchar: 175507299
-syscr: 518281
-syscw: 10282
+Check file_analize: time: 4.9354588985443 - PASS
+rchar: 7102708366
+wchar: 198251806
+syscr: 605015
+syscw: 11589
 read_bytes: 0
-write_bytes: 175710208
-cancelled_write_bytes: 169238528
+write_bytes: 198467584
+cancelled_write_bytes: 193757184
 
-Check file_get_keys: time: 2.1246058940887 - PASS
-rchar: 1084683468
-wchar: 180586297
-syscr: 100605
-syscw: 11309
+Check file_get_keys: time: 2.367112159729 - PASS
+rchar: 1165205628
+wchar: 193993436
+syscr: 112107
+syscw: 11397
 read_bytes: 0
-write_bytes: 180801536
-cancelled_write_bytes: 181334016
+write_bytes: 194195456
+cancelled_write_bytes: 188514304
 
-Check file_search_array: time: 3.0165410041809 - PASS
-rchar: 2211686388
-wchar: 184098609
-syscr: 171485
-syscw: 10331
+Check file_search_array: time: 3.3340499401093 - PASS
+rchar: 2309811348
+wchar: 192285197
+syscr: 219337
+syscw: 11479
 read_bytes: 0
-write_bytes: 184299520
-cancelled_write_bytes: 180006912
+write_bytes: 192495616
+cancelled_write_bytes: 191062016
 
-Check file_select_array: time: 3.1856558322906 - PASS
-rchar: 2785934863
-wchar: 185507874
-syscr: 164283
-syscw: 11114
+Check file_select_array: time: 3.5292551517487 - PASS
+rchar: 3021711734
+wchar: 201240174
+syscr: 157653
+syscw: 10803
 read_bytes: 0
-write_bytes: 185696256
-cancelled_write_bytes: 184750080
+write_bytes: 201441280
+cancelled_write_bytes: 197410816
 
-Check file_search_line: time: 7.32306599617 - PASS
-rchar: 16478610988
-wchar: 211966901
-syscr: 1690825
-syscw: 11306
+Check file_search_line: time: 6.3610148429871 - PASS
+rchar: 14909440886
+wchar: 188308552
+syscr: 1323857
+syscw: 11806
 read_bytes: 0
-write_bytes: 212152320
-cancelled_write_bytes: 208281600
+write_bytes: 188526592
+cancelled_write_bytes: 175579136
 
-Check file_select_line: time: 1.9513521194458 - PASS
-rchar: 780492131
-wchar: 184969434
-syscr: 83099
-syscw: 10695
+Check file_select_line: time: 2.0957839488983 - PASS
+rchar: 814150257
+wchar: 192295141
+syscr: 88943
+syscw: 11472
 read_bytes: 0
-write_bytes: 185163776
-cancelled_write_bytes: 181645312
+write_bytes: 192516096
+cancelled_write_bytes: 186953728
+
+Check file_pop_line: time: 3.0591158866882 - PASS
+rchar: 1161475101
+wchar: 380231861
+syscr: 85277
+syscw: 21696
+read_bytes: 0
+write_bytes: 380641280
+cancelled_write_bytes: 385363968
 ```
 
 
