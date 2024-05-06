@@ -30,6 +30,7 @@
 
 
 #### Результат выполнения
+Результат тестирования: Ubuntu 24.04, Ryzen 12 Cores, 16GB RAM, SATA 3 SSD.
 ```
 root@api:/home/commeta/project/kernel/fast_io# php auto_test.php 
 Check file_insert_line: 2.59836602211 - PASS
