@@ -99,7 +99,7 @@ index_2 file_insert_line_2
 Подробнее в разделе: [Авто тест базы данных](/test/auto_test.md)
 
 
-
+### Статистика IO Linux Kernel
 ```
 file_put_contents (FILE_APPEND) time: 0.00001717 // Время работы функции. Высокая погрешность при замере
 rchar: 106 // количество прочитанных символов
