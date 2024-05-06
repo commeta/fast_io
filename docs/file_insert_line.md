@@ -120,7 +120,7 @@ write_bytes: 0
 cancelled_write_bytes: 0
 ```
 
-Тот же результат вызова `file_put_contents(__DIR__ . '/fast_io1.dat', 'id file_insert_line', FILE_APPEND);`
+Тот же метод, вызов `file_put_contents(__DIR__ . '/fast_io1.dat', 'id file_insert_line', FILE_APPEND);`
 ```
 time: 0.00004315
 rchar: 97
