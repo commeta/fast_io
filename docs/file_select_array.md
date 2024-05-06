@@ -102,7 +102,7 @@ array file_select_array(string $filename, array $query[, string $pattern][, int 
 ```
 for($i=0; $i <=500; $i++){
 	print_r(
-		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 92, '1234567890'), 0, 8192) . ', '
+		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 92, '1234567890'), 0, 8192)
 	);
 }
 
@@ -138,14 +138,13 @@ Array
 
     [2] => Array
         (
-            [trim_line] => index_3 file_insert_line_3 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-            [trim_length] => 119
+            [trim_line] => file_update_line mode 0
+            [trim_length] => 23
             [line_offset] => 24576
             [line_length] => 8192
         )
 
 )
-
 ```
 
 
@@ -173,16 +172,7 @@ Array
             [line_length] => 8192
         )
 
-    [2] => Array
-        (
-            [trim_line] => index_3 file_insert_line_3 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012
-            [trim_length] => 119
-            [line_offset] => 24576
-            [line_length] => 8192
-        )
-
 )
-
 ```
 
 
@@ -286,7 +276,7 @@ Array
                     [1] => Array
                         (
                             [line_match] => file_insert_line_1
-                            [match_offset] => 7
+                            [match_offset] => 8
                             [match_length] => 18
                         )
 
@@ -310,7 +300,7 @@ Array
                     [1] => Array
                         (
                             [line_match] => file_insert_line_2
-                            [match_offset] => 7
+                            [match_offset] => 8
                             [match_length] => 18
                         )
 
@@ -320,31 +310,8 @@ Array
             [line_length] => 8192
         )
 
-    [2] => Array
-        (
-            [line_matches] => Array
-                (
-                    [0] => Array
-                        (
-                            [line_match] => index_3
-                            [match_offset] => 0
-                            [match_length] => 7
-                        )
-
-                    [1] => Array
-                        (
-                            [line_match] => file_insert_line_3
-                            [match_offset] => 7
-                            [match_length] => 18
-                        )
-
-                )
-
-            [line_offset] => 24576
-            [line_length] => 8192
-        )
-
 )
+
 ```
 
 
