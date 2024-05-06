@@ -112,7 +112,7 @@ foreach($end_io as $p=>$v) echo $p, ': ', $v - $start_io[$p], "\n";
 ```
 time: 0.00005198 // Высокая погрешность т.к. это единичный вызов
 rchar: 97
-wchar: 37
+wchar: 37 // +1 запрос на блокировку файла
 syscr: 3
 syscw: 4
 read_bytes: 0
