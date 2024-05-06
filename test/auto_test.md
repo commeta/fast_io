@@ -34,46 +34,68 @@
 ```
 root@api:/home/commeta/project/kernel/fast_io# php auto_test.php 
 
-Check file_insert_line: time: 2.2931261062622 - PASS
-rchar: 674486417
-wchar: 173484249
-syscr: 74759
-syscw: 10601
-write_bytes: 173690880
-cancelled_write_bytes: 171610112
+Check file_insert_line: time: 2.4278519153595 - PASS
+rchar: 712121352
+wchar: 194359745
+syscr: 76042
+syscw: 10907
+read_bytes: 0
+write_bytes: 194560000
+cancelled_write_bytes: 186003456
 
-Check file_analize: time: 4.3252830505371 - PASS
-rchar: 6276222858
-wchar: 180224033
-syscr: 607035
-syscw: 10819
-write_bytes: 180441088
-cancelled_write_bytes: 174018560
+Check file_analize: time: 4.0404360294342 - PASS
+rchar: 6082861699
+wchar: 175507299
+syscr: 518281
+syscw: 10282
+read_bytes: 0
+write_bytes: 175710208
+cancelled_write_bytes: 169238528
 
-Check file_get_keys: time: 2.2275409698486 - PASS
-rchar: 1156963872
-wchar: 192651264
-syscr: 108861
-syscw: 11467
-write_bytes: 192884736
-cancelled_write_bytes: 192188416
+Check file_get_keys: time: 2.1246058940887 - PASS
+rchar: 1084683468
+wchar: 180586297
+syscr: 100605
+syscw: 11309
+read_bytes: 0
+write_bytes: 180801536
+cancelled_write_bytes: 181334016
 
-Check file_search_array: time: 3.0164902210236 - PASS
-rchar: 2203209396
-wchar: 183397241
-syscr: 214181
-syscw: 11031
-write_bytes: 183603200
-cancelled_write_bytes: 175931392
+Check file_search_array: time: 3.0165410041809 - PASS
+rchar: 2211686388
+wchar: 184098609
+syscr: 171485
+syscw: 10331
+read_bytes: 0
+write_bytes: 184299520
+cancelled_write_bytes: 180006912
 
-Check file_select_array: time: 3.0919930934906 - PASS
-rchar: 2679817694
-wchar: 178446027
-syscr: 152223
-syscw: 10348
-write_bytes: 178647040
-cancelled_write_bytes: 178601984
+Check file_select_array: time: 3.1856558322906 - PASS
+rchar: 2785934863
+wchar: 185507874
+syscr: 164283
+syscw: 11114
+read_bytes: 0
+write_bytes: 185696256
+cancelled_write_bytes: 184750080
 
+Check file_search_line: time: 7.32306599617 - PASS
+rchar: 16478610988
+wchar: 211966901
+syscr: 1690825
+syscw: 11306
+read_bytes: 0
+write_bytes: 212152320
+cancelled_write_bytes: 208281600
+
+Check file_select_line: time: 1.9513521194458 - PASS
+rchar: 780492131
+wchar: 184969434
+syscr: 83099
+syscw: 10695
+read_bytes: 0
+write_bytes: 185163776
+cancelled_write_bytes: 181645312
 ```
 
 
