@@ -29,7 +29,6 @@
 - file_select_array - Тест сходимости транзакционных режимов, с участием: file_insert_line, +рандомный размер буфера.
 - file_search_line - Тест сходимости транзакционных режимов, с участием: file_insert_line, +рандомный размер буфера.
 - file_select_line - Тест сходимости транзакционных режимов, с участием: file_insert_line, +рандомный размер буфера.
-- file_pop_line - Тест сходимости транзакционных режимов, с участием: file_insert_line, bugfix! автомат спотыкается на низком буфере.
 - file_pop_line - Тест сходимости транзакционных режимов без авто-поиска строки!, с участием: file_insert_line, +рандомный размер буфера.
 
 
@@ -98,15 +97,6 @@ syscw: 10493
 read_bytes: 0
 write_bytes: 181710848
 cancelled_write_bytes: 179101696
-
-Check file_pop_line: time: 2.9483249187469 - PASS
-rchar: 1152357135
-wchar: 348247041
-syscr: 87569
-syscw: 22084
-read_bytes: 0
-write_bytes: 348643328
-cancelled_write_bytes: 350273536
 
 Check file_pop_line: time: 2.1540770530701 - PASS
 rchar: 450267687
