@@ -23,6 +23,33 @@
  * 
  */
 
+function get_process_io_stats() {
+    $ioFile = '/proc/' . getmypid() . '/io';
+    
+    if (!file_exists($ioFile)) {
+        return [];
+    }
+    
+    $ioData = file_get_contents($ioFile);
+    if ($ioData === false) {
+        // Не удалось прочитать файл
+        return [];
+    }
+    
+    $ioStats = [];
+    
+    // Разбор данных файла
+    $lines = explode("\n", trim($ioData));
+    foreach ($lines as $line) {
+        list($key, $value) = explode(':', $line, 2);
+        $key = trim($key);
+        $value = trim($value);
+        $ioStats[$key] = intval($value);
+    }
+    
+    return $ioStats;
+}
+
 ini_set('error_reporting', E_ALL);
 ini_set('display_errors', 1);
 ini_set('html_errors', 1);
@@ -35,7 +62,8 @@ $db_file = __DIR__ . '/fast_io.dat';
 // #########################
 // Check file_insert_line
 $file_insert_line_passed = true;
-$start= microtime(true);
+$start = microtime(true);
+$start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
@@ -111,7 +139,11 @@ for($ii = 0; $ii < 100; $ii++){
 
 $time= microtime(true) - $start;
 
-if($file_insert_line_passed) echo "Check file_insert_line: ", $time, " - PASS",  "\n";
+$end_io = get_process_io_stats();
+$io_stats = '';
+foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) $io_stats .= strval($p) . ': ' . strval($v - $start_io[$p]) . ' ';
+
+if($file_insert_line_passed) echo "Check file_insert_line: time: ", $time, " ", $io_stats, "- PASS",  "\n";
 else echo "Check file_insert_line alignment data - ERROR\n";
 
 
@@ -120,6 +152,7 @@ else echo "Check file_insert_line alignment data - ERROR\n";
 // Check file_analize
 $file_analize_passed = true;
 $start= microtime(true);
+$start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
@@ -160,7 +193,11 @@ for($ii = 0; $ii < 100; $ii++){
 
 $time= microtime(true) - $start;
 
-if($file_analize_passed) echo "Check file_analize: ", $time, " - PASS",  "\n";
+$end_io = get_process_io_stats();
+$io_stats = '';
+foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) $io_stats .= strval($p) . ': ' . strval($v - $start_io[$p]) . ' ';
+
+if($file_analize_passed) echo "Check file_analize: time: ", $time, " ", $io_stats, "- PASS",  "\n";
 else echo "Check file_analize - ERROR\n";
 
 
@@ -169,6 +206,7 @@ else echo "Check file_analize - ERROR\n";
 // Check file_get_keys
 $file_get_keys_passed = true;
 $start= microtime(true);
+$start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
@@ -305,16 +343,19 @@ for($ii = 0; $ii < 100; $ii++){
 
 $time= microtime(true) - $start;
 
-if($file_get_keys_passed) echo "Check file_get_keys: ", $time, " - PASS",  "\n";
+$end_io = get_process_io_stats();
+$io_stats = '';
+foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) $io_stats .= strval($p) . ': ' . strval($v - $start_io[$p]) . ' ';
+
+if($file_get_keys_passed) echo "Check file_get_keys: time: ", $time, " ", $io_stats, "- PASS",  "\n";
 else echo "Check file_get_keys - ERROR\n";
-
-
 
 
 // #########################
 // Check file_search_array
 $file_search_array_passed = true;
 $start= microtime(true);
+$start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
@@ -560,7 +601,12 @@ for($ii = 0; $ii < 100; $ii++){
 
 $time= microtime(true) - $start;
 
-if($file_search_array_passed) echo "Check file_search_array: ", $time, " - PASS",  "\n";
+$end_io = get_process_io_stats();
+$io_stats = '';
+
+foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) $io_stats .= strval($p) . ': ' . strval($v - $start_io[$p]) . ' ';
+
+if($file_search_array_passed) echo "Check file_search_array: time: ", $time, " ", $io_stats, "- PASS",  "\n";
 else echo "Check file_search_array - ERROR\n";
 
 
@@ -569,6 +615,7 @@ else echo "Check file_search_array - ERROR\n";
 // Check file_select_array
 $file_select_array_passed = true;
 $start= microtime(true);
+$start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
@@ -862,8 +909,11 @@ for($ii = 0; $ii < 100; $ii++){
 
 
 }
-
 $time= microtime(true) - $start;
 
-if($file_select_array_passed) echo "Check file_select_array: ", $time, " - PASS",  "\n";
+$end_io = get_process_io_stats();
+$io_stats = '';
+foreach($end_io as $p=>$v) if($v - $start_io[$p] > 0) $io_stats .= strval($p) . ': ' . strval($v - $start_io[$p]) . ' ';
+
+if($file_select_array_passed) echo "Check file_select_array: time: ", $time, " ", $io_stats, "- PASS",  "\n";
 else echo "Check file_select_array - ERROR\n";
