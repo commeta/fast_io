@@ -59,15 +59,14 @@ for($i=0; $i <=1; $i++){
 	$str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 8192, '1234567890_' . $i . '_');
 	file_insert_line($db_file, $str, 2, 8192);
 }
-
 print_r([
 	file_callback_string(
 		$db_file,
 		function () {
 			$mode = func_num_args(); // Режим
 
-			$filename = '';
 			$line = ''; // Текущая строка в файле
+			$filename = ''; // Имя текущего файла
 			$line_offset = 0; // Смещение начала строки в файле
 			$line_length = 0; // Длина строки в файле
 			$line_count = 0; // Количество прочитанных строк 
@@ -78,8 +77,8 @@ print_r([
 			$dynamic_buffer = ''; // Динамический буфер
 
 			if ($mode > 0){
-				$filename = func_get_arg(0);
-				if($mode > 1) $line  = func_get_arg(1);
+				$line = func_get_arg(0);
+				if($mode > 1) $filename = func_get_arg(1);
 				if($mode > 2) $line_offset = func_get_arg(2);
 				if($mode > 3) $line_length = func_get_arg(3);
 				if($mode > 4) $line_count = func_get_arg(4);
