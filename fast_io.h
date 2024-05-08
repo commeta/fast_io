@@ -41,14 +41,3 @@ ZEND_END_MODULE_GLOBALS(fast_io)
 #endif
 
 #define SPECIAL_CHAR 127
-
-// Вспомогательная функция для блокировки файла
-int lock_file(int fd, int lock_type) {
-    struct flock fl;
-    fl.l_type = lock_type;
-    fl.l_whence = SEEK_SET;
-    fl.l_start = 0;
-    fl.l_len = 0; // Блокировка всего файла
-    return fcntl(fd, F_SETLKW, &fl);
-}
-
