@@ -1602,8 +1602,6 @@ PHP_FUNCTION(file_defrag_data) {
 }
 
 
-
-
 /* Функция для извлечения и удаления последней строки из файла */
 PHP_FUNCTION(file_pop_line) {
     char *filename;
@@ -1839,7 +1837,6 @@ PHP_FUNCTION(file_pop_line) {
         RETVAL_FALSE;
     }
 }
-
 
 
 
@@ -3375,6 +3372,8 @@ PHP_FUNCTION(file_update_array) {
 
 
 
+
+
 PHP_FUNCTION(file_callback_string) {
     char *filename;
     size_t filename_len;
@@ -3469,7 +3468,7 @@ PHP_FUNCTION(file_callback_string) {
             if(mode > 0){
                 // Подготовка параметров для callback-функции
                 ZVAL_STRING(&args[0], lineStart);
-                if(mode > 1) ZVAL_LONG(&args[1], searchOffset); 
+                if(mode > 1) ZVAL_LONG(&args[1], searchOffset);
                 if(mode > 2) ZVAL_LONG(&args[2], lineLength);
                 if(mode > 3) ZVAL_LONG(&args[3], line_count);
                 if(mode > 4) ZVAL_LONG(&args[4], position);
@@ -3552,5 +3551,4 @@ PHP_FUNCTION(file_callback_string) {
     RETVAL_STRING(found_value);
     efree(found_value);
 }
-
 
