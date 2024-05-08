@@ -3373,6 +3373,7 @@ PHP_FUNCTION(file_update_array) {
 
 
 
+
 PHP_FUNCTION(file_callback_string) {
     char *filename;
     size_t filename_len;
@@ -3465,11 +3466,11 @@ PHP_FUNCTION(file_callback_string) {
 
             zval args[10];
 
-            ZVAL_STRING(&args[0], filename);
+            ZVAL_STRING(&args[0], lineStart);
 
             if(mode > 0){
                 // Подготовка параметров для callback-функции
-                ZVAL_STRING(&args[1], lineStart);
+                ZVAL_STRING(&args[1], filename);
                 if(mode > 1) ZVAL_LONG(&args[2], searchOffset); // после смены position надо корректировать
                 if(mode > 2) ZVAL_LONG(&args[3], lineLength);
                 if(mode > 3) ZVAL_LONG(&args[4], line_count);
@@ -3520,8 +3521,8 @@ PHP_FUNCTION(file_callback_string) {
                 zval_dtor(&args[i]);
             }
 
-            line_count++; // поменять везде
-            searchOffset += lineLength; // Обновляем смещение
+            line_count++; 
+            searchOffset += lineLength;
             lineStart = lineEnd + 1;
         }
 
