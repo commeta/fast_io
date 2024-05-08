@@ -3399,6 +3399,17 @@ PHP_FUNCTION(file_callback_string) {
         RETURN_FALSE;
     }
 
+    // Попытка установить блокирующую блокировку на запись
+    if(mode < 100){
+        if (flock(fileno(fp), LOCK_EX) < 0) {
+            php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
+            fclose(fp);
+            RETURN_FALSE;
+        }
+    }
+
+    if(mode > 99) mode -= 100;
+
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
@@ -3458,7 +3469,7 @@ PHP_FUNCTION(file_callback_string) {
             if(mode > 0){
                 // Подготовка параметров для callback-функции
                 ZVAL_STRING(&args[0], lineStart);
-                if(mode > 1) ZVAL_LONG(&args[1], searchOffset); // после смены position надо корректировать
+                if(mode > 1) ZVAL_LONG(&args[1], searchOffset); 
                 if(mode > 2) ZVAL_LONG(&args[2], lineLength);
                 if(mode > 3) ZVAL_LONG(&args[3], line_count);
                 if(mode > 4) ZVAL_LONG(&args[4], position);
