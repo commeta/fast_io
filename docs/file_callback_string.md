@@ -66,6 +66,7 @@ print_r([
 		function () {
 			$mode = func_num_args(); // Режим
 
+			$filename = '';
 			$line = ''; // Текущая строка в файле
 			$line_offset = 0; // Смещение начала строки в файле
 			$line_length = 0; // Длина строки в файле
@@ -77,19 +78,22 @@ print_r([
 			$dynamic_buffer = ''; // Динамический буфер
 
 			if ($mode > 0){
-				$line  = func_get_arg(0);
-				if($mode > 1) $line_offset = func_get_arg(1);
-				if($mode > 2) $line_length = func_get_arg(2);
-				if($mode > 3) $line_count = func_get_arg(3);
-				if($mode > 4) $position = func_get_arg(4);
-				if($mode > 5) $return_line = func_get_arg(5);
-				if($mode > 6) $current_size = func_get_arg(6);
-				if($mode > 7) $dynamic_buffer_size = func_get_arg(7);
-				if($mode > 8) $dynamic_buffer = func_get_arg(8);
+				$filename = func_get_arg(0);
+				if($mode > 1) $line  = func_get_arg(1);
+				if($mode > 2) $line_offset = func_get_arg(2);
+				if($mode > 3) $line_length = func_get_arg(3);
+				if($mode > 4) $line_count = func_get_arg(4);
+				if($mode > 5) $position = func_get_arg(5);
+				if($mode > 6) $return_line = func_get_arg(6);
+				if($mode > 7) $current_size = func_get_arg(7);
+				if($mode > 8) $dynamic_buffer_size = func_get_arg(8);
+				if($mode > 9) $dynamic_buffer = func_get_arg(9);
 			}
 
+
 			print_r([
-				$mode,
+				$filename,
+				$mode - 1,
 				mb_strlen($line), 
 				$line_offset,
 				$line_length,
@@ -110,6 +114,7 @@ print_r([
 		}, 9
 	)
 ]);
+
 ```
 
 Результат:
