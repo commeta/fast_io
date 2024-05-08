@@ -85,6 +85,7 @@ PHP_FUNCTION(find_matches_pcre2);
 PHP_FUNCTION(replicate_file);
 PHP_FUNCTION(file_select_array);
 PHP_FUNCTION(file_update_array);
+PHP_FUNCTION(file_callback_string);
 
 
 
@@ -173,7 +174,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_select_line, 1, 3, IS_STRIN
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_update_line, 0, 3, IS_LONG, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_update_line, 1, 3, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, line, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, row, IS_LONG, 0)
@@ -186,7 +187,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_analize, 1, 1, IS_ARRAY, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_matches_pcre2, 0, 2, IS_ARRAY, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_find_matches_pcre2, 1, 2, IS_ARRAY, 0)
     ZEND_ARG_TYPE_INFO(0, pattern, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, subject, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
@@ -211,6 +212,12 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_update_array, 1, 2, IS_LONG
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_callback_string, 1, 2, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, callback, IS_CALLABLE, 0)
+    ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
+ZEND_END_ARG_INFO()
+
 
 /* Регистрация функций */
 const zend_function_entry fast_io_functions[] = {
@@ -232,6 +239,7 @@ const zend_function_entry fast_io_functions[] = {
     PHP_FE(replicate_file, arginfo_replicate_file)
     PHP_FE(file_select_array, arginfo_file_select_array)
     PHP_FE(file_update_array, arginfo_file_update_array)
+    PHP_FE(file_callback_string, arginfo_file_callback_string)
     PHP_FE_END
 };
 
@@ -3363,6 +3371,175 @@ PHP_FUNCTION(file_update_array) {
 
     fclose(fp);
     RETURN_LONG(written);
+}
+
+
+
+PHP_FUNCTION(file_callback_string) {
+    char *filename;
+    size_t filename_len;
+    zend_long position = 0;
+    zend_long mode = 0;
+    zval *callback;
+    zval retval;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "sz|l", &filename, &filename_len, &callback, &mode) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    // Проверяем, что переданный параметр действительно является callback-функцией
+    if (!zend_is_callable(callback, 0, NULL)) {
+        php_error_docref(NULL, E_WARNING, "The passed parameter is not a callback function");
+        RETURN_FALSE;
+    }
+
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
+        php_error_docref(NULL, E_WARNING, "Failed to open file: %s", filename);
+        RETURN_FALSE;
+    }
+
+    // Перемещение указателя в конец файла для получения его размера
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+
+    off_t searchOffset = 0; // Смещение начала строки
+
+    if(position > 0){
+        if(position > file_size){
+            php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
+
+            fclose(fp);
+            RETURN_FALSE;
+        }
+
+        fseek(fp, position, SEEK_SET);
+        searchOffset = position;
+    } else {
+        fseek(fp, 0, SEEK_SET);
+    }
+
+    zend_long ini_buffer_size = FAST_IO_G(buffer_size);
+
+    if(file_size < ini_buffer_size) ini_buffer_size = file_size;
+    if(ini_buffer_size < 16) ini_buffer_size = 16;
+
+    zend_long dynamic_buffer_size = ini_buffer_size;
+    char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
+    if (!dynamic_buffer) {
+        php_error_docref(NULL, E_WARNING, "Out of memory");
+        fclose(fp);
+        RETURN_FALSE;
+    }
+
+    char *found_value = (char *)emalloc(1);
+    found_value[0] = '\0';
+
+
+    ssize_t bytesRead;
+    size_t current_size = 0; // Текущий размер данных в динамическом буфере
+    zend_long line_count = 0;
+    bool found_match = false;
+
+
+    while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
+        current_size += bytesRead;
+        
+        dynamic_buffer[current_size] = '\0';
+
+        char *lineStart = dynamic_buffer;
+        char *lineEnd;
+        while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
+            ssize_t lineLength = lineEnd - lineStart + 1;
+            *lineEnd = '\0';
+
+            zval args[9];
+
+            if(mode > 0){
+                // Подготовка параметров для callback-функции
+                ZVAL_STRING(&args[0], lineStart);
+                if(mode > 1) ZVAL_LONG(&args[1], searchOffset); // после смены position надо корректировать
+                if(mode > 2) ZVAL_LONG(&args[2], lineLength);
+                if(mode > 3) ZVAL_LONG(&args[3], line_count);
+                if(mode > 4) ZVAL_LONG(&args[4], position);
+                if(mode > 5) ZVAL_STRING(&args[5], found_value);
+                if(mode > 6) ZVAL_LONG(&args[6], current_size);
+                if(mode > 7) ZVAL_LONG(&args[7], dynamic_buffer_size);
+                if(mode > 8) ZVAL_STRING(&args[8], dynamic_buffer);
+            }
+
+            // Вызываем callback-функцию с одним аргументом
+            if (call_user_function(EG(function_table), NULL, callback, &retval, mode, args) == SUCCESS) {
+                if(Z_TYPE_P(&retval) == IS_STRING) {
+                    efree(found_value);
+
+                    found_value = estrdup(Z_STRVAL_P(&retval));
+                    found_value[strlen(found_value)] = '\0';
+                }
+
+                if(Z_TYPE_P(&retval) == IS_LONG) {
+                    if(Z_LVAL_P(&retval) > file_size || Z_LVAL_P(&retval) < 0 || Z_LVAL_P(&retval) == position){
+                        php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
+                        fclose(fp);
+                        if (dynamic_buffer) efree(dynamic_buffer);
+                        if (found_value) efree(found_value);
+                        RETURN_FALSE;
+                    } else {
+                        fseek(fp, position, SEEK_SET);
+                    }
+
+                    searchOffset = position;
+                }
+
+                if(Z_TYPE_P(&retval) == IS_TRUE) {
+                    found_match = true;
+                    break;
+                }
+
+            } else {
+                // Если вызов функции не удался, возвращаем FALSE
+                php_error_docref(NULL, E_WARNING, "Failed call callback function");
+                RETVAL_FALSE;
+                found_match = true;
+                break;
+            }
+
+            // Освобождаем ресурсы
+            for (int i = 0; i < mode; i++) {
+                zval_dtor(&args[i]);
+            }
+
+            line_count++;
+            searchOffset += lineLength; // Обновляем смещение
+            lineStart = lineEnd + 1;
+        }
+
+        if (found_match) break;
+
+        current_size -= (lineStart - dynamic_buffer);
+        memmove(dynamic_buffer, lineStart, current_size);
+
+        if (current_size + ini_buffer_size > dynamic_buffer_size) {
+            dynamic_buffer_size += ini_buffer_size;
+
+            char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
+            if (!temp_buffer) {
+                php_error_docref(NULL, E_WARNING, "Out of memory");
+                fclose(fp);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                efree(found_value);
+                RETURN_FALSE;
+            }
+
+            dynamic_buffer = temp_buffer;
+        }
+    }
+
+    efree(dynamic_buffer);
+    fclose(fp);
+
+    RETVAL_STRING(found_value);
+    efree(found_value);
 }
 
 
