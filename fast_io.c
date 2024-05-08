@@ -3373,7 +3373,6 @@ PHP_FUNCTION(file_update_array) {
 
 
 
-
 PHP_FUNCTION(file_callback_string) {
     char *filename;
     size_t filename_len;
@@ -3452,6 +3451,7 @@ PHP_FUNCTION(file_callback_string) {
     bool found_match = false;
 
 
+
     while ((bytesRead = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytesRead;
         
@@ -3463,23 +3463,25 @@ PHP_FUNCTION(file_callback_string) {
             ssize_t lineLength = lineEnd - lineStart + 1;
             *lineEnd = '\0';
 
-            zval args[9];
+            zval args[10];
+
+            ZVAL_STRING(&args[0], filename);
 
             if(mode > 0){
                 // Подготовка параметров для callback-функции
-                ZVAL_STRING(&args[0], lineStart);
-                if(mode > 1) ZVAL_LONG(&args[1], searchOffset);
-                if(mode > 2) ZVAL_LONG(&args[2], lineLength);
-                if(mode > 3) ZVAL_LONG(&args[3], line_count);
-                if(mode > 4) ZVAL_LONG(&args[4], position);
-                if(mode > 5) ZVAL_STRING(&args[5], found_value);
-                if(mode > 6) ZVAL_LONG(&args[6], current_size);
-                if(mode > 7) ZVAL_LONG(&args[7], dynamic_buffer_size);
-                if(mode > 8) ZVAL_STRING(&args[8], dynamic_buffer);
+                ZVAL_STRING(&args[1], lineStart);
+                if(mode > 2) ZVAL_LONG(&args[2], searchOffset); // после смены position надо корректировать
+                if(mode > 3) ZVAL_LONG(&args[3], lineLength);
+                if(mode > 4) ZVAL_LONG(&args[4], line_count);
+                if(mode > 5) ZVAL_LONG(&args[5], position);
+                if(mode > 6) ZVAL_STRING(&args[6], found_value);
+                if(mode > 7) ZVAL_LONG(&args[7], current_size);
+                if(mode > 8) ZVAL_LONG(&args[8], dynamic_buffer_size);
+                if(mode > 9) ZVAL_STRING(&args[9], dynamic_buffer);
             }
 
             // Вызываем callback-функцию с одним аргументом
-            if (call_user_function(EG(function_table), NULL, callback, &retval, mode, args) == SUCCESS) {
+            if (call_user_function(EG(function_table), NULL, callback, &retval, mode + 1, args) == SUCCESS) {
                 if(Z_TYPE_P(&retval) == IS_STRING) {
                     efree(found_value);
 
@@ -3494,14 +3496,13 @@ PHP_FUNCTION(file_callback_string) {
                         if (dynamic_buffer) efree(dynamic_buffer);
                         if (found_value) efree(found_value);
                         RETURN_FALSE;
-                    } else {
-                        fseek(fp, position, SEEK_SET);
                     }
 
+                    fseek(fp, position, SEEK_SET);
                     searchOffset = position;
                 }
 
-                if(Z_TYPE_P(&retval) == IS_TRUE) {
+                if(Z_TYPE_P(&retval) == IS_FALSE) {
                     found_match = true;
                     break;
                 }
@@ -3519,7 +3520,7 @@ PHP_FUNCTION(file_callback_string) {
                 zval_dtor(&args[i]);
             }
 
-            line_count++;
+            line_count++; // поменять везде
             searchOffset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
         }
@@ -3551,4 +3552,5 @@ PHP_FUNCTION(file_callback_string) {
     RETVAL_STRING(found_value);
     efree(found_value);
 }
+
 
