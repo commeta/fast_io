@@ -91,6 +91,7 @@ Callback-функция в PHP, вызванная из расширения Fas
 #### Пример использования:
 ```
 $db_file = __DIR__ . '/fast_io.dat';
+$db_file = __DIR__ . '/fast_io.dat';
 
 for($i=0; $i <=1; $i++){
 	$str = 'index_' . $i . ' file_insert_line_' . $i;
@@ -102,7 +103,8 @@ print_r(
 		file_callback_string(
 			$db_file,
 			function () {
-				$ret_val = unserialize(func_get_arg(6));
+				$ret_val = unserialize(func_get_arg(6)); // Строка для возврата из функции, string
+
 				$ret_val[] = [
 					func_num_args(), // Количество аргументов переданных в функцию
 					func_get_arg(0), // Текущая строка в файле, без символа перевода строки, string
@@ -111,7 +113,6 @@ print_r(
 					func_get_arg(3), // Длина строки в файле, int
 					func_get_arg(4), // Количество прочитанных строк с нуля, int
 					func_get_arg(5), // Позиция начала поиска строк в файле, int
-					unserialize(func_get_arg(6)), // Строка для возврата из функции, string
 					func_get_arg(7), // Текущий размер файла, int
 					func_get_arg(8), // Текущий размер динамического буфера, int
 					array_slice(explode("\n", func_get_arg(9)), 0, -1), // Строки в динамическом буфере, обрывки строк справа
@@ -141,10 +142,9 @@ Array
             [4] => 27
             [5] => 0
             [6] => 0
-            [7] => 
+            [7] => 54
             [8] => 54
-            [9] => 54
-            [10] => Array
+            [9] => Array
                 (
                     [0] => index_0 file_insert_line_0
                     [1] => index_1 file_insert_line_1
@@ -161,33 +161,9 @@ Array
             [4] => 27
             [5] => 1
             [6] => 0
-            [7] => Array
-                (
-                    [0] => Array
-                        (
-                            [0] => 10
-                            [1] => index_0 file_insert_line_0
-                            [2] => /home/commeta/project/kernel/fast_io/fast_io.dat
-                            [3] => 0
-                            [4] => 27
-                            [5] => 0
-                            [6] => 0
-                            [7] => 
-                            [8] => 54
-                            [9] => 54
-                            [10] => Array
-                                (
-                                    [0] => index_0 file_insert_line_0
-                                    [1] => index_1 file_insert_line_1
-                                )
-
-                        )
-
-                )
-
+            [7] => 54
             [8] => 54
-            [9] => 54
-            [10] => Array
+            [9] => Array
                 (
                     [0] => index_0 file_insert_line_0
                     [1] => index_1 file_insert_line_1
