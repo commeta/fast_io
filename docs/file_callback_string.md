@@ -27,7 +27,7 @@ string file_callback_string(string $filename, $callback[, int $mode = 0])
 - При вызове функции file_callback_string() переменная $dynamic_buffer_size устанавливается размером ini_get('fast_io.buffer_size').
 - Если размер файла меньше ini_get('fast_io.buffer_size') то переменная $dynamic_buffer_size равняется размеру файла.
 - Если $dynamic_buffer_size < 16 то $dynamic_buffer_size = 16.
-- В цикле поиска строк, переменная $dynamic_buffer_size может увеличиваться $dynamic_buffer_size += ini_get('fast_io.buffer_size').
+- В цикле поиска строк, переменная $dynamic_buffer_size может увеличиваться: $dynamic_buffer_size += ini_get('fast_io.buffer_size').
 - Увеличение переменной $dynamic_buffer_size будет происходить на каждой итерации цикла пока текущая строка не поместится в $dynamic_buffer.
 
 
