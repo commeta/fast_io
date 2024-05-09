@@ -5,7 +5,7 @@
 
 ### Синтаксис
 
-array file_callback_string(string $filename, $callback[, int $mode = 0])
+string file_callback_string(string $filename, $callback[, int $mode = 0])
 
 
 #### Параметры
