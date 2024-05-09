@@ -3462,12 +3462,16 @@ PHP_FUNCTION(file_callback_string) {
         char *lineEnd;
         while ((lineEnd = strchr(lineStart, '\n')) != NULL) {
             ssize_t lineLength = lineEnd - lineStart + 1;
-            *lineEnd = '\0';
 
             zval args[10];
 
-            ZVAL_STRING(&args[0], lineStart);
+            *lineEnd = '\0';
+            char *line = estrdup(lineStart);
+            ZVAL_STRING(&args[0], line);
+            efree(line);
 
+            *lineEnd = '\n';
+            
             if(mode > 0){
                 // Подготовка параметров для callback-функции
                 ZVAL_STRING(&args[1], filename);
@@ -3522,7 +3526,7 @@ PHP_FUNCTION(file_callback_string) {
             }
 
             line_count++; 
-            searchOffset += lineLength; 
+            searchOffset += lineLength; // Обновляем смещение
             lineStart = lineEnd + 1;
         }
 
