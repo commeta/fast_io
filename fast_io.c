@@ -3471,12 +3471,12 @@ PHP_FUNCTION(file_callback_string) {
             if(mode > 0){
                 // Подготовка параметров для callback-функции
                 ZVAL_STRING(&args[1], filename);
-                if(mode > 1) ZVAL_LONG(&args[2], searchOffset); // после смены position надо корректировать
+                if(mode > 1) ZVAL_LONG(&args[2], searchOffset); 
                 if(mode > 2) ZVAL_LONG(&args[3], lineLength);
                 if(mode > 3) ZVAL_LONG(&args[4], line_count);
                 if(mode > 4) ZVAL_LONG(&args[5], position);
                 if(mode > 5) ZVAL_STRING(&args[6], found_value);
-                if(mode > 6) ZVAL_LONG(&args[7], current_size);
+                if(mode > 6) ZVAL_LONG(&args[7], file_size);
                 if(mode > 7) ZVAL_LONG(&args[8], dynamic_buffer_size);
                 if(mode > 8) ZVAL_STRING(&args[9], dynamic_buffer);
             }
@@ -3522,7 +3522,7 @@ PHP_FUNCTION(file_callback_string) {
             }
 
             line_count++; 
-            searchOffset += lineLength;
+            searchOffset += lineLength; 
             lineStart = lineEnd + 1;
         }
 
