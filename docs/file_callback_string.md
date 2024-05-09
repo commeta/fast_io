@@ -3,6 +3,9 @@
 Функция file_callback_string позволяет пользователю читать файл и обрабатывать его содержимое построчно, используя заданную callback-функцию.
 
 
+Страница описания прокта [Fast_IO Engine](https://github.com/commeta/fast_io).
+
+
 ### Синтаксис
 
 string file_callback_string(string $filename, $callback[, int $mode = 0])
