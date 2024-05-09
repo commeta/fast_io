@@ -91,7 +91,6 @@ Callback-функция в PHP, вызванная из расширения Fas
 #### Пример использования:
 ```
 $db_file = __DIR__ . '/fast_io.dat';
-$db_file = __DIR__ . '/fast_io.dat';
 
 for($i=0; $i <=1; $i++){
 	$str = 'index_' . $i . ' file_insert_line_' . $i;
