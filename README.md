@@ -18,6 +18,7 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 
 ## Function List
 
+- [file_callback_string](/docs/file_callback_string.md) - Line-by-line reading of the file with the callback function.
 - [file_insert_line](/docs/file_insert_line.md): Inserting lines with alignment into the file.
 - [file_pop_line](/docs/file_pop_line.md): Extracting and deleting the last line from the file.
 - [file_defrag_data](/docs/file_defrag_data.md): Defragmenting the data file and its corresponding index file.
@@ -33,7 +34,7 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - [file_select_array](/docs/file_select_array.md) - Bulk selection of lines from a file, according to the specified offset and size.
 - [file_update_line](/docs/file_update_line.md): Updating a line in the file.
 - [file_update_array](/docs/file_update_array.md) - Massive updating of lines in the file.
-- [file_analize](/docs/file_analize.md): - Returns the maximum length of a line in the file.
+- [file_analize](/docs/file_analize.md): - Returns statistics for data analysis and file diagnostics.
 - [replicate_file](/docs/replicate_file.md): - Data file replication
 
 
@@ -140,6 +141,14 @@ dynamic_buffer is used to store parts of a file that are read into memory to sea
 When you work with file operations, such as reading from a file using buffer functions, a system buffer is utilized. This buffer serves as an intermediary storage for data between the physical file on the disk and the computer's RAM. The system buffer allows for optimization of input/output by minimizing the number of disk accesses, which significantly enhances the performance of read and write operations.
 
 During operation, the system buffer is used for the temporary storage of data read from a file before it is placed into the user buffer (dynamic_buffer). This enables efficient reading of data in large blocks, reducing the number of disk accesses.
+
+System reading and writing functions use an internal buffer to optimize input/output operations. Even if you request reading or writing of just one byte, these functions usually read or write data in blocks.
+
+When you request reading of 1 byte, the system function may read an entire block of data from the file and store it in the internal buffer. On subsequent calls, the data is read from this buffer, which reduces the number of requests to the operating system kernel and speeds up the reading process.
+
+Similarly, when you request writing of 1 byte, the data is first placed in the internal buffer. When the buffer is full or when the file is closed, the data from the buffer is written to the file.
+
+The size of a block (blocksize) depends on the system and can be different. In many systems, the block size is 4096 bytes (4 KB) or 8192 bytes (8 KB), but this is not a fixed value and may differ depending on the file system and the specific operating system.
 
 ### Advantages of using the System Buffer
 
