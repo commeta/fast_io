@@ -14,6 +14,22 @@ array file_callback_string(string $filename, $callback[, int $mode = 0])
 - **$callback** Callback-функция, которая будет вызвана для каждой строки файла.
 - **$mode** (int, optional): Режим анализа.
 
+Номер режима анализа увеличивает количество параметров callback функции:
+
+```
+$line = func_get_arg(0); // Текущая строка в файле, string
+$filename = func_get_arg(1); // Имя текущего файла, string
+$line_offset = func_get_arg(2); // Смещение начала строки в файле, int
+$line_length = func_get_arg(3); // Длина строки в файле, int
+$line_count = func_get_arg(4); // Количество прочитанных строк, int
+$position = func_get_arg(5); // Позиция начала поиска строк в файле, int
+$return_line = func_get_arg(6); // Строка для возврата из функции, string
+$file_size = func_get_arg(7); // Текущий размер файла, int
+$dynamic_buffer_size = func_get_arg(8); // Текущий размер динамического буфера, int
+$dynamic_buffer = func_get_arg(9); // Динамический буфер, string
+```
+
+
 ##### Log mode
 - +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим $mode - 100 но не будет блокировать файл.
 
@@ -63,45 +79,19 @@ print_r(unserialize(
 	file_callback_string(
 		$db_file,
 		function () {
-			$mode = func_num_args(); // Режим
-
-			$line = ''; // Текущая строка в файле
-			$filename = ''; // Имя текущего файла
-			$line_offset = 0; // Смещение начала строки в файле
-			$line_length = 0; // Длина строки в файле
-			$line_count = 0; // Количество прочитанных строк 
-			$position = 0; // Позиция начала поиска строк в файле
-			$return_line = ''; // Строка для возврата из функции
-			$file_size = 0; // Текущий размер файла
-			$dynamic_buffer_size = 0; // Текущий размер динамического буфера
-			$dynamic_buffer = ''; // Динамический буфер
-
-			if ($mode > 0){
-				$line = func_get_arg(0);
-				if($mode > 1) $filename = func_get_arg(1);
-				if($mode > 2) $line_offset = func_get_arg(2);
-				if($mode > 3) $line_length = func_get_arg(3);
-				if($mode > 4) $line_count = func_get_arg(4);
-				if($mode > 5) $position = func_get_arg(5);
-				if($mode > 6) $return_line = func_get_arg(6);
-				if($mode > 7) $file_size = func_get_arg(7);
-				if($mode > 8) $dynamic_buffer_size = func_get_arg(8);
-				if($mode > 9) $dynamic_buffer = func_get_arg(9);
-			}
-
-			$ret_val = unserialize($return_line);
+			$ret_val = unserialize(func_get_arg(6));
 			$ret_val[] = [
-				$filename,
-				$mode - 1,
-				mb_strlen($line), 
-				$line_offset,
-				$line_length,
-				$line_count,
-				$position,
-				mb_strlen($return_line),
-				$file_size,
-				$dynamic_buffer_size,
-				mb_strlen($dynamic_buffer)
+				func_get_arg(1),
+				func_num_args(),
+				mb_strlen(func_get_arg(0)), 
+				func_get_arg(2),
+				func_get_arg(3),
+				func_get_arg(4),
+				func_get_arg(5),
+				mb_strlen(func_get_arg(6)),
+				func_get_arg(7),
+				func_get_arg(8),
+				mb_strlen(func_get_arg(9))
 			];
 
 			//return true; // Закончить поиск
@@ -112,8 +102,6 @@ print_r(unserialize(
 		}, 9
 	)
 ));
-
-
 ```
 
 Результат:
@@ -123,7 +111,7 @@ Array
     [0] => Array
         (
             [0] => /home/commeta/project/kernel/fast_io/fast_io.dat
-            [1] => 9
+            [1] => 10
             [2] => 8191
             [3] => 0
             [4] => 8192
@@ -138,20 +126,16 @@ Array
     [1] => Array
         (
             [0] => /home/commeta/project/kernel/fast_io/fast_io.dat
-            [1] => 9
+            [1] => 10
             [2] => 8191
             [3] => 8192
             [4] => 8192
             [5] => 1
             [6] => 0
-            [7] => 174
+            [7] => 175
             [8] => 16384
             [9] => 8192
             [10] => 8191
         )
-
-)
-
-
 ```
 
