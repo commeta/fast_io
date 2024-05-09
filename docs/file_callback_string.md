@@ -111,7 +111,7 @@ print_r(
 					func_get_arg(3), // Длина строки в файле, int
 					func_get_arg(4), // Количество прочитанных строк с нуля, int
 					func_get_arg(5), // Позиция начала поиска строк в файле, int
-					func_get_arg(6), // Строка для возврата из функции, string
+					unserialize(func_get_arg(6)), // Строка для возврата из функции, string
 					func_get_arg(7), // Текущий размер файла, int
 					func_get_arg(8), // Текущий размер динамического буфера, int
 					array_slice(explode("\n", func_get_arg(9)), 0, -1), // Строки в динамическом буфере, обрывки строк справа
@@ -161,7 +161,30 @@ Array
             [4] => 27
             [5] => 1
             [6] => 0
-            [7] => a:1:{i:0;a:11:{i:0;i:10;i:1;s:26:"index_0 file_insert_line_0";i:2;s:48:"/home/commeta/project/kernel/fast_io/fast_io.dat";i:3;i:0;i:4;i:27;i:5;i:0;i:6;i:0;i:7;s:0:"";i:8;i:54;i:9;i:54;i:10;a:2:{i:0;s:26:"index_0 file_insert_line_0";i:1;s:26:"index_1 file_insert_line_1";}}}
+            [7] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 10
+                            [1] => index_0 file_insert_line_0
+                            [2] => /home/commeta/project/kernel/fast_io/fast_io.dat
+                            [3] => 0
+                            [4] => 27
+                            [5] => 0
+                            [6] => 0
+                            [7] => 
+                            [8] => 54
+                            [9] => 54
+                            [10] => Array
+                                (
+                                    [0] => index_0 file_insert_line_0
+                                    [1] => index_1 file_insert_line_1
+                                )
+
+                        )
+
+                )
+
             [8] => 54
             [9] => 54
             [10] => Array
