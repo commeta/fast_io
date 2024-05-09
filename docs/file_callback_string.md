@@ -11,14 +11,14 @@ string file_callback_string(string $filename, $callback[, int $mode = 0])
 #### Параметры
 
 - **$filename**: Путь к текстовому файлу, который необходимо проанализировать.
-- **$callback** Callback-функция, которая будет вызвана для каждой строки файла.
+- **$callback**: Callback-функция, которая будет вызвана для каждой строки файла.
 - **$mode** (int, optional): Режим анализа.
 
 Номер режима анализа увеличивает количество параметров callback функции, 
 по умолчанию $mode = 0 callback функции будет передан 0 параметр func_get_arg(0).
 
 
-Соответственно при $mode = 1 callback функции будет передан 0 и 1 параметры (func_get_arg(0) и func_get_arg(1)).
+Соответственно при $mode = 1 callback функции будет передан 0 и 1 параметры (func_get_arg(0) и func_get_arg(1)). И так далее.
 
 Переменная $dynamic_buffer может зависеть от нескольких параметров:
 - При вызове функции file_callback_string() переменная $dynamic_buffer_size устанавливается размером ini_get('fast_io.buffer_size').
