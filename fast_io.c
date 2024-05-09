@@ -3467,6 +3467,8 @@ PHP_FUNCTION(file_callback_string) {
 
             *lineEnd = '\0';
             char *line = estrdup(lineStart);
+            line[lineLength - 1] = '\0';
+
             ZVAL_STRING(&args[0], line);
             efree(line);
 
