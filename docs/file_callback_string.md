@@ -90,12 +90,11 @@ Callback-функция в PHP, вызванная из расширения Fas
 
 #### Пример использования:
 ```
-ini_set('fast_io.buffer_size', 4096);
 $db_file = __DIR__ . '/fast_io.dat';
 
 for($i=0; $i <=1; $i++){
 	$str = 'index_' . $i . ' file_insert_line_' . $i;
-	file_insert_line($db_file, $str, 2, 256);
+	file_insert_line($db_file, $str);
 }
 
 print_r(
@@ -106,16 +105,16 @@ print_r(
 				$ret_val = unserialize(func_get_arg(6));
 				$ret_val[] = [
 					func_num_args(), // Количество аргументов переданных в функцию
-					mb_strlen(func_get_arg(0)), // Длина текущей строки в файле (-1 т.к. без символа перевода строки), string
+					func_get_arg(0), // Текущая строка в файле, без символа перевода строки, string
 					func_get_arg(1), // Имя текущего файла, string
 					func_get_arg(2), // Смещение начала строки в файле, int
 					func_get_arg(3), // Длина строки в файле, int
 					func_get_arg(4), // Количество прочитанных строк с нуля, int
 					func_get_arg(5), // Позиция начала поиска строк в файле, int
-					mb_strlen(func_get_arg(6)), // Длина строки для возврата из функции, string
+					func_get_arg(6), // Строка для возврата из функции, string
 					func_get_arg(7), // Текущий размер файла, int
 					func_get_arg(8), // Текущий размер динамического буфера, int
-					count(array_slice(explode("\n", func_get_arg(9)), 0, -1)), // Колличество строк в динамическом буфере, обрывки строк справа
+					array_slice(explode("\n", func_get_arg(9)), 0, -1), // Строки в динамическом буфере, обрывки строк справа
 				];
 
 				//return false; // Закончить поиск
@@ -136,34 +135,43 @@ Array
     [0] => Array
         (
             [0] => 10
-            [1] => 255
+            [1] => index_0 file_insert_line_0
             [2] => /home/commeta/project/kernel/fast_io/fast_io.dat
             [3] => 0
-            [4] => 256
+            [4] => 27
             [5] => 0
             [6] => 0
-            [7] => 0
-            [8] => 512
-            [9] => 512
-            [10] => 2
+            [7] => 
+            [8] => 54
+            [9] => 54
+            [10] => Array
+                (
+                    [0] => index_0 file_insert_line_0
+                    [1] => index_1 file_insert_line_1
+                )
+
         )
 
     [1] => Array
         (
             [0] => 10
-            [1] => 255
+            [1] => index_1 file_insert_line_1
             [2] => /home/commeta/project/kernel/fast_io/fast_io.dat
-            [3] => 256
-            [4] => 256
+            [3] => 27
+            [4] => 27
             [5] => 1
             [6] => 0
-            [7] => 167
-            [8] => 512
-            [9] => 512
-            [10] => 2
+            [7] => a:1:{i:0;a:11:{i:0;i:10;i:1;s:26:"index_0 file_insert_line_0";i:2;s:48:"/home/commeta/project/kernel/fast_io/fast_io.dat";i:3;i:0;i:4;i:27;i:5;i:0;i:6;i:0;i:7;s:0:"";i:8;i:54;i:9;i:54;i:10;a:2:{i:0;s:26:"index_0 file_insert_line_0";i:1;s:26:"index_1 file_insert_line_1";}}}
+            [8] => 54
+            [9] => 54
+            [10] => Array
+                (
+                    [0] => index_0 file_insert_line_0
+                    [1] => index_1 file_insert_line_1
+                )
+
         )
 
 )
-
 ```
 
