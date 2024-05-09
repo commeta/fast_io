@@ -59,7 +59,7 @@ for($i=0; $i <=1; $i++){
 	$str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 8192, '1234567890_' . $i . '_');
 	file_insert_line($db_file, $str, 2, 8192);
 }
-print_r([
+print_r(unserialize(
 	file_callback_string(
 		$db_file,
 		function () {
@@ -72,7 +72,7 @@ print_r([
 			$line_count = 0; // Количество прочитанных строк 
 			$position = 0; // Позиция начала поиска строк в файле
 			$return_line = ''; // Строка для возврата из функции
-			$current_size = 0; // Текущий размер порции данных в динамическом буфере
+			$file_size = 0; // Текущий размер файла
 			$dynamic_buffer_size = 0; // Текущий размер динамического буфера
 			$dynamic_buffer = ''; // Динамический буфер
 
@@ -84,13 +84,13 @@ print_r([
 				if($mode > 4) $line_count = func_get_arg(4);
 				if($mode > 5) $position = func_get_arg(5);
 				if($mode > 6) $return_line = func_get_arg(6);
-				if($mode > 7) $current_size = func_get_arg(7);
+				if($mode > 7) $file_size = func_get_arg(7);
 				if($mode > 8) $dynamic_buffer_size = func_get_arg(8);
 				if($mode > 9) $dynamic_buffer = func_get_arg(9);
 			}
 
-
-			print_r([
+			$ret_val = unserialize($return_line);
+			$ret_val[] = [
 				$filename,
 				$mode - 1,
 				mb_strlen($line), 
@@ -99,20 +99,20 @@ print_r([
 				$line_count,
 				$position,
 				mb_strlen($return_line),
-				$current_size,
+				$file_size,
 				$dynamic_buffer_size,
 				mb_strlen($dynamic_buffer)
-			]);
-
+			];
 
 			//return true; // Закончить поиск
 			//return false; // Продолжить поиск со следующей строки
 			//return 0; // Переместится на начало файла
 			
-			return $return_line . $line_count . ', '; // Вернуть составную строку
+			return serialize($ret_val); // Вернуть составную строку
 		}, 9
 	)
-]);
+));
+
 
 ```
 
@@ -120,36 +120,38 @@ print_r([
 ```
 Array
 (
-    [0] => /home/commeta/project/kernel/fast_io/fast_io.dat
-    [1] => 9
-    [2] => 8191
-    [3] => 0
-    [4] => 8192
-    [5] => 0
-    [6] => 0
-    [7] => 0
-    [8] => 8192
-    [9] => 8192
-    [10] => 8191
+    [0] => Array
+        (
+            [0] => /home/commeta/project/kernel/fast_io/fast_io.dat
+            [1] => 9
+            [2] => 8191
+            [3] => 0
+            [4] => 8192
+            [5] => 0
+            [6] => 0
+            [7] => 0
+            [8] => 16384
+            [9] => 8192
+            [10] => 8191
+        )
+
+    [1] => Array
+        (
+            [0] => /home/commeta/project/kernel/fast_io/fast_io.dat
+            [1] => 9
+            [2] => 8191
+            [3] => 8192
+            [4] => 8192
+            [5] => 1
+            [6] => 0
+            [7] => 174
+            [8] => 16384
+            [9] => 8192
+            [10] => 8191
+        )
+
 )
-Array
-(
-    [0] => /home/commeta/project/kernel/fast_io/fast_io.dat
-    [1] => 9
-    [2] => 8191
-    [3] => 8192
-    [4] => 8192
-    [5] => 1
-    [6] => 0
-    [7] => 3
-    [8] => 8192
-    [9] => 8192
-    [10] => 8191
-)
-Array
-(
-    [0] => 0, 1, 
-)
+
 
 ```
 
