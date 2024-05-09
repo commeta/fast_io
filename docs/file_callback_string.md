@@ -32,7 +32,6 @@ string file_callback_string(string $filename, $callback[, int $mode = 0])
 
 
 
-
 ##### Log mode
 - +100 Log mode: Если добавить +100 к любому из вышеперечисленных режимов, функция пересчитает режим $mode - 100 но не будет блокировать файл.
 
@@ -91,12 +90,14 @@ Callback-функция в PHP, вызванная из расширения Fas
 
 #### Пример использования:
 ```
+ini_set('fast_io.buffer_size', 4096);
 $db_file = __DIR__ . '/fast_io.dat';
 
 for($i=0; $i <=1; $i++){
-	$str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 8192, '1234567890_' . $i . '_');
-	file_insert_line($db_file, $str, 2, 8192);
+	$str = 'index_' . $i . ' file_insert_line_' . $i;
+	file_insert_line($db_file, $str, 2, 256);
 }
+
 print_r(
 	unserialize(
 		file_callback_string(
@@ -104,17 +105,17 @@ print_r(
 			function () {
 				$ret_val = unserialize(func_get_arg(6));
 				$ret_val[] = [
-					func_get_arg(1),
-					func_num_args(),
-					mb_strlen(func_get_arg(0)), 
-					func_get_arg(2),
-					func_get_arg(3),
-					func_get_arg(4),
-					func_get_arg(5),
-					mb_strlen(func_get_arg(6)),
-					func_get_arg(7),
-					func_get_arg(8),
-					mb_strlen(func_get_arg(9))
+					func_num_args(), // Количество аргументов переданных в функцию
+					mb_strlen(func_get_arg(0)), // Длина текущей строки в файле (-1 т.к. без символа перевода строки), string
+					func_get_arg(1), // Имя текущего файла, string
+					func_get_arg(2), // Смещение начала строки в файле, int
+					func_get_arg(3), // Длина строки в файле, int
+					func_get_arg(4), // Количество прочитанных строк с нуля, int
+					func_get_arg(5), // Позиция начала поиска строк в файле, int
+					mb_strlen(func_get_arg(6)), // Длина строки для возврата из функции, string
+					func_get_arg(7), // Текущий размер файла, int
+					func_get_arg(8), // Текущий размер динамического буфера, int
+					count(array_slice(explode("\n", func_get_arg(9)), 0, -1)), // Колличество строк в динамическом буфере, обрывки строк справа
 				];
 
 				//return false; // Закончить поиск
@@ -122,7 +123,7 @@ print_r(
 				//return 0; // Переместится на начало файла
 				
 				return serialize($ret_val); // Вернуть составную строку
-			}, 9 // Количество параметров функции с нуля: при $mode == 0 передается только нулевой параметр func_get_arg(0)
+			}, 9
 		)
 	)
 );
@@ -134,32 +135,35 @@ Array
 (
     [0] => Array
         (
-            [0] => /home/commeta/project/kernel/fast_io/fast_io.dat
-            [1] => 10
-            [2] => 8191
+            [0] => 10
+            [1] => 255
+            [2] => /home/commeta/project/kernel/fast_io/fast_io.dat
             [3] => 0
-            [4] => 8192
+            [4] => 256
             [5] => 0
             [6] => 0
             [7] => 0
-            [8] => 16384
-            [9] => 8192
-            [10] => 8191
+            [8] => 512
+            [9] => 512
+            [10] => 2
         )
 
     [1] => Array
         (
-            [0] => /home/commeta/project/kernel/fast_io/fast_io.dat
-            [1] => 10
-            [2] => 8191
-            [3] => 8192
-            [4] => 8192
+            [0] => 10
+            [1] => 255
+            [2] => /home/commeta/project/kernel/fast_io/fast_io.dat
+            [3] => 256
+            [4] => 256
             [5] => 1
             [6] => 0
-            [7] => 175
-            [8] => 16384
-            [9] => 8192
-            [10] => 8191
+            [7] => 167
+            [8] => 512
+            [9] => 512
+            [10] => 2
         )
+
+)
+
 ```
 
