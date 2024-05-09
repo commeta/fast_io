@@ -3373,7 +3373,6 @@ PHP_FUNCTION(file_update_array) {
 
 
 
-
 PHP_FUNCTION(file_callback_string) {
     char *filename;
     size_t filename_len;
@@ -3466,12 +3465,7 @@ PHP_FUNCTION(file_callback_string) {
             zval args[10];
 
             *lineEnd = '\0';
-            char *line = estrdup(lineStart);
-            line[lineLength - 1] = '\0';
-
-            ZVAL_STRING(&args[0], line);
-            efree(line);
-
+            ZVAL_STRING(&args[0], lineStart);
             *lineEnd = '\n';
             
             if(mode > 0){
