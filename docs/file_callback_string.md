@@ -94,33 +94,35 @@ for($i=0; $i <=1; $i++){
 	$str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 8192, '1234567890_' . $i . '_');
 	file_insert_line($db_file, $str, 2, 8192);
 }
-print_r(unserialize(
-	file_callback_string(
-		$db_file,
-		function () {
-			$ret_val = unserialize(func_get_arg(6));
-			$ret_val[] = [
-				func_get_arg(1),
-				func_num_args(),
-				mb_strlen(func_get_arg(0)), 
-				func_get_arg(2),
-				func_get_arg(3),
-				func_get_arg(4),
-				func_get_arg(5),
-				mb_strlen(func_get_arg(6)),
-				func_get_arg(7),
-				func_get_arg(8),
-				mb_strlen(func_get_arg(9))
-			];
+print_r(
+	unserialize(
+		file_callback_string(
+			$db_file,
+			function () {
+				$ret_val = unserialize(func_get_arg(6));
+				$ret_val[] = [
+					func_get_arg(1),
+					func_num_args(),
+					mb_strlen(func_get_arg(0)), 
+					func_get_arg(2),
+					func_get_arg(3),
+					func_get_arg(4),
+					func_get_arg(5),
+					mb_strlen(func_get_arg(6)),
+					func_get_arg(7),
+					func_get_arg(8),
+					mb_strlen(func_get_arg(9))
+				];
 
-			//return true; // Закончить поиск
-			//return false; // Продолжить поиск со следующей строки
-			//return 0; // Переместится на начало файла
-			
-			return serialize($ret_val); // Вернуть составную строку
-		}, 9
+				//return false; // Закончить поиск
+				//return true; // Продолжить поиск со следующей строки
+				//return 0; // Переместится на начало файла
+				
+				return serialize($ret_val); // Вернуть составную строку
+			}, 9 // Количество параметров функции с нуля: при $mode == 0 присутствует только func_get_arg(1)
+		)
 	)
-));
+);
 ```
 
 Результат:
