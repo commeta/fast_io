@@ -3733,7 +3733,7 @@ PHP_FUNCTION(file_callback_line) {
                 }                
 
                 if(Z_TYPE_P(&retval) == IS_LONG) {
-                    if(Z_LVAL_P(&retval) > file_size || Z_LVAL_P(&retval) < 0){
+                    if(Z_LVAL_P(&retval) >= file_size || Z_LVAL_P(&retval) < 0){
                         php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
                         fclose(fp);
                         if (dynamic_buffer) efree(dynamic_buffer);
