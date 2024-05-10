@@ -3728,7 +3728,7 @@ PHP_FUNCTION(file_callback_line) {
                     efree(found_value);
 
                     found_value = estrdup(Z_STRVAL_P(&retval));
-                    found_value[strlen(Z_STRVAL_P(&retval))] = '\0';
+                    found_value[Z_STRLEN_P(&retval)] = '\0';
                 }
 
                 if(Z_TYPE_P(&retval) == IS_LONG) {
