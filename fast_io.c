@@ -3727,9 +3727,10 @@ PHP_FUNCTION(file_callback_line) {
                 if(Z_TYPE_P(&retval) == IS_STRING) {
                     efree(found_value);
 
-                    found_value = estrdup(Z_STRVAL_P(&retval));
+                    found_value = emalloc(Z_STRLEN_P(&retval) + 1);
+                    strncpy(found_value, Z_STRVAL_P(&retval), Z_STRLEN_P(&retval));
                     found_value[Z_STRLEN_P(&retval)] = '\0';
-                }
+                }                
 
                 if(Z_TYPE_P(&retval) == IS_LONG) {
                     if(Z_LVAL_P(&retval) > file_size || Z_LVAL_P(&retval) < 0){
