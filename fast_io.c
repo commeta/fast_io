@@ -3731,6 +3731,7 @@ PHP_FUNCTION(file_callback_line) {
                         fclose(fp);
                         if (dynamic_buffer) efree(dynamic_buffer);
                         if (found_value) efree(found_value);
+                        for (int i = 0; i <= mode; i++) zval_dtor(&args[i]);
                         RETURN_FALSE;
                     }
 
