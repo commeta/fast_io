@@ -1,6 +1,6 @@
-# Описание функции file_callback_string
+# Описание функции file_callback_line
 
-Функция file_callback_string позволяет пользователю читать файл и обрабатывать его содержимое построчно, используя заданную callback-функцию.
+Функция file_callback_line позволяет пользователю читать файл и обрабатывать его содержимое построчно, используя заданную callback-функцию.
 
 
 Страница описания прокта [Fast_IO Engine](https://github.com/commeta/fast_io).
@@ -8,7 +8,7 @@
 
 ### Синтаксис
 
-string file_callback_string(string $filename, $callback[, int $mode = 0])
+string file_callback_line(string $filename, $callback[, int $mode = 0])
 
 
 #### Параметры
@@ -24,7 +24,7 @@ string file_callback_string(string $filename, $callback[, int $mode = 0])
 Соответственно при $mode = 1 callback функции будет передан 0 и 1 параметры (func_get_arg(0) и func_get_arg(1)). И так далее.
 
 Переменная $dynamic_buffer может зависеть от нескольких параметров:
-- При вызове функции file_callback_string() переменная $dynamic_buffer_size устанавливается размером ini_get('fast_io.buffer_size').
+- При вызове функции file_callback_line() переменная $dynamic_buffer_size устанавливается размером ini_get('fast_io.buffer_size').
 - Если размер файла меньше ini_get('fast_io.buffer_size') то переменная $dynamic_buffer_size равняется размеру файла.
 - Если $dynamic_buffer_size < 16 то $dynamic_buffer_size = 16.
 - В цикле поиска строк, переменная $dynamic_buffer_size может увеличиваться: $dynamic_buffer_size += ini_get('fast_io.buffer_size').
@@ -38,21 +38,21 @@ string file_callback_string(string $filename, $callback[, int $mode = 0])
 Режимы +100 Log mode подходят для работы с файлами журналов. Подробнее: [алгоритм реализации транзакции с помощью блокировки файла](/test/transaction/README.md).
 
 
-#### Возвращаемое значение file_callback_string:
+#### Возвращаемое значение file_callback_line:
 - В случае успеха возвращает последнее значение возвращенное callback-функцией.
 - В случае ошибки возвращает `FALSE`.
 
 #### Возвращаемое значение callback:
-- Если callback-функция возвращает строку $return_line, эта строка сохраняется и возвращается в конце работы функции file_callback_string.
+- Если callback-функция возвращает строку $return_line, эта строка сохраняется и возвращается в конце работы функции file_callback_line.
 - Строка $return_line передается callback функции при каждом вызове если $mode > 5.
 - Если callback-функция возвращает целое число (int), функция пытается переместиться на эту позицию в файле.
 - При попытке перехода в тот же кадр: (int) $position == (int) $return_position - возникнет циклический переход.
-- Если callback-функция возвращает `FALSE`, чтение файла прекращается, file_callback_string возвращает $return_line.
+- Если callback-функция возвращает `FALSE`, чтение файла прекращается, file_callback_line возвращает $return_line.
 - Если callback-функция возвращает `TRUE`, чтение файла продолжается.
 
 
 
-#### Описание работы функции file_callback_string:
+#### Описание работы функции file_callback_line:
 1. Функция открывает указанный файл для чтения.
 2. Читает файл построчно и вызывает callback-функцию для каждой строки.
 
@@ -98,7 +98,7 @@ for($i=0; $i <=1; $i++){
 
 print_r(
 	unserialize(
-		file_callback_string(
+		file_callback_line(
 			$db_file,
 			function () {
 				$ret_val = unserialize(func_get_arg(6)); // Строка для возврата из функции, string
@@ -192,7 +192,7 @@ for($i=0; $i <=1; $i++){
 }
 
 $stat = [];
-file_callback_string(
+file_callback_line(
 	$db_file,
 	function () use (&$stat) {
 		$stat[] = func_get_arg(0);
