@@ -3725,12 +3725,20 @@ PHP_FUNCTION(file_callback_line) {
             // Вызываем callback-функцию с одним аргументом
             if (call_user_function(EG(function_table), NULL, callback, &retval, mode + 1, args) == SUCCESS) {
                 if(Z_TYPE_P(&retval) == IS_STRING) {
-                    efree(found_value);
+                    char *temp_retval = (char *)erealloc(found_value, Z_STRLEN_P(&retval));
+                    if (!temp_retval) {
+                        php_error_docref(NULL, E_WARNING, "Out of memory");
+                        fclose(fp);
+                        if (dynamic_buffer) efree(dynamic_buffer);
+                        if (found_value) efree(found_value);
+                        RETURN_FALSE;
+                    }
 
-                    found_value = emalloc(Z_STRLEN_P(&retval) + 1);
+                    found_value = temp_retval;
+
                     strncpy(found_value, Z_STRVAL_P(&retval), Z_STRLEN_P(&retval));
                     found_value[Z_STRLEN_P(&retval)] = '\0';
-                }                
+                }
 
                 if(Z_TYPE_P(&retval) == IS_LONG) {
                     if(Z_LVAL_P(&retval) >= file_size || Z_LVAL_P(&retval) < 0){
