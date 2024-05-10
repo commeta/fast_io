@@ -18,7 +18,7 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 
 ## Function List
 
-- [file_callback_string](/docs/file_callback_string.md) - Line-by-line reading of the file with the callback function.
+- [file_callback_line](/docs/file_callback_line.md) - Line-by-line reading of the file with the callback function.
 - [file_insert_line](/docs/file_insert_line.md): Inserting lines with alignment into the file.
 - [file_pop_line](/docs/file_pop_line.md): Extracting and deleting the last line from the file.
 - [file_defrag_data](/docs/file_defrag_data.md): Defragmenting the data file and its corresponding index file.
