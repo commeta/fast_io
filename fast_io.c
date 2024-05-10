@@ -2647,8 +2647,6 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     array_init(return_value);
 
     while ((bytes_read = fread(buffer, 1, ini_buffer_size, fp)) > 0) {
-        buffer[bytes_read] = '\0';
-
         for (ssize_t i = 0; i < bytes_read; ++i) {
             if (buffer[i] == '\n') { // Конец текущей строки
                 line_count++;
