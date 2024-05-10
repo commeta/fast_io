@@ -85,7 +85,7 @@ PHP_FUNCTION(find_matches_pcre2);
 PHP_FUNCTION(replicate_file);
 PHP_FUNCTION(file_select_array);
 PHP_FUNCTION(file_update_array);
-PHP_FUNCTION(file_callback_string);
+PHP_FUNCTION(file_callback_line);
 
 
 
@@ -212,7 +212,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_update_array, 1, 2, IS_LONG
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_callback_string, 1, 2, IS_STRING, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_callback_line, 1, 2, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, callback, IS_CALLABLE, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
@@ -239,7 +239,7 @@ const zend_function_entry fast_io_functions[] = {
     PHP_FE(replicate_file, arginfo_replicate_file)
     PHP_FE(file_select_array, arginfo_file_select_array)
     PHP_FE(file_update_array, arginfo_file_update_array)
-    PHP_FE(file_callback_string, arginfo_file_callback_string)
+    PHP_FE(file_callback_line, arginfo_file_callback_line)
     PHP_FE_END
 };
 
@@ -3373,7 +3373,7 @@ PHP_FUNCTION(file_update_array) {
 
 
 
-PHP_FUNCTION(file_callback_string) {
+PHP_FUNCTION(file_callback_line) {
     char *filename;
     size_t filename_len;
     zend_long position = 0;
