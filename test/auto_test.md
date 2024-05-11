@@ -35,88 +35,86 @@
 #### Результат выполнения
 Результат тестирования: Ubuntu 24.04, Ryzen 12 Cores, 16GB RAM, SATA 3 SSD.
 ```
-Check file_insert_line: time: 2.4393680095673 - PASS
-rchar: 721840850 (2,367,304,472.86 MB/s)
-wchar: 190374266 (624,339,633.06 MB/s)
-syscr: 84525 (277,202.95 MB/s)
-syscw: 10755 (35,271.43 MB/s)
-read_bytes: 0 (0.00 MB/s)
-write_bytes: 190595072 (625,063,774.72 MB/s)
-cancelled_write_bytes: 183947264 (603,262,036.00 MB/s)
+Check file_insert_line: time: 2.186115026474 - PASS
+rchar: 680777013 (311.41 M/s)
+wchar: 173243992 (79.25 M/s)
+syscr: 76766 (0.04 M/s)
+syscw: 10984 (0.01 M/s)
+read_bytes: 0 (0.00 M/s)
+write_bytes: 173473792 (79.35 M/s)
+cancelled_write_bytes: 164847616 (75.41 M/s)
 
-Check file_analize: time: 4.3009340763092 - PASS
-rchar: 6013737818 (11,185,919,544.55 MB/s)
-wchar: 179922634 (334,667,085.44 MB/s)
-syscr: 577291 (1,073,796.51 MB/s)
-syscw: 10521 (19,569.70 MB/s)
-read_bytes: 0 (0.00 MB/s)
-write_bytes: 180121600 (335,037,174.35 MB/s)
-cancelled_write_bytes: 178229248 (331,517,284.08 MB/s)
+Check file_analize: time: 3.7850120067596 - PASS
+rchar: 5917868742 (1,563.50 M/s)
+wchar: 178188352 (47.08 M/s)
+syscr: 616798 (0.16 M/s)
+syscw: 10713 (0.00 M/s)
+read_bytes: 0 (0.00 M/s)
+write_bytes: 178397184 (47.13 M/s)
+cancelled_write_bytes: 182571008 (48.24 M/s)
 
-Check file_get_keys: time: 2.4806950092316 - PASS
-rchar: 1205542122 (3,887,756,028.09 MB/s)
-wchar: 200729870 (647,334,297.05 MB/s)
-syscr: 118137 (380,980.33 MB/s)
-syscw: 11213 (36,160.83 MB/s)
-read_bytes: 0 (0.00 MB/s)
-write_bytes: 200941568 (648,017,002.50 MB/s)
-cancelled_write_bytes: 197926912 (638,295,030.27 MB/s)
+Check file_get_keys: time: 2.2372951507568 - PASS
+rchar: 1137253404 (508.32 M/s)
+wchar: 189364181 (84.64 M/s)
+syscr: 109083 (0.05 M/s)
+syscw: 11038 (0.00 M/s)
+read_bytes: 0 (0.00 M/s)
+write_bytes: 189595648 (84.74 M/s)
+cancelled_write_bytes: 189669376 (84.78 M/s)
 
-Check file_search_array: time: 3.7282540798187 - PASS
-rchar: 1846043100 (3,961,195,906.67 MB/s)
-wchar: 153640688 (329,678,578.15 MB/s)
-syscr: 205735 (441,461.33 MB/s)
-syscw: 10320 (22,144.41 MB/s)
-read_bytes: 0 (0.00 MB/s)
-write_bytes: 153853952 (330,136,195.03 MB/s)
-cancelled_write_bytes: 153202688 (328,738,728.04 MB/s)
+Check file_search_array: time: 2.7417509555817 - PASS
+rchar: 2201533068 (802.97 M/s)
+wchar: 183261858 (66.84 M/s)
+syscr: 171433 (0.06 M/s)
+syscw: 10989 (0.00 M/s)
+read_bytes: 0 (0.00 M/s)
+write_bytes: 183468032 (66.92 M/s)
+cancelled_write_bytes: 181243904 (66.11 M/s)
 
-Check file_select_array: time: 2.9537951946259 - PASS
-rchar: 2497627602 (6,764,524,789.11 MB/s)
-wchar: 166315040 (450,444,337.65 MB/s)
-syscr: 150678 (408,093.29 MB/s)
-syscw: 10488 (28,405.49 MB/s)
-read_bytes: 0 (0.00 MB/s)
-write_bytes: 166531072 (451,029,434.41 MB/s)
-cancelled_write_bytes: 164159488 (444,606,283.60 MB/s)
+Check file_select_array: time: 2.9431412220001 - PASS
+rchar: 2833958532 (962.90 M/s)
+wchar: 188728407 (64.12 M/s)
+syscr: 163758 (0.06 M/s)
+syscw: 11331 (0.00 M/s)
+read_bytes: 0 (0.00 M/s)
+write_bytes: 188936192 (64.20 M/s)
+cancelled_write_bytes: 182697984 (62.08 M/s)
 
-Check file_search_line: time: 7.2284481525421 - PASS
-rchar: 15166284068 (16,785,106,565.55 MB/s)
-wchar: 197594237 (218,685,098.47 MB/s)
-syscr: 1544095 (1,708,908.99 MB/s)
-syscw: 11436 (12,656.66 MB/s)
-read_bytes: 0 (0.00 MB/s)
-write_bytes: 197804032 (218,917,286.62 MB/s)
-cancelled_write_bytes: 196804608 (217,811,185.86 MB/s)
+Check file_search_line: time: 5.0648438930511 - PASS
+rchar: 11827773408 (2,335.27 M/s)
+wchar: 167657528 (33.10 M/s)
+syscr: 1105195 (0.22 M/s)
+syscw: 9878 (0.00 M/s)
+read_bytes: 0 (0.00 M/s)
+write_bytes: 167845888 (33.14 M/s)
+cancelled_write_bytes: 170512384 (33.67 M/s)
 
-Check file_select_line: time: 2.2228870391846 - PASS
-rchar: 827814895 (2,979,242,329.12 MB/s)
-wchar: 195400780 (703,232,423.62 MB/s)
-syscr: 91489 (329,261.90 MB/s)
-syscw: 11764 (42,337.73 MB/s)
-read_bytes: 0 (0.00 MB/s)
-write_bytes: 195616768 (704,009,747.87 MB/s)
-cancelled_write_bytes: 191799296 (690,270,958.87 MB/s)
+Check file_select_line: time: 1.6394920349121 - PASS
+rchar: 707533727 (431.56 M/s)
+wchar: 167401840 (102.11 M/s)
+syscr: 77769 (0.05 M/s)
+syscw: 10084 (0.01 M/s)
+read_bytes: 0 (0.00 M/s)
+write_bytes: 167628800 (102.24 M/s)
+cancelled_write_bytes: 161308672 (98.39 M/s)
 
-Check file_pop_line - ERROR
-rchar: 588882265 (319,688,924.84 MB/s)
-wchar: 339546583 (184,331,042.90 MB/s)
-syscr: 69950 (37,974.04 MB/s)
-syscw: 17017 (9,238.09 MB/s)
-read_bytes: 0 (0.00 MB/s)
-write_bytes: 339828736 (184,484,216.45 MB/s)
-cancelled_write_bytes: 340869120 (185,049,013.97 MB/s)
+Check file_pop_line: time: 2.4415328502655 - PASS
+rchar: 714881709 (292.80 M/s)
+wchar: 437225139 (179.08 M/s)
+syscr: 87086 (0.04 M/s)
+syscw: 25432 (0.01 M/s)
+read_bytes: 0 (0.00 M/s)
+write_bytes: 441176064 (180.70 M/s)
+cancelled_write_bytes: 441184256 (180.70 M/s)
 
-Check file_callback_line: time: 2.0378620624542 - PASS
-rchar: 218743187 (858,716,361.74 MB/s)
-wchar: 195721830 (768,341,817.07 MB/s)
-syscr: 22283 (87,475.99 MB/s)
-syscw: 11282 (44,289.55 MB/s)
-read_bytes: 0 (0.00 MB/s)
-write_bytes: 195928064 (769,151,426.33 MB/s)
-cancelled_write_bytes: 196296704 (770,598,590.03 MB/s)
-root@api:/home/commeta/project/kernel/fast_io# 
-
+Check file_callback_line: time: 1.6702420711517 - PASS
+rchar: 209627849 (125.51 M/s)
+wchar: 187280611 (112.13 M/s)
+syscr: 21711 (0.01 M/s)
+syscw: 10982 (0.01 M/s)
+read_bytes: 0 (0.00 M/s)
+write_bytes: 187461632 (112.24 M/s)
+cancelled_write_bytes: 187518976 (112.27 M/s)
 ```
 
 
