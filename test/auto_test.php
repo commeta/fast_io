@@ -23,6 +23,12 @@
  * 
  */
 
+function mb_sec($time, $bytes){
+    $speed = ($bytes / $time)  *  8;
+    return number_format($speed, 2) . " MB/s";
+    //echo "Read speed: " . number_format($readSpeed, 2) . " MB/s";
+}
+
 function get_process_io_stats() {
     $ioFile = '/proc/' . getmypid() . '/io';
     
@@ -145,7 +151,7 @@ if($file_insert_line_passed) echo "\nCheck file_insert_line: time: ", $time, " -
 else echo "\nCheck file_insert_line - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
 
 
 
@@ -197,7 +203,7 @@ if($file_analize_passed) echo "\nCheck file_analize: time: ", $time, " - PASS", 
 else echo "\nCheck file_analize - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
 
 
 
@@ -345,7 +351,7 @@ if($file_get_keys_passed) echo "\nCheck file_get_keys: time: ", $time, " - PASS"
 else echo "\nCheck file_get_keys - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
 
 
 
@@ -605,7 +611,7 @@ if($file_search_array_passed) echo "\nCheck file_search_array: time: ", $time, "
 else echo "\nCheck file_search_array - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
 
 
 
@@ -915,7 +921,7 @@ if($file_select_array_passed) echo "\nCheck file_select_array: time: ", $time, "
 else echo "\nCheck file_select_array - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
 
 
 
@@ -996,7 +1002,7 @@ if($file_search_line_passed) echo "\nCheck file_search_line: time: ", $time, " -
 else echo "\nCheck file_search_line - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
 
 
 
@@ -1079,13 +1085,13 @@ if($file_select_line_passed) echo "\nCheck file_select_line: time: ", $time, " -
 else echo "\nCheck file_select_line - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
 
 
 
 
 
-
+last_analize:
 // #########################
 // Check file_pop_line
 $file_pop_line_passed = true;
@@ -1134,7 +1140,6 @@ for($ii = 0; $ii < 100; $ii++){
 
         if($file_offset == $last_offset) $last_offset += $align;  
     }
-
 
     $insert_string_reverse = array_reverse($insert_string, true);
     foreach($insert_string_reverse as $row_num=>$line_arr){
@@ -1214,7 +1219,7 @@ for($ii = 0; $ii < 100; $ii++){
         file_insert_line($db_file, $line_arr['trim_line'], 2, $align);
     }
 
-    $file_last_str = file_pop_line($db_file, 0 - $c  - 2, 3);
+    $file_last_str = file_pop_line($db_file, 0 - $c - 2, 3);
     $file_str_array = array_slice(explode("\n", $file_last_str), 0, -1);
     foreach($insert_string as $row_num=>$line_arr){
         if(
@@ -1237,4 +1242,7 @@ if($file_pop_line_passed) echo "\nCheck file_pop_line: time: ", $time, " - PASS"
 else echo "\nCheck file_pop_line - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], "\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
+
+
+
