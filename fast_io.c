@@ -1647,7 +1647,8 @@ PHP_FUNCTION(file_pop_line) {
         // Увеличиваем размер буфера на 1 для возможного символа перевода строки
         char *buffer = (char *)emalloc(offset + 1); // +1 для '\0'
         if (!buffer) {
-            php_error_docref(NULL, E_WARNING, "Out of memory");
+            php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", offset + 1);
+
             fclose(fp);
             RETURN_FALSE;
         }
@@ -1700,7 +1701,7 @@ PHP_FUNCTION(file_pop_line) {
         zend_long dynamic_buffer_size = ini_buffer_size;
         char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
         if (!dynamic_buffer) {
-            php_error_docref(NULL, E_WARNING, "Out of memory");
+            php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
             fclose(fp);
             RETURN_FALSE;
         }
@@ -1711,13 +1712,17 @@ PHP_FUNCTION(file_pop_line) {
 
         offset--;
 
+        ssize_t add = 1;
+
         while(pos >= 0){
             if (first_block_size > 0) {
                 fseek(fp, 0, SEEK_SET); // Перемещаем указатель на предыдущую порцию
                 bytes_read = fread(dynamic_buffer, 1, first_block_size + 1, fp);
+                add = first_block_size + 1;
             } else {
                 fseek(fp, pos - ini_buffer_size, SEEK_SET); // Перемещаем указатель на предыдущую порцию
                 bytes_read = fread(dynamic_buffer, 1, ini_buffer_size, fp);
+                add = 1;
             }
 
             if(bytes_read == -1){
@@ -1730,7 +1735,7 @@ PHP_FUNCTION(file_pop_line) {
             pos -= bytes_read;
             current_size += bytes_read;
 
-            for (ssize_t i = bytes_read + 1; i >= 0; --i) {
+            for (ssize_t i = bytes_read + add; i >= 0; --i) {
                 if (dynamic_buffer[i] == '\n') offset++;
                 
                 if(offset == 0 || (i == 0 && pos == 0) || first_block_size > 0){ // Все строки найдены
@@ -1787,7 +1792,7 @@ PHP_FUNCTION(file_pop_line) {
 
             char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!temp_buffer) {
-                php_error_docref(NULL, E_WARNING, "Out of memory");
+                php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
                 fclose(fp);
                 if (dynamic_buffer) efree(dynamic_buffer);
                 RETURN_FALSE;
@@ -3532,5 +3537,3 @@ PHP_FUNCTION(file_callback_line) {
     RETVAL_STRING(found_value);
     efree(found_value);
 }
-
-
