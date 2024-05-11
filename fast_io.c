@@ -2954,7 +2954,6 @@ PHP_FUNCTION(file_select_array) {
     pcre2_code *re;
     pcre2_match_data *match_data; 
 
-    array_init(return_value);
 
 
     if(mode > 9){
@@ -3533,3 +3532,4 @@ PHP_FUNCTION(file_callback_line) {
     RETVAL_STRING(found_value);
     efree(found_value);
 }
+
