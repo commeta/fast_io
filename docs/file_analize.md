@@ -100,7 +100,7 @@ Array
             [min_length] => 8192
             [max_length] => 8192
             [avg_length] => 8192
-            [line_count] => 1
+            [line_count] => 0
             [total_characters] => 8192
             [last_symbol] => 10
             [file_size] => 4104192
