@@ -1708,21 +1708,17 @@ PHP_FUNCTION(file_pop_line) {
 
         size_t current_size = 0; // Текущий размер данных в динамическом буфере
         ssize_t first_block_size = 0;
-        bool first_block = false;
 
         offset--;
 
-        ssize_t add = 1;
 
         while(pos >= 0){
             if (first_block_size > 0) {
                 fseek(fp, 0, SEEK_SET); // Перемещаем указатель на предыдущую порцию
-                bytes_read = fread(dynamic_buffer, 1, first_block_size + 1, fp);
-                add = first_block_size + 1;
+                bytes_read = fread(dynamic_buffer, 1, first_block_size, fp);
             } else {
                 fseek(fp, pos - ini_buffer_size, SEEK_SET); // Перемещаем указатель на предыдущую порцию
                 bytes_read = fread(dynamic_buffer, 1, ini_buffer_size, fp);
-                add = 1;
             }
 
             if(bytes_read == -1){
@@ -1735,7 +1731,7 @@ PHP_FUNCTION(file_pop_line) {
             pos -= bytes_read;
             current_size += bytes_read;
 
-            for (ssize_t i = bytes_read + add; i >= 0; --i) {
+            for (ssize_t i = bytes_read - 1; i >= 0; --i) {
                 if (dynamic_buffer[i] == '\n') offset++;
                 
                 if(offset == 0 || (i == 0 && pos == 0) || first_block_size > 0){ // Все строки найдены
@@ -1749,6 +1745,7 @@ PHP_FUNCTION(file_pop_line) {
                             line_start = dynamic_buffer;
                         } else {
                             line_start = dynamic_buffer + i + 1;
+                            dynamic_buffer[i] = '\0';
                         }
 
                         dynamic_buffer[current_size] = '\0';
@@ -3537,3 +3534,4 @@ PHP_FUNCTION(file_callback_line) {
     RETVAL_STRING(found_value);
     efree(found_value);
 }
+
