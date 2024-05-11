@@ -81,7 +81,7 @@ Array
             [key] => index_0
             [line_offset] => 0
             [line_length] => 8192
-            [line_count] => 1
+            [line_count] => 0
         )
 
     [1] => Array
@@ -89,7 +89,7 @@ Array
             [key] => index_1
             [line_offset] => 8192
             [line_length] => 8192
-            [line_count] => 2
+            [line_count] => 1
         )
 
 )
@@ -109,7 +109,7 @@ Array
             [trim_length] => 8192
             [line_offset] => 0
             [line_length] => 8192
-            [line_count] => 1
+            [line_count] => 0
         )
 
     [1] => Array
@@ -118,7 +118,7 @@ Array
             [trim_length] => 8192
             [line_offset] => 8192
             [line_length] => 8192
-            [line_count] => 2
+            [line_count] => 1
         )
 
 )
@@ -137,14 +137,14 @@ Array
         (
             [line_offset] => 0
             [line_length] => 8192
-            [line_count] => 1
+            [line_count] => 0
         )
 
     [1] => Array
         (
             [line_offset] => 8192
             [line_length] => 8192
-            [line_count] => 2
+            [line_count] => 1
         )
 
 )
