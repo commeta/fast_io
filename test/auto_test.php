@@ -23,10 +23,15 @@
  * 
  */
 
-function mb_sec($time, $bytes){
+function mb_sec($time, $bytes, $k){
     $millions = $bytes / 1000000;
-    $speed = $millions / $time;
-    return number_format($speed, 2) . " M/s";
+    if($k == 'syscr' || $k == 'syscw') {
+        $speed = $bytes / $time;
+        return number_format($speed, 2) . " per sec";
+    } else {
+        $speed = $millions / $time;
+        return number_format($speed, 2) . " millions per sec";
+    }
 }
 
 function get_process_io_stats() {
@@ -149,7 +154,7 @@ if($file_insert_line_passed) echo "\nCheck file_insert_line: time: ", $time, " -
 else echo "\nCheck file_insert_line - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
 
 
 
@@ -201,7 +206,7 @@ if($file_analize_passed) echo "\nCheck file_analize: time: ", $time, " - PASS", 
 else echo "\nCheck file_analize - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
 
 
 
@@ -349,7 +354,7 @@ if($file_get_keys_passed) echo "\nCheck file_get_keys: time: ", $time, " - PASS"
 else echo "\nCheck file_get_keys - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
 
 
 
@@ -609,7 +614,7 @@ if($file_search_array_passed) echo "\nCheck file_search_array: time: ", $time, "
 else echo "\nCheck file_search_array - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
 
 
 
@@ -919,7 +924,7 @@ if($file_select_array_passed) echo "\nCheck file_select_array: time: ", $time, "
 else echo "\nCheck file_select_array - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
 
 
 
@@ -1000,7 +1005,7 @@ if($file_search_line_passed) echo "\nCheck file_search_line: time: ", $time, " -
 else echo "\nCheck file_search_line - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
 
 
 
@@ -1083,7 +1088,7 @@ if($file_select_line_passed) echo "\nCheck file_select_line: time: ", $time, " -
 else echo "\nCheck file_select_line - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
 
 
 
@@ -1239,7 +1244,7 @@ if($file_pop_line_passed) echo "\nCheck file_pop_line: time: ", $time, " - PASS"
 else echo "\nCheck file_pop_line - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
 
 
 
@@ -1315,5 +1320,6 @@ if($file_callback_line_passed) echo "\nCheck file_callback_line: time: ", $time,
 else echo "\nCheck file_callback_line - ERROR\n";
 
 $end_io = get_process_io_stats();
-foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p]), ")\n";
+foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
+
 
