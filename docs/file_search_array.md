@@ -104,7 +104,7 @@ Array
             [trim_length] => 119
             [line_offset] => 24576
             [line_length] => 8192
-            [line_count] => 4
+            [line_count] => 3
         )
     [1] => Array
         (
@@ -112,7 +112,7 @@ Array
             [trim_length] => 121
             [line_offset] => 245760
             [line_length] => 8192
-            [line_count] => 31
+            [line_count] => 30
         )
 )
 
@@ -132,7 +132,7 @@ Array
             [trim_length] => 119
             [line_offset] => 0
             [line_length] => 8192
-            [line_count] => 1
+            [line_count] => 0
         )
 
     [1] => Array
@@ -141,7 +141,7 @@ Array
             [trim_length] => 119
             [line_offset] => 8192
             [line_length] => 8192
-            [line_count] => 2
+            [line_count] => 1
         )
 
 )
@@ -189,7 +189,7 @@ Array
                 )
             [line_offset] => 0
             [line_length] => 8192
-            [line_count] => 1
+            [line_count] => 0
         )
     [1] => Array
         (
@@ -202,7 +202,7 @@ Array
                 )
             [line_offset] => 8192
             [line_length] => 8192
-            [line_count] => 2
+            [line_count] => 1
         )
 )
 
@@ -237,7 +237,7 @@ Array
 
             [line_offset] => 0
             [line_length] => 8192
-            [line_count] => 1
+            [line_count] => 0
         )
 
     [1] => Array
@@ -262,7 +262,7 @@ Array
 
             [line_offset] => 8192
             [line_length] => 8192
-            [line_count] => 2
+            [line_count] => 1
         )
 
 )
