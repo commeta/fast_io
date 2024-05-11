@@ -1745,7 +1745,6 @@ PHP_FUNCTION(file_pop_line) {
                             line_start = dynamic_buffer;
                         } else {
                             line_start = dynamic_buffer + i + 1;
-                            dynamic_buffer[i] = '\0';
                         }
 
                         dynamic_buffer[current_size] = '\0';
@@ -3534,4 +3533,3 @@ PHP_FUNCTION(file_callback_line) {
     RETVAL_STRING(found_value);
     efree(found_value);
 }
-
