@@ -218,7 +218,7 @@ Next, compile and test your extension using phpize, ./configure, make, and make 
 The Fast_IO extension was rigorously tested on Ubuntu 24.04, with a Ryzen 12 Cores CPU, 16GB RAM, and a SATA 3 SSD. Here are the results for some of the key functions when executed in a loop of 10,000 iterations, with linear index incrementation (to avoid cache hits) and repeated searches for the same index:
 
 
-**test/auto_test.php**
+**test/test.php**
 
 ```
 file_insert_line: 0.10697793960571 (0.00001070)
