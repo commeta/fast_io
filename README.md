@@ -232,9 +232,39 @@ file_pop_line: 0.24059700965881 (0.00002406)
 ```
 
 
-
-
 **test/auto_test.php**
+
+
+The test of functions is a complex check of their work with various input data and modes. Here is a brief description of the test with analysis:
+
+Characteristics of the test:
+- Purpose: Check the correctness of the function's operation under various conditions.
+- Methodology: Using a cycle to repeatedly test the function with different parameters.
+- Test parameters: Buffer size, number of line insertions, alignment, and function modes.
+
+Test process:
+- Deletion of an existing file before each test.
+- Generation of random values for function parameters.
+- Inserting lines into a file using the file_insert_line function.
+- Checking the results of the function's operation in different modes.
+
+Results:
+- Success: If all checks are passed, the test is considered successful.
+- Failure: Any discrepancy in the function's operation result leads to test failure.
+
+Analysis of results:
+- Test duration and input/output statistics are measured to assess performance and throughput.
+- Results are output to the console indicating the test duration and passage status.
+
+Convergence analysis:
+
+The test checks the convergence of data extracted by the functions from the file with the data that was inserted into the file. Convergence means that the extracted data exactly matches the inserted data without errors.
+For convergence analysis, various function modes are used, each of which checks certain aspects of the data (for example, line counter, line offset, line length, and the line itself).
+
+Purpose of convergence analysis:
+
+The purpose is to ensure that the functions reliably operate under various conditions and correctly process data, which is critical for the stability and reliability of the system using this function.
+
 ```
 Check file_insert_line: time: 2.5057950019836 - PASS
 rchar: 752348375 (300.24 millions per sec)
@@ -319,35 +349,6 @@ cancelled_write_bytes: 172916736 (111.53 millions per sec)
 
 ```
 
-The test of functions is a complex check of their work with various input data and modes. Here is a brief description of the test with analysis:
-
-Characteristics of the test:
-- Purpose: Check the correctness of the function's operation under various conditions.
-- Methodology: Using a cycle to repeatedly test the function with different parameters.
-- Test parameters: Buffer size, number of line insertions, alignment, and function modes.
-
-Test process:
-- Deletion of an existing file before each test.
-- Generation of random values for function parameters.
-- Inserting lines into a file using the file_insert_line function.
-- Checking the results of the function's operation in different modes.
-
-Results:
-- Success: If all checks are passed, the test is considered successful.
-- Failure: Any discrepancy in the function's operation result leads to test failure.
-
-Analysis of results:
-- Test duration and input/output statistics are measured to assess performance and throughput.
-- Results are output to the console indicating the test duration and passage status.
-
-Convergence analysis:
-
-The test checks the convergence of data extracted by the functions from the file with the data that was inserted into the file. Convergence means that the extracted data exactly matches the inserted data without errors.
-For convergence analysis, various function modes are used, each of which checks certain aspects of the data (for example, line counter, line offset, line length, and the line itself).
-
-Purpose of convergence analysis:
-
-The purpose is to ensure that the functions reliably operate under various conditions and correctly process data, which is critical for the stability and reliability of the system using this function.
 
 What the test shows:
 
