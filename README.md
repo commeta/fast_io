@@ -217,6 +217,9 @@ Next, compile and test your extension using phpize, ./configure, make, and make 
 
 The Fast_IO extension was rigorously tested on Ubuntu 24.04, with a Ryzen 12 Cores CPU, 16GB RAM, and a SATA 3 SSD. Here are the results for some of the key functions when executed in a loop of 10,000 iterations, with linear index incrementation (to avoid cache hits) and repeated searches for the same index:
 
+
+**test/auto_test.php**
+
 ```
 file_insert_line: 0.10697793960571 (0.00001070)
 file_search_line: 2.9135210514069 (0.00029135)
@@ -227,6 +230,142 @@ file_search_data: 2.353935956955 (0.00023539)
 file_search_data repeat: 0.15796780586243 (0.00001580)
 file_pop_line: 0.24059700965881 (0.00002406)
 ```
+
+
+
+
+**test/auto_test.php**
+```
+Check file_insert_line: time: 2.5057950019836 - PASS
+rchar: 752348375 (300.24 millions per sec)
+wchar: 201599266 (80.45 millions per sec)
+syscr: 88584 (35,351.65 per sec)
+syscw: 11219 (4,477.22 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 201805824 (80.54 millions per sec)
+cancelled_write_bytes: 200536064 (80.03 millions per sec)
+
+Check file_analize: time: 3.9903860092163 - PASS
+rchar: 5995335071 (1,502.44 millions per sec)
+wchar: 179673526 (45.03 millions per sec)
+syscr: 737563 (184,835.00 per sec)
+syscw: 10526 (2,637.84 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 179884032 (45.08 millions per sec)
+cancelled_write_bytes: 178995200 (44.86 millions per sec)
+
+Check file_get_keys: time: 2.1031000614166 - PASS
+rchar: 1171380936 (556.98 millions per sec)
+wchar: 195020046 (92.73 millions per sec)
+syscr: 98643 (46,903.62 per sec)
+syscw: 10670 (5,073.46 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 195219456 (92.82 millions per sec)
+cancelled_write_bytes: 188624896 (89.69 millions per sec)
+
+Check file_search_array: time: 2.5878760814667 - PASS
+rchar: 2026237164 (782.97 millions per sec)
+wchar: 168664934 (65.18 millions per sec)
+syscr: 225525 (87,146.75 per sec)
+syscw: 10757 (4,156.69 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 168886272 (65.26 millions per sec)
+cancelled_write_bytes: 167989248 (64.91 millions per sec)
+
+Check file_select_array: time: 2.913064956665 - PASS
+rchar: 3015590353 (1,035.20 millions per sec)
+wchar: 200834864 (68.94 millions per sec)
+syscr: 159738 (54,835.03 per sec)
+syscw: 10926 (3,750.69 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 201039872 (69.01 millions per sec)
+cancelled_write_bytes: 200429568 (68.80 millions per sec)
+
+Check file_search_line: time: 4.3936989307404 - PASS
+rchar: 11316432550 (2,575.60 millions per sec)
+wchar: 156442077 (35.61 millions per sec)
+syscr: 945901 (215,285.80 per sec)
+syscw: 10288 (2,341.54 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 156622848 (35.65 millions per sec)
+cancelled_write_bytes: 153374720 (34.91 millions per sec)
+
+Check file_select_line: time: 1.8514518737793 - PASS
+rchar: 788399017 (425.83 millions per sec)
+wchar: 183793222 (99.27 millions per sec)
+syscr: 90337 (48,792.52 per sec)
+syscw: 11600 (6,265.35 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 184012800 (99.39 millions per sec)
+cancelled_write_bytes: 179003392 (96.68 millions per sec)
+
+Check file_pop_line: time: 2.42817902565 - PASS
+rchar: 701572972 (288.93 millions per sec)
+wchar: 426354213 (175.59 millions per sec)
+syscr: 87071 (35,858.56 per sec)
+syscw: 25176 (10,368.26 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 430428160 (177.26 millions per sec)
+cancelled_write_bytes: 433696768 (178.61 millions per sec)
+
+Check file_callback_line: time: 1.5504369735718 - PASS
+rchar: 193445776 (124.77 millions per sec)
+wchar: 172226656 (111.08 millions per sec)
+syscr: 20351 (13,125.98 per sec)
+syscw: 10386 (6,698.76 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 172425216 (111.21 millions per sec)
+cancelled_write_bytes: 172916736 (111.53 millions per sec)
+
+```
+
+The test of functions is a complex check of their work with various input data and modes. Here is a brief description of the test with analysis:
+
+Characteristics of the test:
+- Purpose: Check the correctness of the function's operation under various conditions.
+- Methodology: Using a cycle to repeatedly test the function with different parameters.
+- Test parameters: Buffer size, number of line insertions, alignment, and function modes.
+
+Test process:
+- Deletion of an existing file before each test.
+- Generation of random values for function parameters.
+- Inserting lines into a file using the file_insert_line function.
+- Checking the results of the function's operation in different modes.
+
+Results:
+- Success: If all checks are passed, the test is considered successful.
+- Failure: Any discrepancy in the function's operation result leads to test failure.
+
+Analysis of results:
+- Test duration and input/output statistics are measured to assess performance and throughput.
+- Results are output to the console indicating the test duration and passage status.
+
+Convergence analysis:
+
+The test checks the convergence of data extracted by the functions from the file with the data that was inserted into the file. Convergence means that the extracted data exactly matches the inserted data without errors.
+For convergence analysis, various function modes are used, each of which checks certain aspects of the data (for example, line counter, line offset, line length, and the line itself).
+
+Purpose of convergence analysis:
+
+The purpose is to ensure that the functions reliably operate under various conditions and correctly process data, which is critical for the stability and reliability of the system using this function.
+
+What the test shows:
+
+If the test passes, it shows that the function works correctly.
+Test duration and input/output statistics allow you to assess the performance and overall throughput of the functions.
+If the test fails, an error message is displayed, indicating problems in the function's operation.
+
+Thus, the test not only checks the correctness of the function's operation but also provides information about its performance, which can be used for optimization and code improvement.
+
+Conclusions:
+The test shows that the functions work correctly under various conditions and settings.
+
+For a deeper analysis and performance optimization, additional profiling and testing in various execution environments may be required. This will help identify potential bottlenecks and optimize the function's operation for different types of loads and data sizes.
+
+
+For more information, see: [Auto database test](/test/auto_test.md)
+
+
 
 ## Call Costs
 
