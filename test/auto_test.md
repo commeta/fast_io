@@ -35,86 +35,87 @@
 #### Результат выполнения
 Результат тестирования: Ubuntu 24.04, Ryzen 12 Cores, 16GB RAM, SATA 3 SSD.
 ```
-Check file_insert_line: time: 2.0206029415131 - PASS
-rchar: 668356378 (330.77 millions per sec)
-wchar: 169830513 (84.05 millions per sec)
-syscr: 71381 (35,326.58 per sec)
-syscw: 10422 (5,157.87 per sec)
+Check file_insert_line: time: 2.3249299526215 - PASS
+rchar: 734991037 (316.13 millions per sec)
+wchar: 197211103 (84.82 millions per sec)
+syscr: 82689 (35,566.23 per sec)
+syscw: 10742 (4,620.35 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 170061824 (84.16 millions per sec)
-cancelled_write_bytes: 166739968 (82.52 millions per sec)
+write_bytes: 197427200 (84.92 millions per sec)
+cancelled_write_bytes: 196390912 (84.47 millions per sec)
 
-Check file_analize: time: 4.5036659240723 - PASS
-rchar: 7088363107 (1,573.91 millions per sec)
-wchar: 201598125 (44.76 millions per sec)
-syscr: 778566 (172,873.84 per sec)
-syscw: 10640 (2,362.52 per sec)
+Check file_analize: time: 6.8016469478607 - PASS
+rchar: 7602825353 (1,117.79 millions per sec)
+wchar: 215786744 (31.73 millions per sec)
+syscr: 768615 (113,004.25 per sec)
+syscw: 11951 (1,757.07 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 201822208 (44.81 millions per sec)
-cancelled_write_bytes: 204009472 (45.30 millions per sec)
+write_bytes: 216023040 (31.76 millions per sec)
+cancelled_write_bytes: 216506368 (31.83 millions per sec)
 
-Check file_get_keys: time: 1.9767808914185 - PASS
-rchar: 1123353516 (568.27 millions per sec)
-wchar: 186991393 (94.59 millions per sec)
-syscr: 105705 (53,473.30 per sec)
-syscw: 11342 (5,737.61 per sec)
+Check file_get_keys: time: 1.927946805954 - PASS
+rchar: 1077162792 (558.71 millions per sec)
+wchar: 179332885 (93.02 millions per sec)
+syscr: 92253 (47,850.39 per sec)
+syscw: 10206 (5,293.71 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 187166720 (94.68 millions per sec)
-cancelled_write_bytes: 187129856 (94.66 millions per sec)
+write_bytes: 179548160 (93.13 millions per sec)
+cancelled_write_bytes: 176144384 (91.36 millions per sec)
 
-Check file_search_array: time: 2.339879989624 - PASS
-rchar: 1907223540 (815.09 millions per sec)
-wchar: 158733488 (67.84 millions per sec)
-syscr: 215737 (92,200.03 per sec)
-syscw: 9908 (4,234.41 per sec)
+Check file_search_array: time: 2.6650650501251 - PASS
+rchar: 2204118948 (827.04 millions per sec)
+wchar: 183480195 (68.85 millions per sec)
+syscr: 195569 (73,382.45 per sec)
+syscw: 10288 (3,860.32 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 158941184 (67.93 millions per sec)
-cancelled_write_bytes: 153329664 (65.53 millions per sec)
+write_bytes: 183689216 (68.92 millions per sec)
+cancelled_write_bytes: 182661120 (68.54 millions per sec)
 
-Check file_select_array: time: 2.6338698863983 - PASS
-rchar: 2686374164 (1,019.93 millions per sec)
-wchar: 178893952 (67.92 millions per sec)
-syscr: 160128 (60,795.71 per sec)
-syscw: 11026 (4,186.24 per sec)
+Check file_select_array: time: 3.3443758487701 - PASS
+rchar: 3093490454 (924.98 millions per sec)
+wchar: 206018159 (61.60 millions per sec)
+syscr: 182073 (54,441.55 per sec)
+syscw: 12269 (3,668.55 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 179105792 (68.00 millions per sec)
-cancelled_write_bytes: 179871744 (68.29 millions per sec)
+write_bytes: 206213120 (61.66 millions per sec)
+cancelled_write_bytes: 207093760 (61.92 millions per sec)
 
-Check file_search_line: time: 5.644623041153 - PASS
-rchar: 13996705470 (2,479.65 millions per sec)
-wchar: 188313363 (33.36 millions per sec)
-syscr: 1356663 (240,346.08 per sec)
-syscw: 11565 (2,048.85 per sec)
+Check file_search_line: time: 7.2499101161957 - PASS
+rchar: 16776156810 (2,313.98 millions per sec)
+wchar: 216642676 (29.88 millions per sec)
+syscr: 1770967 (244,274.34 per sec)
+syscw: 11680 (1,611.05 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 188534784 (33.40 millions per sec)
-cancelled_write_bytes: 187154432 (33.16 millions per sec)
+write_bytes: 216854528 (29.91 millions per sec)
+cancelled_write_bytes: 206196736 (28.44 millions per sec)
 
-Check file_select_line: time: 1.7338440418243 - PASS
-rchar: 763166643 (440.16 millions per sec)
-wchar: 181497808 (104.68 millions per sec)
-syscr: 85299 (49,196.47 per sec)
-syscw: 10955 (6,318.33 per sec)
+Check file_select_line: time: 1.8261711597443 - PASS
+rchar: 785417171 (430.09 millions per sec)
+wchar: 186901077 (102.35 millions per sec)
+syscr: 85439 (46,785.87 per sec)
+syscw: 10949 (5,995.60 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 181723136 (104.81 millions per sec)
-cancelled_write_bytes: 180125696 (103.89 millions per sec)
+write_bytes: 187133952 (102.47 millions per sec)
+cancelled_write_bytes: 186793984 (102.29 millions per sec)
 
-Check file_pop_line: time: 2.3454391956329 - PASS
-rchar: 710848655 (303.08 millions per sec)
-wchar: 441092267 (188.06 millions per sec)
-syscr: 85833 (36,595.70 per sec)
-syscw: 24924 (10,626.58 per sec)
+Check file_pop_line: time: 5.9825229644775 - PASS
+rchar: 1425209869 (238.23 millions per sec)
+wchar: 901270799 (150.65 millions per sec)
+syscr: 154466 (25,819.54 per sec)
+syscw: 46904 (7,840.17 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 445120512 (189.78 millions per sec)
-cancelled_write_bytes: 443826176 (189.23 millions per sec)
+write_bytes: 902180864 (150.80 millions per sec)
+cancelled_write_bytes: 897216512 (149.97 millions per sec)
 
-Check file_callback_line: time: 1.5155608654022 - PASS
-rchar: 197454865 (130.29 millions per sec)
-wchar: 175354555 (115.70 millions per sec)
-syscr: 21195 (13,984.92 per sec)
-syscw: 10706 (7,064.05 per sec)
+Check file_callback_line: time: 2.1984159946442 - PASS
+rchar: 674857333 (306.97 millions per sec)
+wchar: 185078722 (84.19 millions per sec)
+syscr: 71290 (32,427.89 per sec)
+syscw: 11074 (5,037.26 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 175566848 (115.84 millions per sec)
-cancelled_write_bytes: 175894528 (116.06 millions per sec)
+write_bytes: 185290752 (84.28 millions per sec)
+cancelled_write_bytes: 186834944 (84.99 millions per sec)
+
 ```
 
 
