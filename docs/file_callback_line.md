@@ -8,13 +8,14 @@
 
 ### Синтаксис
 
-string file_callback_line(string $filename, $callback[, int $mode = 0])
+string file_callback_line(string $filename, $callback[, int $position = 0][, int $mode = 0])
 
 
 #### Параметры
 
 - **$filename**: Путь к текстовому файлу, который необходимо проанализировать.
 - **$callback**: Callback-функция, которая будет вызвана для каждой строки файла.
+- **$position** (int, optional) - Позиция начала поиска в файле.
 - **$mode** (int, optional): Режим анализа.
 
 Номер режима анализа увеличивает количество параметров callback функции, 
@@ -45,8 +46,6 @@ string file_callback_line(string $filename, $callback[, int $mode = 0])
 #### Возвращаемое значение callback:
 - Если callback-функция возвращает строку $return_line, эта строка сохраняется и возвращается в конце работы функции file_callback_line.
 - Строка $return_line передается callback функции при каждом вызове если $mode > 5.
-- Если callback-функция возвращает целое число (int), функция пытается переместиться на эту позицию в файле.
-- При попытке перехода в тот же кадр: (int) $position == (int) $return_position - возникнет циклический переход.
 - Если callback-функция возвращает `FALSE`, чтение файла прекращается, file_callback_line возвращает $return_line.
 - Если callback-функция возвращает `TRUE`, чтение файла продолжается.
 
@@ -118,8 +117,7 @@ print_r(
 
 				//return false; // Закончить поиск
 				//return true; // Продолжить поиск со следующей строки
-				//return 0; // Переместится на начало файла
-				
+			
 				return serialize($ret_val); // Вернуть составную строку
 			}, 9
 		)
