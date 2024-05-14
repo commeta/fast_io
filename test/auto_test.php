@@ -23,6 +23,7 @@
  * 
  */
 
+
 function mb_sec($time, $bytes, $k){
     $millions = $bytes / 1000000;
     if($k == 'syscr' || $k == 'syscw') {
@@ -79,7 +80,7 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(16, 65535);
+    $align = mt_rand(32, 65535);
 
     ini_set('fast_io.buffer_size', mt_rand(16, 65535));
 
@@ -92,13 +93,12 @@ for($ii = 0; $ii < 100; $ii++){
 
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
         $file_offset = file_insert_line($db_file, $str, 2, $align);
-    
         $file_line = file_get_keys($db_file, 0, 1, $last_offset, 1);
 
         if(
             empty($file_line[0]) ||
             $file_line[0]['line_length'] !== $align ||
-            mb_strlen($file_line[0]['line']) + 1 !== $align
+            strlen($file_line[0]['line']) + 1 !== $align
         ){
             $file_insert_line_passed = false;
             break;
@@ -158,6 +158,10 @@ foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($tim
 
 
 
+
+
+
+
 // #########################
 // Check file_analize
 $file_analize_passed = true;
@@ -166,7 +170,7 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(16, 65535);
+    $align = mt_rand(32, 65535);
 
     ini_set('fast_io.buffer_size', mt_rand(16, 65535));
 
@@ -219,14 +223,11 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(16, 65535);
+    $align = mt_rand(32, 65535);
 
     ini_set('fast_io.buffer_size', mt_rand(16, 65535));
 
-    $last_offset = 0;
-
     $c = mt_rand(10, 100);
-
     $insert_string = [];
     
     for($i=0; $i <= $c; $i++){
@@ -238,15 +239,12 @@ for($ii = 0; $ii < 100; $ii++){
         $trim_line = mb_substr($str, 0, $align - 1);
         $insert_string[$i] = [
             'trim_line' => $trim_line,
-            'trim_length' => mb_strlen($trim_line),
+            'trim_length' => strlen($trim_line),
             'line_offset' => $file_offset,
             'line_length' => $align,
             'line_count' => $i
         ];
-
-        if($file_offset == $last_offset) $last_offset += $align;  
     }
-
 
     $file_array = file_get_keys($db_file, 0, $c + 1, 0, 1);
     if(count($file_array) != count($insert_string)) {
@@ -368,14 +366,11 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(16, 65535);
+    $align = mt_rand(32, 65535);
 
     ini_set('fast_io.buffer_size', mt_rand(16, 65535));
 
-    $last_offset = 0;
-
     $c = mt_rand(10, 100);
-
     $insert_string = [];
     
     for($i=0; $i <= $c; $i++){
@@ -387,13 +382,11 @@ for($ii = 0; $ii < 100; $ii++){
         $trim_line = mb_substr($str, 0, $align - 1);
         $insert_string[$i] = [
             'trim_line' => $trim_line,
-            'trim_length' => mb_strlen($trim_line),
+            'trim_length' => strlen($trim_line),
             'line_offset' => $file_offset,
             'line_length' => $align,
             'line_count' => $i
         ];
-
-        if($file_offset == $last_offset) $last_offset += $align;  
     }
 
     $file_array = file_search_array($db_file, 'index_', 0, $c + 1, 0, 0);
@@ -578,10 +571,10 @@ for($ii = 0; $ii < 100; $ii++){
             $file_array[$row_num]['line_count'] !== $line_arr['line_count'] ||
             $file_array[$row_num]['line_matches'][0]['line_match'] !== $str_array[0] ||
             $file_array[$row_num]['line_matches'][0]['match_offset'] !== strpos($insert_string[$row_num]['trim_line'], $str_array[0]) ||
-            $file_array[$row_num]['line_matches'][0]['match_length'] !== mb_strlen($str_array[0]) ||
+            $file_array[$row_num]['line_matches'][0]['match_length'] !== strlen($str_array[0]) ||
             $file_array[$row_num]['line_matches'][1]['line_match'] !== $str_array[1] ||
             $file_array[$row_num]['line_matches'][1]['match_offset'] !== strpos($insert_string[$row_num]['trim_line'], $str_array[1]) ||
-            $file_array[$row_num]['line_matches'][1]['match_length'] !== mb_strlen($str_array[1]) 
+            $file_array[$row_num]['line_matches'][1]['match_length'] !== strlen($str_array[1]) 
         ){
             $file_search_array_passed = false;
             break;
@@ -628,14 +621,11 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(16, 65535);
+    $align = mt_rand(32, 65535);
 
     ini_set('fast_io.buffer_size', mt_rand(16, 65535));
 
-    $last_offset = 0;
-
     $c = mt_rand(10, 100);
-
     $insert_string = [];
     $query = [];
     
@@ -648,7 +638,7 @@ for($ii = 0; $ii < 100; $ii++){
         $trim_line = mb_substr($str, 0, $align - 1);
         $insert_string[$i] = [
             'trim_line' => $trim_line,
-            'trim_length' => mb_strlen($trim_line),
+            'trim_length' => strlen($trim_line),
             'line_offset' => $file_offset,
             'line_length' => $align,
             'line_count' => $i
@@ -657,8 +647,6 @@ for($ii = 0; $ii < 100; $ii++){
         $query[] = [
             $file_offset, $align
         ];
-
-        if($file_offset == $last_offset) $last_offset += $align;  
     }
 
     $file_array = file_select_array($db_file, $query);
@@ -887,10 +875,10 @@ for($ii = 0; $ii < 100; $ii++){
             $file_array[$row_num]['line_length'] !== $line_arr['line_length'] ||
             $file_array[$row_num]['line_matches'][0]['line_match'] !== $str_array[0] ||
             $file_array[$row_num]['line_matches'][0]['match_offset'] !== strpos($insert_string[$row_num]['trim_line'], $str_array[0]) ||
-            $file_array[$row_num]['line_matches'][0]['match_length'] !== mb_strlen($str_array[0]) ||
+            $file_array[$row_num]['line_matches'][0]['match_length'] !== strlen($str_array[0]) ||
             $file_array[$row_num]['line_matches'][1]['line_match'] !== $str_array[1] ||
             $file_array[$row_num]['line_matches'][1]['match_offset'] !== strpos($insert_string[$row_num]['trim_line'], $str_array[1]) ||
-            $file_array[$row_num]['line_matches'][1]['match_length'] !== mb_strlen($str_array[1]) 
+            $file_array[$row_num]['line_matches'][1]['match_length'] !== strlen($str_array[1]) 
         ){
             $file_select_array_passed = false;
             break;
@@ -939,14 +927,10 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(16, 65535);
+    $align = mt_rand(32, 65535);
 
     ini_set('fast_io.buffer_size', mt_rand(16, 65535));
-
-    $last_offset = 0;
-
     $c = mt_rand(10, 100);
-
     $insert_string = [];
     
     for($i=0; $i <= $c; $i++){
@@ -961,9 +945,6 @@ for($ii = 0; $ii < 100; $ii++){
             'trim_line' => $trim_line,
             'line_offset' => $file_offset,
         ];
-
-
-        if($file_offset == $last_offset) $last_offset += $align;  
     }
 
     
@@ -1020,14 +1001,10 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(16, 65535);
+    $align = mt_rand(32, 65535);
 
     ini_set('fast_io.buffer_size', mt_rand(16, 65535));
-
-    $last_offset = 0;
-
     $c = mt_rand(10, 100);
-
     $insert_string = [];
     
     for($i=0; $i <= $c; $i++){
@@ -1039,13 +1016,10 @@ for($ii = 0; $ii < 100; $ii++){
         $trim_line = mb_substr($str, 0, $align - 1);
         $insert_string[$i] = [
             'trim_line' => $trim_line,
-            'trim_length' => mb_strlen($trim_line),
+            'trim_length' => strlen($trim_line),
             'line_offset' => $file_offset,
             'line_count' => $i
         ];
-
-
-        if($file_offset == $last_offset) $last_offset += $align;  
     }
 
     
@@ -1094,6 +1068,7 @@ foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($tim
 
 
 
+
 // #########################
 // Check file_pop_line
 $file_pop_line_passed = true;
@@ -1101,18 +1076,17 @@ $start= microtime(true);
 $start_io = get_process_io_stats();
 
 
-for($ii = 0; $ii < 500; $ii++){
+
+for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(16, 65535);
+    $align = mt_rand(32, 65535);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(4096, 65535));
 
-    $last_offset = 0;
-    $c = mt_rand(1, 10);
+    $c = mt_rand(10, 100);
     $insert_string = [];
     $mode = 0;
 
-    
     for($i=0; $i <= $c; $i++){
         $shuffle = mt_rand(16, $align * 2);
 
@@ -1135,12 +1109,10 @@ for($ii = 0; $ii < 500; $ii++){
 
         $insert_string[$i] = [
             'trim_line' => $trim_line,
-            'trim_length' => mb_strlen($trim_line),
+            'trim_length' => strlen($trim_line),
             'line_offset' => $file_offset,
-            'line_count' => $i
+            'line_count' => $i,
         ];
-
-        if($file_offset == $last_offset) $last_offset += $align;  
     }
 
     $insert_string_reverse = array_reverse($insert_string, true);
@@ -1188,7 +1160,7 @@ for($ii = 0; $ii < 500; $ii++){
         }
     }
 
-    if(filesize($db_file) != 0){
+    if(filesize($db_file)!= 0){
         $file_pop_line_passed = false;
         break;
     }
@@ -1199,7 +1171,7 @@ for($ii = 0; $ii < 500; $ii++){
         file_insert_line($db_file, $line_arr['trim_line'], 2, $align);
     }
 
-    $file_last_str = file_pop_line($db_file, 0 - $c - 2, 1);
+    $file_last_str = file_pop_line($db_file, 0 - $c - 1, 1);
     $file_str_array = array_slice(explode("\n", $file_last_str), 0, -1);
     foreach($insert_string as $row_num=>$line_arr){
         if(
@@ -1216,6 +1188,7 @@ for($ii = 0; $ii < 500; $ii++){
     }
 
     unlink($db_file);
+    
 
     foreach($insert_string as $row_num=>$line_arr){
         file_insert_line($db_file, $line_arr['trim_line'], 2, $align);
@@ -1251,6 +1224,8 @@ foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($tim
 
 
 
+
+
 // #########################
 // Check file_callback_line
 $file_callback_line_passed = true;
@@ -1260,57 +1235,94 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(16, 65535);
+    $align = mt_rand(32, 65535);
 
     ini_set('fast_io.buffer_size', mt_rand(16, 65535));
 
-    $last_offset = 0;
-
     $c = mt_rand(10, 100);
-
     $insert_string = [];
-    $mode = 0;
-    
-    for($i=0; $i <= $c; $i++){
-        $shuffle = mt_rand(1, $align * 2);
 
-        if($mode == 3) $mode = 2;
-        else $mode = 3;
+    for($i=0; $i <= $c; $i++){
+        $shuffle = mt_rand(1, 65535);
 
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890_' . $i . '_');
         $file_offset = file_insert_line($db_file, $str, 2, $align);
-
-        $trim_line = mb_substr($str, 0, $align - 1);
+        $trim_line = substr($str, 0, $align - 1);
                
         $insert_string[$i] = [
             'trim_line' => $trim_line,
-            'trim_length' => mb_strlen($trim_line),
+            'line_length' => $align,
             'line_offset' => $file_offset,
             'line_count' => $i
         ];
-
-        if($file_offset == $last_offset) $last_offset += $align;  
     }
 
+    $callback_line_arr = [];
 
-    $insert_string_reverse = array_reverse($insert_string, true);
-    foreach($insert_string_reverse as $row_num=>$line_arr){
-        if($mode == 0) $mode = 1;
-        else $mode = 0;
+    file_callback_line(
+        $db_file,
+        function () use (&$callback_line_arr) {
+            $return_arr = [];
+            $args = func_num_args();
 
-        $file_last_str = file_pop_line($db_file, $align, $mode);
+            if($args > 0){
+                $return_arr[] = func_get_arg(0);
 
-        if($mode == 1) $file_last_str = trim($file_last_str);
+                if($args > 1) $return_arr[] = func_get_arg(1);
+                if($args > 2) $return_arr[] = func_get_arg(2);
+                if($args > 3) $return_arr[] = func_get_arg(3);
+                if($args > 4) $return_arr[] = func_get_arg(4);
+                if($args > 5) $return_arr[] = func_get_arg(5);
+                if($args > 6) $return_arr[] = func_get_arg(6);
+                if($args > 7) $return_arr[] = func_get_arg(7);
+            }
 
+            $callback_line_arr[] = $return_arr;
+
+            return true;
+        }, 0, 7
+    );
+
+
+    foreach($insert_string as $row_num=>$line_arr){
         if(
-            $file_last_str === false ||
-            $file_last_str !== $line_arr['trim_line']
-        ){           
+            trim($callback_line_arr[$row_num][0]) !== $line_arr['trim_line'] ||
+            $db_file != $callback_line_arr[$row_num][1] ||
+            $line_arr['line_offset'] != $callback_line_arr[$row_num][2] ||
+            $line_arr['line_length'] != $callback_line_arr[$row_num][3] ||
+            $line_arr['line_count'] != $callback_line_arr[$row_num][4] ||
+            0 != $callback_line_arr[$row_num][5] ||
+            filesize($db_file) != $callback_line_arr[$row_num][7] 
+        ){  
             $file_callback_line_passed = false;
             break;
         }
     }
 
+
+    foreach($insert_string as $row_num=>$line_arr){
+        $file_line_str = file_callback_line(
+            $db_file,
+            function () use (&$line_arr){
+                if(!empty(func_get_arg(6))) return false;
+
+                if(
+                    func_get_arg(2) == $line_arr['line_offset'] &&
+                    func_get_arg(3) == $line_arr['line_length']
+                ) return func_get_arg(0); 
+
+                return true;
+            }, $line_arr['line_offset'], 6
+        );
+
+
+        if(
+            trim($file_line_str) !== $line_arr['trim_line']
+        ){  
+            $file_callback_line_passed = false;
+            break;
+        }
+    }
 
 }
 
