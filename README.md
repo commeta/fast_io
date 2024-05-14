@@ -266,86 +266,87 @@ Purpose of convergence analysis:
 The purpose is to ensure that the functions reliably operate under various conditions and correctly process data, which is critical for the stability and reliability of the system using this function.
 
 ```
-Check file_insert_line: time: 2.5057950019836 - PASS
-rchar: 752348375 (300.24 millions per sec)
-wchar: 201599266 (80.45 millions per sec)
-syscr: 88584 (35,351.65 per sec)
-syscw: 11219 (4,477.22 per sec)
+Check file_insert_line: time: 2.3249299526215 - PASS
+rchar: 734991037 (316.13 millions per sec)
+wchar: 197211103 (84.82 millions per sec)
+syscr: 82689 (35,566.23 per sec)
+syscw: 10742 (4,620.35 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 201805824 (80.54 millions per sec)
-cancelled_write_bytes: 200536064 (80.03 millions per sec)
+write_bytes: 197427200 (84.92 millions per sec)
+cancelled_write_bytes: 196390912 (84.47 millions per sec)
 
-Check file_analize: time: 3.9903860092163 - PASS
-rchar: 5995335071 (1,502.44 millions per sec)
-wchar: 179673526 (45.03 millions per sec)
-syscr: 737563 (184,835.00 per sec)
-syscw: 10526 (2,637.84 per sec)
+Check file_analize: time: 6.8016469478607 - PASS
+rchar: 7602825353 (1,117.79 millions per sec)
+wchar: 215786744 (31.73 millions per sec)
+syscr: 768615 (113,004.25 per sec)
+syscw: 11951 (1,757.07 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 179884032 (45.08 millions per sec)
-cancelled_write_bytes: 178995200 (44.86 millions per sec)
+write_bytes: 216023040 (31.76 millions per sec)
+cancelled_write_bytes: 216506368 (31.83 millions per sec)
 
-Check file_get_keys: time: 2.1031000614166 - PASS
-rchar: 1171380936 (556.98 millions per sec)
-wchar: 195020046 (92.73 millions per sec)
-syscr: 98643 (46,903.62 per sec)
-syscw: 10670 (5,073.46 per sec)
+Check file_get_keys: time: 1.927946805954 - PASS
+rchar: 1077162792 (558.71 millions per sec)
+wchar: 179332885 (93.02 millions per sec)
+syscr: 92253 (47,850.39 per sec)
+syscw: 10206 (5,293.71 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 195219456 (92.82 millions per sec)
-cancelled_write_bytes: 188624896 (89.69 millions per sec)
+write_bytes: 179548160 (93.13 millions per sec)
+cancelled_write_bytes: 176144384 (91.36 millions per sec)
 
-Check file_search_array: time: 2.5878760814667 - PASS
-rchar: 2026237164 (782.97 millions per sec)
-wchar: 168664934 (65.18 millions per sec)
-syscr: 225525 (87,146.75 per sec)
-syscw: 10757 (4,156.69 per sec)
+Check file_search_array: time: 2.6650650501251 - PASS
+rchar: 2204118948 (827.04 millions per sec)
+wchar: 183480195 (68.85 millions per sec)
+syscr: 195569 (73,382.45 per sec)
+syscw: 10288 (3,860.32 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 168886272 (65.26 millions per sec)
-cancelled_write_bytes: 167989248 (64.91 millions per sec)
+write_bytes: 183689216 (68.92 millions per sec)
+cancelled_write_bytes: 182661120 (68.54 millions per sec)
 
-Check file_select_array: time: 2.913064956665 - PASS
-rchar: 3015590353 (1,035.20 millions per sec)
-wchar: 200834864 (68.94 millions per sec)
-syscr: 159738 (54,835.03 per sec)
-syscw: 10926 (3,750.69 per sec)
+Check file_select_array: time: 3.3443758487701 - PASS
+rchar: 3093490454 (924.98 millions per sec)
+wchar: 206018159 (61.60 millions per sec)
+syscr: 182073 (54,441.55 per sec)
+syscw: 12269 (3,668.55 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 201039872 (69.01 millions per sec)
-cancelled_write_bytes: 200429568 (68.80 millions per sec)
+write_bytes: 206213120 (61.66 millions per sec)
+cancelled_write_bytes: 207093760 (61.92 millions per sec)
 
-Check file_search_line: time: 4.3936989307404 - PASS
-rchar: 11316432550 (2,575.60 millions per sec)
-wchar: 156442077 (35.61 millions per sec)
-syscr: 945901 (215,285.80 per sec)
-syscw: 10288 (2,341.54 per sec)
+Check file_search_line: time: 7.2499101161957 - PASS
+rchar: 16776156810 (2,313.98 millions per sec)
+wchar: 216642676 (29.88 millions per sec)
+syscr: 1770967 (244,274.34 per sec)
+syscw: 11680 (1,611.05 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 156622848 (35.65 millions per sec)
-cancelled_write_bytes: 153374720 (34.91 millions per sec)
+write_bytes: 216854528 (29.91 millions per sec)
+cancelled_write_bytes: 206196736 (28.44 millions per sec)
 
-Check file_select_line: time: 1.8514518737793 - PASS
-rchar: 788399017 (425.83 millions per sec)
-wchar: 183793222 (99.27 millions per sec)
-syscr: 90337 (48,792.52 per sec)
-syscw: 11600 (6,265.35 per sec)
+Check file_select_line: time: 1.8261711597443 - PASS
+rchar: 785417171 (430.09 millions per sec)
+wchar: 186901077 (102.35 millions per sec)
+syscr: 85439 (46,785.87 per sec)
+syscw: 10949 (5,995.60 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 184012800 (99.39 millions per sec)
-cancelled_write_bytes: 179003392 (96.68 millions per sec)
+write_bytes: 187133952 (102.47 millions per sec)
+cancelled_write_bytes: 186793984 (102.29 millions per sec)
 
-Check file_pop_line: time: 2.42817902565 - PASS
-rchar: 701572972 (288.93 millions per sec)
-wchar: 426354213 (175.59 millions per sec)
-syscr: 87071 (35,858.56 per sec)
-syscw: 25176 (10,368.26 per sec)
+Check file_pop_line: time: 5.9825229644775 - PASS
+rchar: 1425209869 (238.23 millions per sec)
+wchar: 901270799 (150.65 millions per sec)
+syscr: 154466 (25,819.54 per sec)
+syscw: 46904 (7,840.17 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 430428160 (177.26 millions per sec)
-cancelled_write_bytes: 433696768 (178.61 millions per sec)
+write_bytes: 902180864 (150.80 millions per sec)
+cancelled_write_bytes: 897216512 (149.97 millions per sec)
 
-Check file_callback_line: time: 1.5504369735718 - PASS
-rchar: 193445776 (124.77 millions per sec)
-wchar: 172226656 (111.08 millions per sec)
-syscr: 20351 (13,125.98 per sec)
-syscw: 10386 (6,698.76 per sec)
+Check file_callback_line: time: 2.1984159946442 - PASS
+rchar: 674857333 (306.97 millions per sec)
+wchar: 185078722 (84.19 millions per sec)
+syscr: 71290 (32,427.89 per sec)
+syscw: 11074 (5,037.26 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 172425216 (111.21 millions per sec)
-cancelled_write_bytes: 172916736 (111.53 millions per sec)
+write_bytes: 185290752 (84.28 millions per sec)
+cancelled_write_bytes: 186834944 (84.99 millions per sec)
+
 
 ```
 
