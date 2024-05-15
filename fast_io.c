@@ -1692,7 +1692,6 @@ PHP_FUNCTION(file_pop_line) {
 
     if(offset < 0){
         zend_long ini_buffer_size = FAST_IO_G(buffer_size);
-
         if(file_size < ini_buffer_size) ini_buffer_size = file_size;
         if(ini_buffer_size < 16) ini_buffer_size = 16;
 
@@ -1705,53 +1704,70 @@ PHP_FUNCTION(file_pop_line) {
             RETURN_FALSE;
         }
 
-        size_t current_size = 0; // Текущий размер данных в динамическом буфере
-        ssize_t first_block_size = 0;
+        zend_long current_size = 0; // Текущий размер данных в динамическом буфере
+        zend_long first_block_size = 0;
 
         offset--;
-
 
         while(pos >= 0){
             if (first_block_size > 0) {
                 fseek(fp, 0, SEEK_SET); // Перемещаем указатель на предыдущую порцию
                 bytes_read = fread(dynamic_buffer, 1, first_block_size, fp);
+
+                if(bytes_read != first_block_size){
+                    efree(dynamic_buffer);
+                    fclose(fp);
+                    php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
+                    RETURN_FALSE;
+                }
+
+
             } else {
                 fseek(fp, pos - ini_buffer_size, SEEK_SET); // Перемещаем указатель на предыдущую порцию
                 bytes_read = fread(dynamic_buffer, 1, ini_buffer_size, fp);
+
+                if(bytes_read != ini_buffer_size){
+                    efree(dynamic_buffer);
+                    fclose(fp);
+                    php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
+                    RETURN_FALSE;
+                }
+
+
+
             }
 
-            if(bytes_read == -1){
-                efree(dynamic_buffer);
-                fclose(fp);
-                php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
-                RETURN_FALSE;
-            }
-            
             pos -= bytes_read;
             current_size += bytes_read;
          
 
             for (ssize_t i = bytes_read - 1; i >= 0; --i) {
-                if (dynamic_buffer[i] == '\n') offset++;
+                if (dynamic_buffer[i] == '\n') {
+                    offset++;
+                }
                 
                 if(offset == 0 || (i == 0 && pos == 0) || first_block_size > 0){ // Все строки найдены
                     char *line_start;
+                    zend_long line_length = 0;
 
                     if(first_block_size > 0){
                         line_start = dynamic_buffer;
                         dynamic_buffer[dynamic_buffer_size] = '\0';
+                        line_length = dynamic_buffer_size;
                     } else {
                         if(i == 0){
                             line_start = dynamic_buffer;
+                            if(pos == 0) line_length = current_size;
+                            else line_length = current_size - 1;
                         } else {
-                            line_start = dynamic_buffer + i + 1;
+                            line_start = dynamic_buffer + i;
+                            line_length = current_size - i - 1;
                         }
 
                         dynamic_buffer[current_size] = '\0';
                     }
-        
 
-                    ssize_t new_file_size = file_size - strlen(line_start);
+                    ssize_t new_file_size = file_size - line_length;
 
                     if(new_file_size < 0) new_file_size = 0;
 
