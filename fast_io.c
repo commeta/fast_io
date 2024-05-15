@@ -672,6 +672,8 @@ PHP_FUNCTION(file_search_line) {
 
     char *found_value = NULL;
 
+    ssize_t line_length;
+
     if(mode > 9){
         PCRE2_SIZE erroffset;
         int errorcode;
@@ -698,7 +700,7 @@ PHP_FUNCTION(file_search_line) {
         char *line_start = dynamic_buffer;
         char *line_end;
         while ((line_end = strchr(line_start, '\n')) != NULL) {
-            ssize_t line_length = line_end - line_start + 1;
+            line_length = line_end - line_start + 1;
             *line_end = '\0';
 
             if(mode == 0 && strstr(line_start, line_key) != NULL){
@@ -762,15 +764,15 @@ PHP_FUNCTION(file_search_line) {
     if (found_value == NULL) {
         RETURN_FALSE;
     } else {
-        // Обрезка пробелов справа и символа перевода строки
-        size_t len = strlen(found_value);
-        for (int i = len - 1; i >= 0; --i) {
-            if(found_value[i] == ' ' || found_value[i] == '\n') found_value[i] = '\0';
-            else break;
+        if(mode == 1 || mode == 11){
+            // Обрезка пробелов справа и символа перевода строки
+            for (int i = line_length - 1; i >= 0; --i) {
+                if(found_value[i] == ' ' || found_value[i] == '\n') found_value[i] = '\0';
+                else break;
+            }
         }
 
-        RETVAL_STRING(found_value);
-        efree(found_value);
+        RETURN_STRING(found_value);
     }
 }
 
@@ -842,7 +844,6 @@ PHP_FUNCTION(file_search_data) {
 
     if(file_size < ini_buffer_size) ini_buffer_size = file_size;
     if(ini_buffer_size < 16) ini_buffer_size = 16;
-
 
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
@@ -930,23 +931,23 @@ PHP_FUNCTION(file_search_data) {
             RETURN_FALSE;
         }
 
-        char *dataBuffer = emalloc(size + 1);
-        if (!dataBuffer) {
+        char *data_buffer = emalloc(size + 1);
+        if (!data_buffer) {
             php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", size + 1);
             fclose(data_fp);
             RETURN_FALSE;
         }
 
-        bytes_read = fread(dataBuffer, 1, size, data_fp);
+        bytes_read = fread(data_buffer, 1, size, data_fp);
         if(bytes_read != size){
             php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
             fclose(data_fp);
             RETURN_FALSE;
         }
 
-        dataBuffer[bytes_read] = '\0';
-        RETVAL_STRING(dataBuffer);
-        efree(dataBuffer);
+        data_buffer[bytes_read] = '\0';
+        RETVAL_STRING(data_buffer);
+        efree(data_buffer);
     } else {
         RETURN_FALSE;
     }
@@ -1009,9 +1010,9 @@ PHP_FUNCTION(file_push_data) {
     fseek(data_fp, 0, SEEK_END); // Перемещаем указатель в конец файла
     // Получаем текущее смещение в файле данных
     long position = ftell(data_fp);
-    size_t size = strlen(line_value);
 
-    if (fwrite(line_value, 1, size, data_fp) != size) {
+
+    if (fwrite(line_value, 1, line_value_len, data_fp) != line_value_len) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
         if(ftruncate(fileno(data_fp), position) < 0) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
@@ -1030,7 +1031,7 @@ PHP_FUNCTION(file_push_data) {
     long file_size = ftell(index_fp);
 
     // Запись индекса в индексный файл
-    if(fprintf(index_fp, "%s %ld:%zu\n", line_key, position, size) < line_key_len + 5){
+    if(fprintf(index_fp, "%s %ld:%zu\n", line_key, position, line_value_len) < line_key_len + 5){
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", index_filename);
 
         if(ftruncate(fileno(index_fp), file_size) < 0) {
@@ -1421,9 +1422,9 @@ PHP_FUNCTION(file_defrag_data) {
 
                 if(parsed_err == false){
                     fseek(data_fp, position, SEEK_SET); 
-                    char *dataBuffer = emalloc(size + 1);
+                    char *data_buffer = emalloc(size + 1);
 
-                    if(dataBuffer == NULL){
+                    if(data_buffer == NULL){
                         php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", size + 1);
                         fclose(index_fp);
                         fclose(data_fp);
@@ -1435,7 +1436,7 @@ PHP_FUNCTION(file_defrag_data) {
                         RETURN_LONG(-8);
                     }
 
-                    bytes_read_data = fread(dataBuffer, 1, size, data_fp);
+                    bytes_read_data = fread(data_buffer, 1, size, data_fp);
                     if(bytes_read_data != size){
                         php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
                         fclose(index_fp);
@@ -1448,7 +1449,7 @@ PHP_FUNCTION(file_defrag_data) {
                         RETURN_LONG(-6);
                     }
 
-                    bytes_write_data = fwrite(dataBuffer, 1, bytes_read_data, temp_fp);
+                    bytes_write_data = fwrite(data_buffer, 1, bytes_read_data, temp_fp);
 
                     if(bytes_read_data != bytes_write_data){ // err
                         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_index_filename);
@@ -1459,11 +1460,11 @@ PHP_FUNCTION(file_defrag_data) {
                         unlink(temp_filename);
                         unlink(temp_index_filename);
                         efree(dynamic_buffer);
-                        efree(dataBuffer);
+                        efree(data_buffer);
                         RETURN_LONG(-4);
                     }
 
-                    efree(dataBuffer);
+                    efree(data_buffer);
                 } else {
                     php_error_docref(NULL, E_WARNING, "Failed to find offset:size");
                     fclose(index_fp);
@@ -1647,7 +1648,6 @@ PHP_FUNCTION(file_pop_line) {
         char *buffer = (char *)emalloc(offset + 1); // +1 для '\0'
         if (!buffer) {
             php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", offset + 1);
-
             fclose(fp);
             RETURN_FALSE;
         }
@@ -1684,9 +1684,7 @@ PHP_FUNCTION(file_pop_line) {
         fclose(fp);
 
         // Возврат строки в PHP
-        RETVAL_STRING(buffer);
-        efree(buffer);
-        return;
+        RETURN_STRING(buffer);
     }
 
 
@@ -1754,14 +1752,6 @@ PHP_FUNCTION(file_pop_line) {
                             line_start = dynamic_buffer;
                             if(pos == 0) line_length = current_size;
                             else line_length = current_size - 1;
-
-
-
-
-                            // Посмотреть  -1 смещение
-
-
-
 
 
 
@@ -2496,8 +2486,7 @@ PHP_FUNCTION(file_select_line) {
         }
 
         // Обрезка пробелов справа и символа перевода строки
-        size_t len = strlen(buffer);
-        for (int i = len - 1; i >= 0; --i) {
+        for (int i = bytes_read - 1; i >= 0; --i) {
             if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
             else break;
         }
