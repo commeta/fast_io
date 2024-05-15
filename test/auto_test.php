@@ -80,9 +80,9 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(32, 65535);
+    $align = mt_rand(32, 65536);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(16, 65536));
 
     $last_offset = 0;
 
@@ -170,9 +170,9 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(32, 65535);
+    $align = mt_rand(32, 65536);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(16, 65536));
 
     $last_offset = 0;
 
@@ -223,9 +223,9 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(32, 65535);
+    $align = mt_rand(32, 65536);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(16, 65536));
 
     $c = mt_rand(10, 100);
     $insert_string = [];
@@ -366,9 +366,9 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(32, 65535);
+    $align = mt_rand(32, 65536);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(16, 65536));
 
     $c = mt_rand(10, 100);
     $insert_string = [];
@@ -621,9 +621,9 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(32, 65535);
+    $align = mt_rand(32, 65536);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(16, 65536));
 
     $c = mt_rand(10, 100);
     $insert_string = [];
@@ -927,9 +927,9 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(32, 65535);
+    $align = mt_rand(32, 65536);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(16, 65536));
     $c = mt_rand(10, 100);
     $insert_string = [];
     
@@ -1001,9 +1001,9 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(32, 65535);
+    $align = mt_rand(32, 65536);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(16, 65536));
     $c = mt_rand(10, 100);
     $insert_string = [];
     
@@ -1076,12 +1076,11 @@ $start= microtime(true);
 $start_io = get_process_io_stats();
 
 
-
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(32, 65535);
+    $align = mt_rand(32, 65536);
 
-    ini_set('fast_io.buffer_size', mt_rand(4096, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(16, 65536));
 
     $c = mt_rand(10, 100);
     $insert_string = [];
@@ -1223,9 +1222,6 @@ foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($tim
 
 
 
-
-
-
 // #########################
 // Check file_callback_line
 $file_callback_line_passed = true;
@@ -1235,15 +1231,15 @@ $start_io = get_process_io_stats();
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
-    $align = mt_rand(32, 65535);
+    $align = mt_rand(32, 65536);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65535));
+    ini_set('fast_io.buffer_size', mt_rand(16, 65536));
 
     $c = mt_rand(10, 100);
     $insert_string = [];
 
     for($i=0; $i <= $c; $i++){
-        $shuffle = mt_rand(1, 65535);
+        $shuffle = mt_rand(1, 65536);
 
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890_' . $i . '_');
         $file_offset = file_insert_line($db_file, $str, 2, $align);
