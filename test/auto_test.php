@@ -71,7 +71,6 @@ error_reporting(E_ALL);
 $db_file = __DIR__ . '/fast_io.dat';
 
 
-
 // #########################
 // Check file_insert_line
 $file_insert_line_passed = true;
@@ -113,7 +112,7 @@ for($ii = 0; $ii < 100; $ii++){
             empty($file_array[0]) || 
             $file_array[0] !== 'index_' . $i ||
             $file_array[1] !== 'file_insert_line_' . $i ||
-            trim($file_str) !== mb_substr($str, 0, $align - 1) ||
+            trim($file_str) !== substr($str, 0, $align - 1) ||
             $analize['total_characters'] !== $align ||
             $analize['last_symbol'] !== 10 ||
             $analize['file_size'] !== ($i > 0 ? $align * ($i + 1) : $align) ||
@@ -236,7 +235,7 @@ for($ii = 0; $ii < 100; $ii++){
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
         $file_offset = file_insert_line($db_file, $str, 2, $align);
 
-        $trim_line = mb_substr($str, 0, $align - 1);
+        $trim_line = substr($str, 0, $align - 1);
         $insert_string[$i] = [
             'trim_line' => $trim_line,
             'trim_length' => strlen($trim_line),
@@ -379,7 +378,7 @@ for($ii = 0; $ii < 100; $ii++){
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
         $file_offset = file_insert_line($db_file, $str, 2, $align);
 
-        $trim_line = mb_substr($str, 0, $align - 1);
+        $trim_line = substr($str, 0, $align - 1);
         $insert_string[$i] = [
             'trim_line' => $trim_line,
             'trim_length' => strlen($trim_line),
@@ -635,7 +634,7 @@ for($ii = 0; $ii < 100; $ii++){
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
         $file_offset = file_insert_line($db_file, $str, 2, $align);
 
-        $trim_line = mb_substr($str, 0, $align - 1);
+        $trim_line = substr($str, 0, $align - 1);
         $insert_string[$i] = [
             'trim_line' => $trim_line,
             'trim_length' => strlen($trim_line),
@@ -939,7 +938,7 @@ for($ii = 0; $ii < 100; $ii++){
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
         $file_offset = file_insert_line($db_file, $str, 2, $align);
 
-        $trim_line = mb_substr($str, 0, $align - 1);
+        $trim_line = substr($str, 0, $align - 1);
         $insert_string[$i] = [
             'key' => 'index_' . $i,
             'trim_line' => $trim_line,
@@ -1013,7 +1012,7 @@ for($ii = 0; $ii < 100; $ii++){
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
         $file_offset = file_insert_line($db_file, $str, 2, $align);
 
-        $trim_line = mb_substr($str, 0, $align - 1);
+        $trim_line = substr($str, 0, $align - 1);
         $insert_string[$i] = [
             'trim_line' => $trim_line,
             'trim_length' => strlen($trim_line),
@@ -1066,25 +1065,32 @@ foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($tim
 
 
 
-
-
-
 // #########################
 // Check file_pop_line
 $file_pop_line_passed = true;
 $start= microtime(true);
 $start_io = get_process_io_stats();
+$border = 0;
 
 
 for($ii = 0; $ii < 100; $ii++){
     if(file_exists($db_file)) unlink($db_file);
     $align = mt_rand(32, 65536);
 
-    ini_set('fast_io.buffer_size', mt_rand(16, 65536));
 
     $c = mt_rand(10, 100);
     $insert_string = [];
     $mode = 0;
+
+    if($border > 10) {
+        $border = 0;
+
+        $buf = mt_rand($align - 10, $align + 10);
+        ini_set('fast_io.buffer_size', $buf);
+    } else {
+        ini_set('fast_io.buffer_size', mt_rand(16, 65536));
+        $border++;
+    }
 
     for($i=0; $i <= $c; $i++){
         $shuffle = mt_rand(16, $align * 2);
@@ -1095,7 +1101,8 @@ for($ii = 0; $ii < 100; $ii++){
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890_' . $i . '_');
 
         $file_offset = file_insert_line($db_file, $str, 2, $align);
-        $trim_line = mb_substr($str, 0, $align - 1);
+        $trim_line = substr($str, 0, $align - 1);
+
         $file_last_str = file_pop_line($db_file, $align, $mode);
 
         if(
