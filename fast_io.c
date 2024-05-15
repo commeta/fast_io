@@ -328,7 +328,7 @@ PHP_FUNCTION(file_search_array) {
 
 
     ssize_t bytes_read;
-    size_t current_size = 0; // Текущий размер данных в динамическом буфере
+    ssize_t current_size = 0; // Текущий размер данных в динамическом буфере
 
     zend_long found_count = 0;
     zend_long add_count = 0;
@@ -664,7 +664,7 @@ PHP_FUNCTION(file_search_line) {
     }
 
     ssize_t bytes_read;
-    size_t current_size = 0; // Текущий размер данных в динамическом буфере
+    ssize_t current_size = 0; // Текущий размер данных в динамическом буфере
     bool found_match = false;
 
     pcre2_code *re;
@@ -854,7 +854,7 @@ PHP_FUNCTION(file_search_data) {
     }
 
     ssize_t bytes_read;
-    size_t current_size = 0;
+    ssize_t current_size = 0;
     bool found_match = false;
     char *found_value = NULL;
 
@@ -1121,8 +1121,8 @@ PHP_FUNCTION(file_defrag_lines) {
 
     zend_long found_count = 0;
     ssize_t bytes_read;
-    size_t bytes_write;
-    size_t current_size = 0;
+    ssize_t bytes_write;
+    ssize_t current_size = 0;
 
     bool found_match;
 
@@ -1338,10 +1338,10 @@ PHP_FUNCTION(file_defrag_data) {
     }
 
     ssize_t bytes_read;
-    size_t bytes_write;
-    size_t bytes_readData;
-    size_t bytes_writeData;
-    size_t current_size = 0;
+    ssize_t bytes_write;
+    ssize_t bytes_read_data;
+    ssize_t bytes_write_data;
+    ssize_t current_size = 0;
 
     bool found_match;
 
@@ -1435,8 +1435,8 @@ PHP_FUNCTION(file_defrag_data) {
                         RETURN_LONG(-8);
                     }
 
-                    bytes_readData = fread(dataBuffer, 1, size, data_fp);
-                    if(bytes_readData != size){
+                    bytes_read_data = fread(dataBuffer, 1, size, data_fp);
+                    if(bytes_read_data != size){
                         php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
                         fclose(index_fp);
                         fclose(data_fp);
@@ -1448,9 +1448,9 @@ PHP_FUNCTION(file_defrag_data) {
                         RETURN_LONG(-6);
                     }
 
-                    bytes_writeData = fwrite(dataBuffer, 1, bytes_readData, temp_fp);
+                    bytes_write_data = fwrite(dataBuffer, 1, bytes_read_data, temp_fp);
 
-                    if(bytes_readData != bytes_writeData){ // err
+                    if(bytes_read_data != bytes_write_data){ // err
                         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_index_filename);
                         fclose(index_fp);
                         fclose(data_fp);
@@ -1720,8 +1720,6 @@ PHP_FUNCTION(file_pop_line) {
                     php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
                     RETURN_FALSE;
                 }
-
-
             } else {
                 fseek(fp, pos - ini_buffer_size, SEEK_SET); // Перемещаем указатель на предыдущую порцию
                 bytes_read = fread(dynamic_buffer, 1, ini_buffer_size, fp);
@@ -1732,9 +1730,6 @@ PHP_FUNCTION(file_pop_line) {
                     php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
                     RETURN_FALSE;
                 }
-
-
-
             }
 
             pos -= bytes_read;
@@ -1759,6 +1754,18 @@ PHP_FUNCTION(file_pop_line) {
                             line_start = dynamic_buffer;
                             if(pos == 0) line_length = current_size;
                             else line_length = current_size - 1;
+
+
+
+
+                            // Посмотреть  -1 смещение
+
+
+
+
+
+
+
                         } else {
                             line_start = dynamic_buffer + i;
                             line_length = current_size - i - 1;
@@ -1790,6 +1797,7 @@ PHP_FUNCTION(file_pop_line) {
                     }
 
                     RETVAL_STRING(line_start);
+                    
                     fclose(fp);
                     efree(dynamic_buffer);
                     return;
@@ -1889,9 +1897,9 @@ PHP_FUNCTION(file_erase_line) {
     }
 
     ssize_t bytes_read;
-    size_t bytes_write;
+    ssize_t bytes_write;
 
-    size_t current_size = 0; // Текущий размер данных в динамическом буфере
+    ssize_t current_size = 0; // Текущий размер данных в динамическом буфере
     bool found_match = false;
 
     while ((bytes_read = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
@@ -2033,7 +2041,7 @@ PHP_FUNCTION(file_get_keys) {
     }
 
     ssize_t bytes_read;
-    size_t current_size = 0; // Текущий размер данных в динамическом буфере
+    ssize_t current_size = 0; // Текущий размер данных в динамическом буфере
     bool found_match = false;
 
     zend_long add_count = 0;
@@ -2205,8 +2213,8 @@ PHP_FUNCTION(file_replace_line) {
 
     zend_long found_count = 0;
     ssize_t bytes_read;
-    size_t bytes_write;
-    size_t current_size = 0;
+    ssize_t bytes_write;
+    ssize_t current_size = 0;
 
 
     while ((bytes_read = fread(dynamic_buffer + current_size, 1, ini_buffer_size, data_fp)) > 0) {
@@ -2388,7 +2396,7 @@ PHP_FUNCTION(file_insert_line) {
     buffer[line_length] = '\0'; // Нуль-терминатор
 
     // Запись в файл
-    size_t written = fwrite(buffer, sizeof(char), line_length, fp);
+    ssize_t written = fwrite(buffer, sizeof(char), line_length, fp);
     if (written != line_length) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
 
@@ -2470,6 +2478,7 @@ PHP_FUNCTION(file_select_line) {
     bytes_read = fread(buffer, 1, align, fp);
     if(bytes_read != align){
         php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
+        efree(buffer);
         fclose(fp);
         RETURN_FALSE;
     }
@@ -2495,8 +2504,7 @@ PHP_FUNCTION(file_select_line) {
     }
 
     // Возврат строки в PHP
-    RETVAL_STRING(buffer);
-    efree(buffer);
+    RETURN_STRING(buffer);
 }
 
 
@@ -2558,7 +2566,7 @@ PHP_FUNCTION(file_update_line) {
     buffer[line_length] = '\0'; // Нуль-терминатор
 
     // Запись в файл
-    size_t written = fwrite(buffer, 1, line_length, fp);
+    ssize_t written = fwrite(buffer, 1, line_length, fp);
     fclose(fp); // Это также разблокирует файл
     efree(buffer);
 
@@ -2659,7 +2667,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
                     add_assoc_long(return_value, "total_characters", total_characters);
                     add_assoc_long(return_value, "last_symbol", last_symbol);
                     add_assoc_long(return_value, "file_size", file_size);
-                    return;
+                    RETURN_ZVAL(return_value, 0, 1);
                 }
 
                 current_length = 0; // Сброс длины для следующей строки
@@ -2682,6 +2690,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     add_assoc_long(return_value, "flow_interruption", flow_interruption);
     add_assoc_long(return_value, "last_symbol", last_symbol);
     add_assoc_long(return_value, "file_size", file_size);
+    RETURN_ZVAL(return_value, 0, 1);
 }
 
 
@@ -2869,9 +2878,9 @@ PHP_FUNCTION(replicate_file) {
     }
 
 
-    size_t current_size = 0;
+    ssize_t current_size = 0;
     ssize_t bytes_read;
-    size_t bytes_write;
+    ssize_t bytes_write;
 
     while ((bytes_read = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), source_fp)) > 0) {
         bytes_write = fwrite(dynamic_buffer, 1, bytes_read, destination_fp);
@@ -3247,6 +3256,8 @@ PHP_FUNCTION(file_select_array) {
         zval_ptr_dtor(return_value);
         RETURN_FALSE;
     }
+
+    RETURN_ZVAL(return_value, 0, 1);
 }
 
 
@@ -3283,7 +3294,7 @@ PHP_FUNCTION(file_update_array) {
     fseek(fp, 0, SEEK_END);
     zend_long file_size = ftell(fp);
 
-    size_t bytes_write;
+    ssize_t bytes_write;
     char *buffer = NULL;
     
     size_t written = 0;
@@ -3429,7 +3440,7 @@ PHP_FUNCTION(file_callback_line) {
     found_value[0] = '\0';
 
     ssize_t bytes_read;
-    size_t current_size = 0; // Текущий размер данных в динамическом буфере
+    ssize_t current_size = 0; // Текущий размер данных в динамическом буфере
     zend_long line_count = 0;
     bool found_match = false;
 
@@ -3535,8 +3546,5 @@ PHP_FUNCTION(file_callback_line) {
     efree(dynamic_buffer);
     fclose(fp);
 
-    RETVAL_STRING(found_value);
-    efree(found_value);
+    RETURN_STRING(found_value);
 }
-
-
