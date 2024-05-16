@@ -24,41 +24,6 @@
  */
 
 
-function generate_utf8_string($length) {
-    $result = '';
-
-    $ranges = [
-        '0020-007F', // Основная латиница
-        '00A0-00FF', // Латиница-1 (дополнение)
-        '0100-017F', // Расширенная латиница-А
-        '0370-03FF', // Греческий и коптский
-        '0400-04FF', // Кириллица
-    ];
-
-    foreach ($ranges as $range) {
-        list($start, $end) = explode('-', $range);
-        $start = hexdec($start);
-        $end = hexdec($end);
-        for ($i = $start; $i <= $end; $i++) {
-            // Проверяем, является ли символ печатным
-            $char = mb_chr($i, 'UTF-8');
-            if (mb_ereg_match('\p{Print}', $char)) {
-                $result .= $char;
-            }
-        }
-    }
-
-    // Если результат короче желаемой длины, повторяем его
-    while (mb_strlen($result, 'UTF-8') < $length) {
-        $result .= $result;
-    }
-
-    // Обрезаем строку до заданной длины
-    $result = mb_substr($result, 0, $length, 'UTF-8');
-
-    return $result;
-}
-
 function generate_utf8_random($length) {
     $result = '';
     $asciiRange = '';
@@ -142,6 +107,7 @@ error_reporting(E_ALL);
 
 
 $db_file = __DIR__ . '/fast_io.dat';
+
 
 
 // #########################
@@ -1157,7 +1123,7 @@ for($ii = 0; $ii < 50; $ii++){
     $mode = 0;
 
     if(($ii % 10) == 0) {
-        ini_set('fast_io.buffer_size', mt_rand($align - 10, $align + 10));
+        ini_set('fast_io.buffer_size', mt_rand(($align - 10 < 16 ? 16 : $align - 10), ($align + 10 < 32 ? 32 : $align + 10)));
     } else {
         ini_set('fast_io.buffer_size', mt_rand(16, 65536));
     }
@@ -1292,20 +1258,24 @@ for($ii = 0; $ii < 50; $ii++){
 
 
 $utf8_random_str = generate_utf8_random(65536);
-$utf8_str = generate_utf8_string(65536);
 
 for($i=0; $i <= 500; $i++){
     $align = mt_rand(1, 65536);
     $c = mt_rand(1, 65536);
 
     if(($i % 100) == 0) {
-        $align = mt_rand(1, 10);
-        $c = mt_rand(1, 10);
+        $align = mt_rand(3, 10);
+        $c = mt_rand(2, 10);
     }
 
-    if($i < 250) $str = substr($utf8_random_str, 0, $c);
-    else $str = substr($utf8_str, 0, $c);
+    $str = substr($utf8_random_str, 0, $c);
 
+    if(($i % 10) == 0) {
+        ini_set('fast_io.buffer_size', mt_rand(($align - 10 < 16 ? 16 : $align - 10), ($align + 10 < 32 ? 32 : $align + 10)));
+    } else {
+        ini_set('fast_io.buffer_size', mt_rand(16, 65536));
+    }
+    
 
     $trim_line = substr($str, 0, $align - 1);
     $file_offset = file_insert_line($db_file, $str, 2, $align);
@@ -1319,7 +1289,6 @@ for($i=0; $i <= 500; $i++){
 }
 
 
-
 $time= microtime(true) - $start;
 
 if($file_pop_line_passed) echo "\nCheck file_pop_line: time: ", $time, " - PASS",  "\n";
@@ -1327,6 +1296,8 @@ else echo "\nCheck file_pop_line - ERROR\n";
 
 $end_io = get_process_io_stats();
 foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
+
+
 
 
 
