@@ -1221,6 +1221,11 @@ for($ii = 0; $ii < 100; $ii++){
 }
 
 
+
+$time= microtime(true) - $start;
+$end_io = get_process_io_stats();
+
+
 $str = '';
 for($i=1; $i<= 32; $i++){
     $str .= 'S';
@@ -1239,18 +1244,17 @@ for($i=1; $i<= 32; $i++){
         $file_pop_line_passed = false;
         break;
     }
-
-    unlink($db_file);
 }
 
-
-$time= microtime(true) - $start;
 
 if($file_pop_line_passed) echo "\nCheck file_pop_line: time: ", $time, " - PASS",  "\n";
 else echo "\nCheck file_pop_line - ERROR\n";
 
-$end_io = get_process_io_stats();
 foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
+
+
+
+
 
 
 
