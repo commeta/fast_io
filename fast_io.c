@@ -1637,7 +1637,6 @@ PHP_FUNCTION(file_pop_line) {
 
     // Получаем текущее смещение в файле данных
     zend_long file_size = ftell(fp);
-
     zend_long pos = file_size;
     ssize_t bytes_read;
 
@@ -1797,12 +1796,6 @@ PHP_FUNCTION(file_pop_line) {
             }
 
             if (pos - ini_buffer_size < 0) {
-                if(first_block_size > 0){
-                    efree(dynamic_buffer);
-                    fclose(fp);
-                    RETURN_FALSE;
-                }
-
                 first_block_size = pos;
                 dynamic_buffer_size += first_block_size;
             } else {
@@ -3545,3 +3538,4 @@ PHP_FUNCTION(file_callback_line) {
 
     RETURN_STRING(found_value);
 }
+
