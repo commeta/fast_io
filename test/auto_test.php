@@ -144,7 +144,6 @@ error_reporting(E_ALL);
 $db_file = __DIR__ . '/fast_io.dat';
 
 
-
 // #########################
 // Check file_insert_line
 $file_insert_line_passed = true;
@@ -1311,12 +1310,9 @@ for($i=0; $i <= 500; $i++){
     $trim_line = substr($str, 0, $align - 1);
     $file_offset = file_insert_line($db_file, $str, 2, $align);
    
-    $file_last_str = file_pop_line($db_file, $align, $mode);
+    $file_last_str = file_pop_line($db_file, $align, 2);
     
-    if(
-        ($mode == 2 && $file_last_str !== $trim_line) ||
-        ($mode == 3 && trim($file_last_str) !== $trim_line) 
-    ){
+    if($file_last_str !== $trim_line){
         $file_pop_line_passed = false;
         break;
     } 
@@ -1331,8 +1327,6 @@ else echo "\nCheck file_pop_line - ERROR\n";
 
 $end_io = get_process_io_stats();
 foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
-
-
 
 
 
