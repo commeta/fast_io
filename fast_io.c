@@ -1749,7 +1749,7 @@ PHP_FUNCTION(file_pop_line) {
                     char *line_start;
                     zend_long line_length = 0;
 
-                    if(first_block_size > 0){
+                    if(first_block_size > 0 && file_size > ini_buffer_size){
                         line_start = dynamic_buffer;
                         dynamic_buffer[dynamic_buffer_size] = '\0';
                         line_length = dynamic_buffer_size;
