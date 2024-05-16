@@ -1283,9 +1283,6 @@ for($i=0; $i <= 500; $i++){
     $file_last_str = file_pop_line($db_file, $align, 2);
     
     if($file_last_str !== $trim_line){
-
-        print_r([$align, $c, $i]);
-
         $file_pop_line_passed = false;
         break;
     } 
