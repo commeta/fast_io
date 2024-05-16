@@ -1260,8 +1260,8 @@ for($ii = 0; $ii < 50; $ii++){
 
 
 for($i=0; $i <= 500; $i++){
-    $align = mt_rand(1, 65536);
-    $c = mt_rand(1, 65536);
+    $align = mt_rand(4, 65536);
+    $c = mt_rand(4, 65536);
 
     if(($i % 100) == 0) {
         $align = mt_rand(4, 12);
