@@ -1111,6 +1111,7 @@ foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($tim
 $file_pop_line_passed = true;
 $start= microtime(true);
 $start_io = get_process_io_stats();
+$utf8_random_str = generate_utf8_random($align);
 
 
 for($ii = 0; $ii < 50; $ii++){
@@ -1257,7 +1258,6 @@ for($ii = 0; $ii < 50; $ii++){
 }
 
 
-$utf8_random_str = generate_utf8_random(65536);
 
 for($i=0; $i <= 500; $i++){
     $align = mt_rand(1, 65536);
@@ -1283,6 +1283,9 @@ for($i=0; $i <= 500; $i++){
     $file_last_str = file_pop_line($db_file, $align, 2);
     
     if($file_last_str !== $trim_line){
+
+        print_r([$align, $c, $i]);
+
         $file_pop_line_passed = false;
         break;
     } 
