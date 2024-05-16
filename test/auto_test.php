@@ -1270,7 +1270,7 @@ for($i=0; $i <= 500; $i++){
 
     $str = substr($utf8_random_str, 0, $c);
 
-    if(($i % 10) == 0) {
+    if(($i % 50) == 0) {
         ini_set('fast_io.buffer_size', mt_rand(($align - 10 < 16 ? 16 : $align - 10), ($align + 10 < 32 ? 32 : $align + 10)));
     } else {
         ini_set('fast_io.buffer_size', mt_rand(16, 65536));
