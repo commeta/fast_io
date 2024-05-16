@@ -1264,8 +1264,8 @@ for($i=0; $i <= 500; $i++){
     $c = mt_rand(1, 65536);
 
     if(($i % 100) == 0) {
-        $align = mt_rand(3, 10);
-        $c = mt_rand(2, 10);
+        $align = mt_rand(4, 12);
+        $c = mt_rand(4, 12);
     }
 
     $str = substr($utf8_random_str, 0, $c);
