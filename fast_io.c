@@ -1796,13 +1796,13 @@ PHP_FUNCTION(file_pop_line) {
                 }
             }
 
-            if(first_block_size > 0){
-                efree(dynamic_buffer);
-                fclose(fp);
-                RETURN_FALSE;
-            }
-
             if (pos - ini_buffer_size < 0) {
+                if(first_block_size > 0){
+                    efree(dynamic_buffer);
+                    fclose(fp);
+                    RETURN_FALSE;
+                }
+
                 first_block_size = pos;
                 dynamic_buffer_size += first_block_size;
             } else {
