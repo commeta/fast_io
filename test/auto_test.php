@@ -1227,7 +1227,7 @@ for($i=1; $i<= 32; $i++){
 
     ini_set('fast_io.buffer_size', mt_rand(16, 32));
     
-    $file_offset = file_insert_line($db_file, $str);
+    file_insert_line($db_file, $str);
     $file_last_str = file_pop_line($db_file);
     
     if($file_last_str !== $str){       
