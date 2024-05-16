@@ -65,6 +65,7 @@ PHP_MSHUTDOWN_FUNCTION(fast_io)
 }
 
 
+
 /* Декларация функций */
 PHP_FUNCTION(file_search_array);
 PHP_FUNCTION(file_search_line);
@@ -1723,10 +1724,12 @@ PHP_FUNCTION(file_pop_line) {
                 bytes_read = fread(dynamic_buffer, 1, ini_buffer_size, fp);
 
                 if(bytes_read != ini_buffer_size){
-                    efree(dynamic_buffer);
-                    fclose(fp);
-                    php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
-                    RETURN_FALSE;
+                    if(bytes_read != file_size) {
+                        efree(dynamic_buffer);
+                        fclose(fp);
+                        php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
+                        RETURN_FALSE;
+                    }
                 }
             }
 
@@ -1752,10 +1755,6 @@ PHP_FUNCTION(file_pop_line) {
                             line_start = dynamic_buffer;
                             if(pos == 0) line_length = current_size;
                             else line_length = current_size - 1;
-
-
-
-
                         } else {
                             line_start = dynamic_buffer + i;
                             line_length = current_size - i - 1;
