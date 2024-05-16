@@ -1745,7 +1745,7 @@ PHP_FUNCTION(file_pop_line) {
                     offset++;
                 }
                 
-                if(offset == 0 || (i == 0 && pos == 0) || first_block_size > 0){ // Все строки найдены
+                if(offset == 0 || (i == 0 && pos == 0)){ // Все строки найдены
                     char *line_start;
                     zend_long line_length = 0;
 
