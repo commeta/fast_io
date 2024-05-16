@@ -1229,8 +1229,13 @@ for($i=1; $i<= 32; $i++){
     
     file_insert_line($db_file, $str);
     $file_last_str = file_pop_line($db_file);
+
+    clearstatcache();
     
-    if($file_last_str !== $str){       
+    if(
+        $file_last_str !== $str ||
+        filesize($db_file) !== 0
+    ){       
         $file_pop_line_passed = false;
         break;
     }
