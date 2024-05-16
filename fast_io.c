@@ -1708,6 +1708,8 @@ PHP_FUNCTION(file_pop_line) {
 
         offset--;
 
+        if(file_size < ini_buffer_size) first_block_size = file_size;
+
         while(pos >= 0){
             if (first_block_size > 0) {
                 fseek(fp, 0, SEEK_SET); // Перемещаем указатель на предыдущую порцию
@@ -1724,12 +1726,10 @@ PHP_FUNCTION(file_pop_line) {
                 bytes_read = fread(dynamic_buffer, 1, ini_buffer_size, fp);
 
                 if(bytes_read != ini_buffer_size){
-                    if(bytes_read != file_size) {
-                        efree(dynamic_buffer);
-                        fclose(fp);
-                        php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
-                        RETURN_FALSE;
-                    }
+                    efree(dynamic_buffer);
+                    fclose(fp);
+                    php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
+                    RETURN_FALSE;
                 }
             }
 
@@ -3536,3 +3536,5 @@ PHP_FUNCTION(file_callback_line) {
 
     RETURN_STRING(found_value);
 }
+
+
