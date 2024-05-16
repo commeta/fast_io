@@ -1708,7 +1708,10 @@ PHP_FUNCTION(file_pop_line) {
 
         offset--;
 
-        if(file_size < ini_buffer_size) first_block_size = file_size;
+        if(file_size < ini_buffer_size) {
+            first_block_size = file_size;
+            dynamic_buffer_size = file_size;
+        }
 
         while(pos >= 0){
             if (first_block_size > 0) {
@@ -3536,5 +3539,3 @@ PHP_FUNCTION(file_callback_line) {
 
     RETURN_STRING(found_value);
 }
-
-
