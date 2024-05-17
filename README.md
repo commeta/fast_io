@@ -415,3 +415,152 @@ Now that you have installed the Fast_IO extension, you can begin optimizing your
 We hope this guide has been helpful in setting up the Fast_IO extension for PHP 8. For further assistance or more detailed examples, please consult the individual function documentation pages.
 
 Happy coding!
+
+
+## Principles of LIFO Stack
+
+A LIFO (Last In, First Out) stack is a data structure where the last added element is the first one to be removed. The main operations on a stack include:
+- push: adding an element to the end of the stack.
+- pop: removing and retrieving the last added element.
+
+### Example of Using a LIFO Stack
+
+// Adding a line to the file (simulating push)
+file_insert_line('stack.data', "new line");
+
+// Retrieving the last line from the file (pop)
+$lastLine = file_pop_line('stack.data');
+echo "Retrieved line: " . $lastLine;
+
+
+## Applications of LIFO Stack
+The LIFO stack is widely used in various fields:
+- Algorithms: recursive algorithms, Reverse Polish Notation (RPN).
+- Parsers: syntax analyzers for expressions.
+- Memory management systems: managing the function call stack.
+- Browser history: navigating back/forward.
+
+### Inter-Process Communication (IPC)
+
+For inter-process communication (IPC), a file can be used as a shared resource accessible by multiple processes. Each process can add lines to the file (push) or retrieve lines from the file (pop).
+
+Inter-process communication (IPC) in the context of PHP and the file system represents a method of data exchange between processes running on one or multiple machines. In PHP, despite the lack of built-in IPC mechanisms, various approaches can be used to implement interaction between processes. One such approach is using the file system as an intermediary for data transfer.
+
+
+### Key Concepts of IPC in PHP
+
+1. **File System as a Shared Resource**: Files can serve as a shared resource for multiple processes. Processes can read from and write to files, allowing them to exchange information.
+
+2. **Access Synchronization**: To prevent data races and ensure data integrity, access to files needs to be synchronized. This can be achieved using file locking.
+
+3. **Buffering and Caching**: It is important to consider the levels of caching and buffering provided by the operating system to ensure correct and efficient interaction between processes.
+
+### Linux Kernel Caching Levels
+
+1. **I/O Buffering**: Linux uses buffering to reduce the number of direct I/O operations. Data is first written to memory buffers and then asynchronously written to disk.
+
+2. **Page Cache**: This mechanism caches the contents of files in RAM to speed up access. When reading a file, data is first searched in the page cache, avoiding slow disk read operations.
+
+3. **Filesystem Journaling**: Some file systems, like ext4, use journaling to ensure data integrity. Journaling helps restore the filesystem state after failures.
+
+### Implementing a LIFO Stack and the file_pop_line Function
+
+To implement a LIFO stack using the file system, a file can be used as a container for stack data. The file_pop_line function allows extracting the last line from the file and deleting it, corresponding to the pop operation in a LIFO stack.
+
+#### Technological Aspects:
+
+1. **Writing Data (Push)**:
+   - A process adds a line to the end of the file.
+   - The file_insert_line function is used, automatically adding a newline character.
+   - File locking (flock) is used to prevent data races.
+
+2. **Extracting Data (Pop)**:
+   - The file_pop_line function opens the file and reads its contents.
+   - The last line is extracted and removed from the file.
+   - Buffering may be used for reading efficiency.
+   - After extracting the line, the file is truncated by the size of the last line.
+   - File locking can also be used to prevent simultaneous access.
+
+3. **Synchronization and Atomicity**:
+   - File locking (flock) ensures atomicity of write and read operations.
+   - It is important to handle lock errors correctly and retry if necessary.
+
+4. **Caching and Buffering**:
+   - When writing data to a file, the operating system uses buffers for temporarily storing data before writing it to disk.
+   - Reading data first occurs from the page cache, speeding up access.
+
+### Advantages and Disadvantages of the Approach
+
+Advantages:
+- Simplicity of Implementation: Using the file system does not require additional libraries or extensions.
+- Portability: The solution works on all UNIX-like systems that support PHP and the file system.
+
+Disadvantages:
+- Performance: Disk I/O operations can be slow compared to other IPC methods (e.g., sockets or shared memory).
+- Synchronization Complexity: Careful handling of locks is required to prevent data races.
+
+## Optimization at All Levels of Caching
+
+### Linux Kernel-Level Caching
+Using system calls allows efficient file operations by leveraging Linux kernel-level caching. This ensures high performance when working with files.
+
+### Buffering
+The function uses buffering to read the file in blocks, reducing the number of system calls and increasing performance. Buffering also helps minimize memory usage.
+
+### Memory Optimization
+Using dynamic memory allocation allows efficient memory management and avoids excessive resource consumption.
+
+## Performance of the LIFO Stack Function
+
+The file_pop_line function is optimized to work with files of any size. The use of buffering and efficient memory management ensures high-speed execution of operations.
+
+## System Advantages
+- Low Memory Consumption: Thanks to dynamic memory allocation.
+- High Performance: Due to kernel-level caching and buffering.
+- Flexibility: Ability to work with files of any size.
+- Reliability: Error handling and protection against memory leaks.
+
+## Example Implementation of a Worker Logic for Loading URLs
+
+A software worker is a process that performs a specific task, such as processing data from a LIFO stack. In this case, the worker will extract URLs from the stack, download content from these URLs, and perform complex analysis or parsing of the content.
+
+The example is inspired by the queue_address_manager function in the project [php cron requests events](https://github.com/commeta/php-cron-requests-events), file cron.php.
+
+
+### Worker Logic:
+
+1. Initialization: The worker starts up and prepares for operation.
+2. Processing Loop:
+   - The worker calls the file_pop_line function to extract the last URL from the file.
+   - If a URL is successfully extracted, the worker downloads the content from that URL.
+   - After downloading the content, the worker performs analysis or parsing of the content.
+   - The worker repeats the cycle as long as there are URLs left in the file for processing.
+
+### Cooperative Work of Multiple Parallel Processes with a LIFO Queue
+
+#### Scenario:
+
+1. Queue Creation Process:
+   - One process (process_id: 1) creates a long queue of URLs for downloading.
+   - The process adds many lines to the end of the file, each containing a URL.
+
+2. Processing Processes:
+   - Several processes (process_id: 2, 3, 4, 5) work in parallel.
+   - Each process in a loop calls the file_pop_line function to extract the last element of the stack.
+   - The process downloads the content from the extracted URL.
+   - The process performs complex analysis or parsing of the content.
+   - Thus, the work is distributed across multiple CPU cores (for CPU-BOUND tasks) or queued with long wait cycles for data download (IO-BOUND).
+
+#### Important Aspects:
+
+1. Access Synchronization:
+   - Each process uses file locking (flock) when calling the file_pop_line function to avoid simultaneous access to the file by multiple processes.
+   - The lock is released after completing the read operation and deleting the line from the file.
+
+2. Atomicity of Operations:
+   - The operations of reading and deleting a line from the file must be atomic to avoid data races.
+   - This is achieved through the use of locks and proper error handling.
+
+3. Efficiency:
+   - Using multiple processes allows efficient load distribution across multiple CPU cores.
+   - Buffering and operating system caching speed up read and write operations.
