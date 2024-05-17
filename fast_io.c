@@ -1604,6 +1604,7 @@ PHP_FUNCTION(file_defrag_data) {
 
 
 
+
 /* Функция для извлечения и удаления последней строки из файла */
 PHP_FUNCTION(file_pop_line) {
     char *filename;
@@ -1704,6 +1705,9 @@ PHP_FUNCTION(file_pop_line) {
 
         zend_long current_size = 0; // Текущий размер данных в динамическом буфере
         zend_long first_block_size = 0;
+        
+        char *line_start;
+        zend_long line_length;
 
         offset--;
 
@@ -1712,7 +1716,7 @@ PHP_FUNCTION(file_pop_line) {
             dynamic_buffer_size = file_size;
         }
 
-        while(pos >= 0){
+        while(pos > 0){
             if (first_block_size > 0) {
                 fseek(fp, 0, SEEK_SET); // Перемещаем указатель на предыдущую порцию
                 bytes_read = fread(dynamic_buffer, 1, first_block_size, fp);
@@ -1742,55 +1746,24 @@ PHP_FUNCTION(file_pop_line) {
             for (ssize_t i = bytes_read - 1; i >= 0; --i) {
                 if (dynamic_buffer[i] == '\n') {
                     offset++;
-                }
-                
-                if(offset == 0 || (i == 0 && pos == 0)){ // Все строки найдены
-                    char *line_start;
-                    zend_long line_length = 0;
 
-                    if(i == 0){
-                        line_start = dynamic_buffer;
-
-                        if(pos == 0) {
-                            line_length = current_size;
-                        } else {
-                            line_start = dynamic_buffer + 1;
-                            line_length = current_size - 1;
-                        }
-                    } else {
+                    if(offset == 0){ // Все строки найдены
                         line_start = dynamic_buffer + i + 1;
                         line_length = current_size - i - 1;
+
+                        goto line_found;
                     }
-
-                    dynamic_buffer[current_size] = '\0';
-                    ssize_t new_file_size = file_size - line_length;
-                    if(new_file_size < 0) new_file_size = 0;
-
-                    if(mode < 1 || mode == 2){
-                        // Обрезка пробелов справа и символа перевода строки
-                        for (int i = dynamic_buffer_size - 1; i >= 0; --i) {
-                            if(dynamic_buffer[i] == ' ' || dynamic_buffer[i] == '\n') dynamic_buffer[i] = '\0';
-                            else break;
-                        }
-                    }
-
-                    if(mode < 2){
-                        // Усекаем файл
-                        if(ftruncate(fileno(fp), new_file_size) < 0) {
-                            efree(dynamic_buffer);
-                            fclose(fp);
-                            php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
-                            RETURN_FALSE;
-                        }
-                    }
-
-                    RETVAL_STRING(line_start);
-                    
-                    fclose(fp);
-                    efree(dynamic_buffer);
-                    return;
                 }
             }
+
+
+            if(pos == 0){ // Все строки найдены
+                line_start = dynamic_buffer;
+                line_length = current_size;
+
+                goto line_found;
+            }
+
 
             if (pos - ini_buffer_size < 0) {
                 first_block_size = pos;
@@ -1813,6 +1786,39 @@ PHP_FUNCTION(file_pop_line) {
         }
 
         efree(dynamic_buffer);
+        fclose(fp);
+        RETURN_FALSE;
+
+
+line_found:
+
+        dynamic_buffer[current_size] = '\0';
+        ssize_t new_file_size = file_size - line_length;
+        if(new_file_size < 0) new_file_size = 0;
+
+        if(mode < 1 || mode == 2){
+            // Обрезка пробелов справа и символа перевода строки
+            for (int i = dynamic_buffer_size - 1; i >= 0; --i) {
+                if(dynamic_buffer[i] == ' ' || dynamic_buffer[i] == '\n') dynamic_buffer[i] = '\0';
+                else break;
+            }
+        }
+
+        if(mode < 2){
+            // Усекаем файл
+            if(ftruncate(fileno(fp), new_file_size) < 0) {
+                efree(dynamic_buffer);
+                fclose(fp);
+                php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
+                RETURN_FALSE;
+            }
+        }
+
+        RETVAL_STRING(line_start);
+                    
+        fclose(fp);
+        efree(dynamic_buffer);
+        return;
     }
 
     fclose(fp);
@@ -3535,4 +3541,6 @@ PHP_FUNCTION(file_callback_line) {
 
     RETURN_STRING(found_value);
 }
+
+
 
