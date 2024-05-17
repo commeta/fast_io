@@ -136,7 +136,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_pop_line, 1, 1, IS_STRING, 
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
-    ZEND_ARG_TYPE_INFO(0, param, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, end, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_erase_line, 1, 2, IS_LONG, 0)
@@ -1611,10 +1611,10 @@ PHP_FUNCTION(file_pop_line) {
     char *filename;
     size_t filename_len;
     zend_long offset = -1; // Значение по умолчанию для необязательного аргумента
-    zend_long param = 0;
     zend_long mode = 0;
+    zend_long end = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lll", &filename, &filename_len, &offset, &mode, &param) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lll", &filename, &filename_len, &offset, &mode, &end) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1711,7 +1711,7 @@ PHP_FUNCTION(file_pop_line) {
         char *line_start;
         zend_long line_length;
 
-        if(param < 0) pos -= ~param + 1;
+        if(end > 0) pos -= end;
 
         offset--;
 
@@ -1798,7 +1798,7 @@ line_found:
 
         dynamic_buffer[current_size] = '\0';
         ssize_t new_file_size = file_size - line_length;
-        if(param < 0) new_file_size -= ~param + 1;
+        if(end > 0) new_file_size -= end;
         if(new_file_size < 0) new_file_size = 0;
 
         if(mode < 1 || mode == 2){
