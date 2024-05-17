@@ -1068,8 +1068,6 @@ foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($tim
 
 
 
-
-
 // #########################
 // Check file_pop_line
 $file_pop_line_passed = true;
@@ -1222,38 +1220,52 @@ for($ii = 0; $ii < 100; $ii++){
 
 
 
-$time= microtime(true) - $start;
-$end_io = get_process_io_stats();
+for($ii=16; $ii<=34; $ii++){
+    ini_set('fast_io.buffer_size', $ii);
 
+    $str = '';
+    for($i=1; $i<= 32; $i++){
+        $str .= strval($i);
+        
+        file_insert_line($db_file, $str);
+        $file_last_str = file_pop_line($db_file);
 
-$str = '';
-for($i=1; $i<= 32; $i++){
-    $str .= 'S';
-
-    ini_set('fast_io.buffer_size', mt_rand(16, 32));
-    
-    file_insert_line($db_file, $str);
-    $file_last_str = file_pop_line($db_file);
-
-    clearstatcache();
-    
-    if(
-        $file_last_str !== $str ||
-        filesize($db_file) !== 0
-    ){       
-        $file_pop_line_passed = false;
-        break;
+        clearstatcache();
+        
+        if(
+            $file_last_str !== $str ||
+            filesize($db_file) !== 0
+        ){       
+            $file_pop_line_passed = false;
+            break;
+        }
     }
+
+    unlink($db_file);
+    $str = '';
+    for($i=1; $i<= 32; $i++){
+        $str .= strval($i);
+        
+        file_insert_line($db_file, $str);
+        $file_last_str = file_pop_line($db_file, -1, 2);
+        
+        if(
+            $file_last_str !== $str
+        ){       
+            $file_pop_line_passed = false;
+            break;
+        }
+    }
+    unlink($db_file);
 }
 
 
+$time= microtime(true) - $start;
 if($file_pop_line_passed) echo "\nCheck file_pop_line: time: ", $time, " - PASS",  "\n";
 else echo "\nCheck file_pop_line - ERROR\n";
 
+$end_io = get_process_io_stats();
 foreach($end_io as $p=>$v)  echo $p, ': ', $v - $start_io[$p], ' (', mb_sec($time, $v - $start_io[$p], $p), ")\n";
-
-
-
 
 
 
