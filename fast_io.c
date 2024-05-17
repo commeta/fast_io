@@ -1711,9 +1711,7 @@ PHP_FUNCTION(file_pop_line) {
         char *line_start;
         zend_long line_length;
 
-        if(mode > 1 && param < 0){
-            pos -= ~param + 1;
-        }
+        if(param < 0) pos -= ~param + 1;
 
         offset--;
 
@@ -1800,6 +1798,7 @@ line_found:
 
         dynamic_buffer[current_size] = '\0';
         ssize_t new_file_size = file_size - line_length;
+        if(param < 0) new_file_size -= ~param + 1;
         if(new_file_size < 0) new_file_size = 0;
 
         if(mode < 1 || mode == 2){
@@ -3547,4 +3546,3 @@ PHP_FUNCTION(file_callback_line) {
 
     RETURN_STRING(found_value);
 }
-
