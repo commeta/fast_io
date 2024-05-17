@@ -1823,8 +1823,11 @@ line_found:
             }
         }
 
+        RETVAL_STRING(line_start);
+                        
         fclose(fp);
-        RETURN_STRING(line_start);
+        efree(dynamic_buffer);
+        return;
     }
 
     fclose(fp);
@@ -3547,3 +3550,4 @@ PHP_FUNCTION(file_callback_line) {
 
     RETURN_STRING(found_value);
 }
+
