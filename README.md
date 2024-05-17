@@ -424,14 +424,14 @@ A LIFO (Last In, First Out) stack is a data structure where the last added eleme
 - pop: removing and retrieving the last added element.
 
 ### Example of Using a LIFO Stack
-
+```
 // Adding a line to the file (simulating push)
 file_insert_line('stack.data', "new line");
 
 // Retrieving the last line from the file (pop)
 $lastLine = file_pop_line('stack.data');
 echo "Retrieved line: " . $lastLine;
-
+```
 
 ## Applications of LIFO Stack
 The LIFO stack is widely used in various fields:
