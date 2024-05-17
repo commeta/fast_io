@@ -1748,25 +1748,22 @@ PHP_FUNCTION(file_pop_line) {
                     char *line_start;
                     zend_long line_length = 0;
 
-                    if(first_block_size > 0 && file_size > ini_buffer_size){
+                    if(i == 0){
                         line_start = dynamic_buffer;
-                        dynamic_buffer[dynamic_buffer_size] = '\0';
-                        line_length = dynamic_buffer_size;
-                    } else {
-                        if(i == 0){
-                            line_start = dynamic_buffer;
-                            if(pos == 0) line_length = current_size;
-                            else line_length = current_size - 1;
-                        } else {
-                            line_start = dynamic_buffer + i;
-                            line_length = current_size - i - 1;
-                        }
 
-                        dynamic_buffer[current_size] = '\0';
+                        if(pos == 0) {
+                            line_length = current_size;
+                        } else {
+                            line_start = dynamic_buffer + 1;
+                            line_length = current_size - 1;
+                        }
+                    } else {
+                        line_start = dynamic_buffer + i + 1;
+                        line_length = current_size - i - 1;
                     }
 
+                    dynamic_buffer[current_size] = '\0';
                     ssize_t new_file_size = file_size - line_length;
-
                     if(new_file_size < 0) new_file_size = 0;
 
                     if(mode < 1 || mode == 2){
@@ -1795,7 +1792,7 @@ PHP_FUNCTION(file_pop_line) {
                 }
             }
 
-            if (pos - ini_buffer_size < 0) {
+            if (pos - ini_buffer_size <= 0) {
                 first_block_size = pos;
                 dynamic_buffer_size += first_block_size;
             } else {
@@ -3538,4 +3535,3 @@ PHP_FUNCTION(file_callback_line) {
 
     RETURN_STRING(found_value);
 }
-
