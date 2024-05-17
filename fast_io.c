@@ -287,7 +287,7 @@ PHP_FUNCTION(file_search_array) {
 
     // Попытка установить блокирующую блокировку на запись
     if(mode < 100){
-        if (flock(fileno(fp), LOCK_EX) < 0) {
+        if (flock(fileno(fp), LOCK_EX) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
             fclose(fp);
             RETURN_FALSE;
@@ -512,7 +512,7 @@ PHP_FUNCTION(file_search_array) {
 
                     if (rc == PCRE2_ERROR_NOMATCH) {
                         /* Если совпадений нет, возвращаем пустой массив. */
-                    } else if (rc < 0) {
+                    } else if (rc == -1) {
                         /* Обработка других ошибок. */
                         php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
                         fclose(fp);
@@ -627,7 +627,7 @@ PHP_FUNCTION(file_search_line) {
 
     // Попытка установить блокирующую блокировку на запись
     if(mode < 100){
-        if (flock(fileno(fp), LOCK_EX) < 0) {
+        if (flock(fileno(fp), LOCK_EX) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
             fclose(fp);
             RETURN_FALSE;
@@ -927,7 +927,7 @@ PHP_FUNCTION(file_search_data) {
     efree(found_value);
 
     if (size > 0) {
-        if (fseek(data_fp, position, SEEK_SET) < 0) {
+        if (fseek(data_fp, position, SEEK_SET) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
             fclose(data_fp);
             RETURN_FALSE;
@@ -1016,7 +1016,7 @@ PHP_FUNCTION(file_push_data) {
 
     if (fwrite(line_value, 1, line_value_len, data_fp) != line_value_len) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
-        if(ftruncate(fileno(data_fp), position) < 0) {
+        if(ftruncate(fileno(data_fp), position) == -1) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
             fclose(data_fp);
             fclose(index_fp);
@@ -1036,13 +1036,13 @@ PHP_FUNCTION(file_push_data) {
     if(fprintf(index_fp, "%s %ld:%zu\n", line_key, position, line_value_len) < line_key_len + 5){
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", index_filename);
 
-        if(ftruncate(fileno(index_fp), file_size) < 0) {
+        if(ftruncate(fileno(index_fp), file_size) == -1) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", index_filename);
             fclose(data_fp);
             fclose(index_fp);
             exit(EXIT_FAILURE);
         }
-        if(ftruncate(fileno(data_fp), position) < 0) {
+        if(ftruncate(fileno(data_fp), position) == -1) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", index_filename);
             fclose(data_fp);
             fclose(index_fp);
@@ -1091,7 +1091,7 @@ PHP_FUNCTION(file_defrag_lines) {
 
 
     if(mode < 100){
-        if (flock(fileno(data_fp), LOCK_EX) < 0) {
+        if (flock(fileno(data_fp), LOCK_EX) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to lock the file: %s", filename);
             fclose(data_fp);
             fclose(temp_fp);
@@ -1212,7 +1212,7 @@ PHP_FUNCTION(file_defrag_lines) {
         }
 
         // Усекаем файл
-        if (ftruncate(fileno(data_fp), current_size) < 0) {
+        if (ftruncate(fileno(data_fp), current_size) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
             fclose(data_fp);
             efree(dynamic_buffer);
@@ -1535,7 +1535,7 @@ PHP_FUNCTION(file_defrag_data) {
         }
 
         // Усекаем файл
-        if (ftruncate(fileno(data_fp), current_size) < 0) {
+        if (ftruncate(fileno(data_fp), current_size) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
             fclose(index_fp);
             fclose(data_fp);
@@ -1566,7 +1566,7 @@ PHP_FUNCTION(file_defrag_data) {
             current_size += bytes_write;
         }
         
-        if (ftruncate(fileno(index_fp), current_size) < 0) {
+        if (ftruncate(fileno(index_fp), current_size) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", index_filename);
             fclose(index_fp);
             fclose(data_fp);
@@ -1676,7 +1676,7 @@ PHP_FUNCTION(file_pop_line) {
 
         if(mode < 2){
             // Усекаем файл
-            if(ftruncate(fileno(fp), pos) < 0) {
+            if(ftruncate(fileno(fp), pos) == -1) {
                 efree(buffer);
                 fclose(fp);
                 php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
@@ -1745,8 +1745,6 @@ PHP_FUNCTION(file_pop_line) {
 
             pos -= bytes_read;
             current_size += bytes_read;
-
-
             ssize_t i = bytes_read - 1;
 
             while(i >= 0){
@@ -1815,7 +1813,7 @@ line_found:
 
         if(mode < 2){
             // Усекаем файл
-            if(ftruncate(fileno(fp), new_file_size) < 0) {
+            if(ftruncate(fileno(fp), new_file_size) == -1) {
                 efree(dynamic_buffer);
                 fclose(fp);
                 php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
@@ -1823,9 +1821,8 @@ line_found:
             }
         }
 
-        RETVAL_STRING(line_start);
-                        
         fclose(fp);
+        RETURN_STRING(line_start);
         efree(dynamic_buffer);
         return;
     }
@@ -1857,7 +1854,7 @@ PHP_FUNCTION(file_erase_line) {
 
     if(mode < 100){
         // Попытка установить блокирующую блокировку на запись
-        if (flock(fileno(fp), LOCK_EX) < 0) {
+        if (flock(fileno(fp), LOCK_EX) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
             fclose(fp);
             RETURN_LONG(-2);
@@ -2001,7 +1998,7 @@ PHP_FUNCTION(file_get_keys) {
 
     if(mode < 100){
         // Попытка установить блокирующую блокировку на запись
-        if (flock(fileno(fp), LOCK_EX) < 0) {
+        if (flock(fileno(fp), LOCK_EX) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
             fclose(fp);
             RETURN_FALSE;
@@ -2320,7 +2317,7 @@ PHP_FUNCTION(file_replace_line) {
         }
 
         // Усекаем файл
-        if (ftruncate(fileno(data_fp), current_size) < 0) {
+        if (ftruncate(fileno(data_fp), current_size) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to truncate file: %s", filename);
             efree(dynamic_buffer);
             fclose(data_fp);
@@ -2403,7 +2400,7 @@ PHP_FUNCTION(file_insert_line) {
     if (written != line_length) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
 
-        if(ftruncate(fileno(fp), file_size) < 0) {
+        if(ftruncate(fileno(fp), file_size) == -1) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
             efree(buffer);
             fclose(fp);
@@ -2445,7 +2442,7 @@ PHP_FUNCTION(file_select_line) {
 
     // Попытка установить блокирующую блокировку на запись
     if(mode < 100){
-        if (flock(fileno(fp), LOCK_EX) < 0) {
+        if (flock(fileno(fp), LOCK_EX) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
             fclose(fp);
             RETURN_FALSE;
@@ -2464,7 +2461,7 @@ PHP_FUNCTION(file_select_line) {
     fseek(fp, 0, SEEK_END);
     zend_long file_size = ftell(fp);
 
-    if(position > file_size || fseek(fp, position , SEEK_SET) < 0){
+    if(position > file_size || fseek(fp, position , SEEK_SET) == -1){
         php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
         fclose(fp);
         RETURN_FALSE;
@@ -2532,7 +2529,7 @@ PHP_FUNCTION(file_update_line) {
 
     // Попытка установить блокирующую блокировку на запись
     if(mode < 100){
-        if (flock(fileno(fp), LOCK_EX) < 0) {
+        if (flock(fileno(fp), LOCK_EX) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
             fclose(fp);
             RETURN_LONG(-2);
@@ -2600,7 +2597,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
 
     // Попытка установить блокирующую блокировку на запись
     if(mode < 100){
-        if (flock(fileno(fp), LOCK_EX) < 0) {
+        if (flock(fileno(fp), LOCK_EX) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
             fclose(fp);
             RETURN_LONG(-2);
@@ -2763,7 +2760,7 @@ PHP_FUNCTION(find_matches_pcre2) {
 
     if (rc == PCRE2_ERROR_NOMATCH) {
         /* Если совпадений нет, возвращаем пустой массив. */
-    } else if (rc < 0) {
+    } else if (rc == -1) {
         /* Обработка других ошибок. */
         php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
         if (re != NULL) pcre2_code_free(re);
@@ -2958,7 +2955,7 @@ PHP_FUNCTION(file_select_array) {
 
     // Попытка установить блокирующую блокировку на запись
     if(mode < 100){
-        if (flock(fileno(fp), LOCK_EX) < 0) {
+        if (flock(fileno(fp), LOCK_EX) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
             fclose(fp);
             RETURN_FALSE;
@@ -3199,7 +3196,7 @@ PHP_FUNCTION(file_select_array) {
                         if (rc == PCRE2_ERROR_NOMATCH) {
                             /* Если совпадений нет, возвращаем пустой массив. */
                             //
-                        } else if (rc < 0) {
+                        } else if (rc == -1) {
                             /* Обработка других ошибок. */
                             php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
                             fclose(fp);
@@ -3283,7 +3280,7 @@ PHP_FUNCTION(file_update_array) {
 
     // Попытка установить блокирующую блокировку на запись
     if(mode < 100){
-        if (flock(fileno(fp), LOCK_EX) < 0) {
+        if (flock(fileno(fp), LOCK_EX) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
             fclose(fp);
             RETURN_LONG(-2);
@@ -3396,7 +3393,7 @@ PHP_FUNCTION(file_callback_line) {
 
     // Попытка установить блокирующую блокировку на запись
     if(mode < 100){
-        if (flock(fileno(fp), LOCK_EX) < 0) {
+        if (flock(fileno(fp), LOCK_EX) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
             fclose(fp);
             RETURN_FALSE;
@@ -3550,4 +3547,3 @@ PHP_FUNCTION(file_callback_line) {
 
     RETURN_STRING(found_value);
 }
-
