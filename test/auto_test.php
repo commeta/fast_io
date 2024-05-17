@@ -1220,7 +1220,7 @@ for($ii = 0; $ii < 100; $ii++){
 
 
 
-for($ii=16; $ii<=34; $ii++){
+for($ii=16; $ii<=64; $ii++){
     ini_set('fast_io.buffer_size', $ii);
 
     $str = '';
