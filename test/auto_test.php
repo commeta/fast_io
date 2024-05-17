@@ -1225,7 +1225,7 @@ for($ii=16; $ii<=64; $ii++){
 
     $str = '';
     for($i=1; $i<= 32; $i++){
-        $str .= strval($i);
+        $str = str_pad('', $i, substr(strval($i), 0, 1));
         
         file_insert_line($db_file, $str);
         $file_last_str = file_pop_line($db_file);
@@ -1244,7 +1244,7 @@ for($ii=16; $ii<=64; $ii++){
     unlink($db_file);
     $str = '';
     for($i=1; $i<= 32; $i++){
-        $str .= strval($i);
+        $str = str_pad('', $i, substr(strval($i), 0, 1));
         
         file_insert_line($db_file, $str);
         $file_last_str = file_pop_line($db_file, -1, 2);
@@ -1258,6 +1258,7 @@ for($ii=16; $ii<=64; $ii++){
     }
     unlink($db_file);
 }
+
 
 
 $time= microtime(true) - $start;
