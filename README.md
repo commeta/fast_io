@@ -595,16 +595,3 @@ The example is inspired by the queue_address_manager function in the project [ph
    - The process performs complex analysis or parsing of the content.
    - Thus, the work is distributed across multiple CPU cores (for CPU-BOUND tasks) or queued with long wait cycles for data download (IO-BOUND).
 
-#### Important Aspects:
-
-1. Access Synchronization:
-   - Each process uses file locking (flock) when calling the file_pop_line function to avoid simultaneous access to the file by multiple processes.
-   - The lock is released after completing the read operation and deleting the line from the file.
-
-2. Atomicity of Operations:
-   - The operations of reading and deleting a line from the file must be atomic to avoid data races.
-   - This is achieved through the use of locks and proper error handling.
-
-3. Efficiency:
-   - Using multiple processes allows efficient load distribution across multiple CPU cores.
-   - Buffering and operating system caching speed up read and write operations.
