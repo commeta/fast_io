@@ -1713,7 +1713,7 @@ PHP_FUNCTION(file_pop_line) {
 
         if(end > 0) pos -= end;
         else offset--;
-        
+
 
         if(file_size < ini_buffer_size) {
             first_block_size = file_size;
@@ -1745,9 +1745,11 @@ PHP_FUNCTION(file_pop_line) {
 
             pos -= bytes_read;
             current_size += bytes_read;
-         
 
-            for (ssize_t i = bytes_read - 1; i >= 0; --i) {
+
+            ssize_t i = bytes_read - 1;
+
+            while(i >= 0){
                 if (dynamic_buffer[i] == '\n') {
                     offset++;
 
@@ -1758,6 +1760,8 @@ PHP_FUNCTION(file_pop_line) {
                         goto line_found;
                     }
                 }
+
+                i--;
             }
 
 
