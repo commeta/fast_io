@@ -1712,8 +1712,8 @@ PHP_FUNCTION(file_pop_line) {
         zend_long line_length;
 
         if(end > 0) pos -= end;
-
-        offset--;
+        else offset--;
+        
 
         if(file_size < ini_buffer_size) {
             first_block_size = file_size;
