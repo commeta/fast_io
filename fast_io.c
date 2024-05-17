@@ -1823,11 +1823,8 @@ line_found:
             }
         }
 
-        RETVAL_STRING(line_start);
-                    
         fclose(fp);
-        efree(dynamic_buffer);
-        return;
+        RETURN_STRING(line_start);
     }
 
     fclose(fp);
