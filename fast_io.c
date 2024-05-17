@@ -136,6 +136,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_pop_line, 1, 1, IS_STRING, 
     ZEND_ARG_TYPE_INFO(0, filename, IS_STRING, 0)
     ZEND_ARG_TYPE_INFO(0, offset, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(0, mode, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, param, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_file_erase_line, 1, 2, IS_LONG, 0)
@@ -1610,9 +1611,10 @@ PHP_FUNCTION(file_pop_line) {
     char *filename;
     size_t filename_len;
     zend_long offset = -1; // Значение по умолчанию для необязательного аргумента
+    zend_long param = 0;
     zend_long mode = 0;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|ll", &filename, &filename_len, &offset, &mode) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lll", &filename, &filename_len, &offset, &mode, &param) == FAILURE) {
         RETURN_FALSE;
     }
 
@@ -1708,6 +1710,10 @@ PHP_FUNCTION(file_pop_line) {
         
         char *line_start;
         zend_long line_length;
+
+        if(mode > 1 && param < 0){
+            pos -= ~param + 1;
+        }
 
         offset--;
 
@@ -3541,6 +3547,4 @@ PHP_FUNCTION(file_callback_line) {
 
     RETURN_STRING(found_value);
 }
-
-
 
