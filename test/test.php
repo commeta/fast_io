@@ -98,9 +98,6 @@ function get_process_io_stats() {
 
 
 
-
-
-
 foreach(glob('fast_io*.dat') as $file) {
 	unlink($file);
 }
@@ -110,6 +107,7 @@ foreach(glob('fast_io*.index') as $file) {
 foreach(glob('fast_io*.tmp') as $file) {
 	unlink($file);
 }
+
 
 
 $r_total= memory_get_process_usage_kernel();
@@ -211,11 +209,11 @@ print_r([
 
 print_r([
 	'file_search_line',
-	file_search_line(__DIR__ . '/fast_io1.dat', 'index_360'),
-	file_search_line(__DIR__ . '/fast_io1.dat', 'апдейт'),
-	file_search_line(__DIR__ . '/fast_io1.dat', 'index'),
-	file_search_line(__DIR__ . '/fast_io1.dat', '^\\w+_1', 0, 10),
-	file_search_line(__DIR__ . '/fast_io1.dat', '^\\w+_1', 0, 10),
+	file_search_line(__DIR__ . '/fast_io1.dat', 'index_360', 0, 1),
+	file_search_line(__DIR__ . '/fast_io1.dat', 'апдейт', 0, 1),
+	file_search_line(__DIR__ . '/fast_io1.dat', 'index', 0, 1),
+	file_search_line(__DIR__ . '/fast_io1.dat', '^\\w+_1', 0, 11),
+	file_search_line(__DIR__ . '/fast_io1.dat', '^\\w+_1', 0, 11),
 ]);
 
 
