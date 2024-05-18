@@ -326,7 +326,9 @@ PHP_FUNCTION(file_search_array) {
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     if (!dynamic_buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        fclose(fp);
+        RETURN_FALSE;
     }
 
 
@@ -585,7 +587,12 @@ PHP_FUNCTION(file_search_array) {
             dynamic_buffer_size += ini_buffer_size;
             char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!temp_buffer) {
-                zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                fclose(fp);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                if (re != NULL) pcre2_code_free(re);
+                if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
+                RETURN_FALSE;
             }
             dynamic_buffer = temp_buffer;
         }
@@ -656,7 +663,9 @@ PHP_FUNCTION(file_search_line) {
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     if (!dynamic_buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        fclose(fp);
+        RETURN_FALSE;
     }
 
     ssize_t bytes_read;
@@ -702,7 +711,10 @@ PHP_FUNCTION(file_search_line) {
             if(mode == 0 && strstr(line_start, line_key) != NULL){
                 found_value = estrndup(line_start, line_length - 1);
                 if(found_value == NULL){
-                    zend_error(E_ERROR, "Out of memory to allocate %ld bytes", line_length - 1);
+                    php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", line_length - 1);
+                    fclose(fp);
+                    efree(dynamic_buffer);
+                    RETURN_FALSE;
                 }
 
                 found_match = true;
@@ -712,7 +724,12 @@ PHP_FUNCTION(file_search_line) {
             if(mode == 10 && pcre2_match(re, line_start, line_length - 1, 0, 0, match_data, NULL) > 0){
                 found_value = estrndup(line_start, line_length - 1);
                 if(found_value == NULL){
-                    zend_error(E_ERROR, "Out of memory to allocate %ld bytes", line_length - 1);
+                    php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", line_length - 1);
+                    fclose(fp);
+                    efree(dynamic_buffer);
+                    if (re != NULL) pcre2_code_free(re);
+                    if (match_data != NULL) pcre2_match_data_free(match_data);
+                    RETURN_FALSE;
                 }
                 
                 found_match = true;
@@ -731,7 +748,12 @@ PHP_FUNCTION(file_search_line) {
             dynamic_buffer_size += ini_buffer_size;
             char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!temp_buffer) {
-                zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                if (re != NULL) pcre2_code_free(re);
+                if (mode > 9 && match_data != NULL) pcre2_match_data_free(match_data);
+                php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                fclose(fp);
+                RETURN_FALSE;
             }
             dynamic_buffer = temp_buffer;
         }
@@ -831,7 +853,10 @@ PHP_FUNCTION(file_search_data) {
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     if (!dynamic_buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        fclose(data_fp);
+        fclose(index_fp);
+        RETURN_FALSE;
     }
 
     ssize_t bytes_read;
@@ -852,7 +877,11 @@ PHP_FUNCTION(file_search_data) {
             if (strstr(line_start, line_key) != NULL) {
                 found_value = estrdup(line_start + line_key_len + 1);
                 if(found_value == NULL){
-                    zend_error(E_ERROR, "Out of memory to allocate %ld bytes", line_length - line_key_len + 1);
+                    php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", line_length - line_key_len + 1);
+                    fclose(data_fp);
+                    fclose(index_fp);
+                    efree(dynamic_buffer);
+                    RETURN_FALSE;
                 }
                 
                 found_match = true;
@@ -870,7 +899,11 @@ PHP_FUNCTION(file_search_data) {
             dynamic_buffer_size += ini_buffer_size;
             char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!temp_buffer) {
-                zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                fclose(data_fp);
+                fclose(index_fp);
+                RETURN_FALSE;
             }
             dynamic_buffer = temp_buffer;
         }
@@ -905,7 +938,9 @@ PHP_FUNCTION(file_search_data) {
 
         char *data_buffer = emalloc(size + 1);
         if (!data_buffer) {
-            zend_error(E_ERROR, "Out of memory to allocate %ld bytes", size + 1);
+            php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", size + 1);
+            fclose(data_fp);
+            RETURN_FALSE;
         }
 
         bytes_read = fread(data_buffer, 1, size, data_fp);
@@ -986,6 +1021,9 @@ PHP_FUNCTION(file_push_data) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
         if(ftruncate(fileno(data_fp), position) == -1) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
+            fclose(data_fp);
+            fclose(index_fp);
+            exit(EXIT_FAILURE);
         }
 
         fclose(data_fp);
@@ -1003,9 +1041,15 @@ PHP_FUNCTION(file_push_data) {
 
         if(ftruncate(fileno(index_fp), file_size) == -1) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", index_filename);
+            fclose(data_fp);
+            fclose(index_fp);
+            exit(EXIT_FAILURE);
         }
         if(ftruncate(fileno(data_fp), position) == -1) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", index_filename);
+            fclose(data_fp);
+            fclose(index_fp);
+            exit(EXIT_FAILURE);
         }
 
         fclose(data_fp);
@@ -1074,7 +1118,11 @@ PHP_FUNCTION(file_defrag_lines) {
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     if (!dynamic_buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        fclose(data_fp);
+        fclose(temp_fp);
+        unlink(temp_filename);
+        RETURN_LONG(-8);
     }
 
     zend_long found_count = 0;
@@ -1136,7 +1184,12 @@ PHP_FUNCTION(file_defrag_lines) {
 
             char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!temp_buffer) {
-                zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                fclose(data_fp);
+                fclose(temp_fp);
+                unlink(temp_filename);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                RETURN_LONG(-8);
             }
             dynamic_buffer = temp_buffer;
         }
@@ -1280,7 +1333,14 @@ PHP_FUNCTION(file_defrag_data) {
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     if (!dynamic_buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        fclose(index_fp);
+        fclose(data_fp);
+        fclose(temp_fp);
+        fclose(temp_index_fp);
+        unlink(temp_filename);
+        unlink(temp_index_filename);
+        RETURN_LONG(-8);
     }
 
     ssize_t bytes_read;
@@ -1370,7 +1430,15 @@ PHP_FUNCTION(file_defrag_data) {
                     char *data_buffer = emalloc(size + 1);
 
                     if(data_buffer == NULL){
-                        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", size + 1);
+                        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", size + 1);
+                        fclose(index_fp);
+                        fclose(data_fp);
+                        fclose(temp_fp);
+                        fclose(temp_index_fp);
+                        unlink(temp_filename);
+                        unlink(temp_index_filename);
+                        efree(dynamic_buffer);
+                        RETURN_LONG(-8);
                     }
 
                     bytes_read_data = fread(data_buffer, 1, size, data_fp);
@@ -1430,7 +1498,15 @@ PHP_FUNCTION(file_defrag_data) {
 
             char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!temp_buffer) {
-                zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                fclose(index_fp);
+                fclose(data_fp);
+                fclose(temp_fp);
+                fclose(temp_index_fp);
+                unlink(temp_filename);
+                unlink(temp_index_filename);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                RETURN_LONG(-8);
             }
 
             dynamic_buffer = temp_buffer;
@@ -1577,7 +1653,9 @@ PHP_FUNCTION(file_pop_line) {
         // Увеличиваем размер буфера на 1 для возможного символа перевода строки
         char *buffer = (char *)emalloc(offset + 1); // +1 для '\0'
         if (!buffer) {
-            zend_error(E_ERROR, "Out of memory to allocate %ld bytes", offset + 1);
+            php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", offset + 1);
+            fclose(fp);
+            RETURN_FALSE;
         }
 
         bytes_read = fread(buffer, 1, offset, fp);
@@ -1625,7 +1703,9 @@ PHP_FUNCTION(file_pop_line) {
         zend_long dynamic_buffer_size = ini_buffer_size;
         char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
         if (!dynamic_buffer) {
-            zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+            php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+            fclose(fp);
+            RETURN_FALSE;
         }
 
         zend_long current_size = 0; // Текущий размер данных в динамическом буфере
@@ -1703,7 +1783,10 @@ PHP_FUNCTION(file_pop_line) {
 
             char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!temp_buffer) {
-                zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                fclose(fp);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                RETURN_FALSE;
             }
 
             dynamic_buffer = temp_buffer;
@@ -1811,7 +1894,9 @@ PHP_FUNCTION(file_erase_line) {
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     if (!dynamic_buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        fclose(fp);
+        RETURN_LONG(-8);
     }
 
     ssize_t bytes_read;
@@ -1835,7 +1920,10 @@ PHP_FUNCTION(file_erase_line) {
                 // Найдено совпадение ключа, подготавливаем замену
                 char *replacement = emalloc(line_length);
                 if (!replacement) {
-                    zend_error(E_ERROR, "Out of memory to allocate %ld bytes", line_length);
+                    php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", line_length);
+                    efree(dynamic_buffer);
+                    fclose(fp);
+                    RETURN_LONG(-8);
                 }
 
                 memset(replacement, ' ', line_length - 1); // Заполнение пробелами
@@ -1873,7 +1961,10 @@ PHP_FUNCTION(file_erase_line) {
 
             char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!temp_buffer) {
-                zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                fclose(fp);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                RETURN_LONG(-8);
             }
             dynamic_buffer = temp_buffer;
         }
@@ -1947,7 +2038,9 @@ PHP_FUNCTION(file_get_keys) {
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     if (!dynamic_buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        fclose(fp);
+        RETURN_LONG(-8);
     }
 
     ssize_t bytes_read;
@@ -2035,7 +2128,10 @@ PHP_FUNCTION(file_get_keys) {
 
             char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!temp_buffer) {
-                zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                fclose(fp);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                RETURN_LONG(-8);
             }
             dynamic_buffer = temp_buffer;
         }
@@ -2111,7 +2207,11 @@ PHP_FUNCTION(file_replace_line) {
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     if (!dynamic_buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        fclose(data_fp);
+        fclose(temp_fp);
+        unlink(temp_filename);
+        RETURN_LONG(-8);
     }
 
     zend_long found_count = 0;
@@ -2134,7 +2234,12 @@ PHP_FUNCTION(file_replace_line) {
             if (strstr(line_start, line_key) != NULL) { 
                 char *replacement = estrndup(line, line_len + 1);
                 if(replacement == NULL){
-                    zend_error(E_ERROR, "Out of memory to allocate %ld bytes", line_len + 1);
+                    php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", line_len + 1);
+                    fclose(data_fp);
+                    fclose(temp_fp);
+                    unlink(temp_filename);
+                    efree(dynamic_buffer);
+                    RETURN_LONG(-8);
                 }
 
                 replacement[line_len] = '\n';
@@ -2181,7 +2286,12 @@ PHP_FUNCTION(file_replace_line) {
 
             char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!temp_buffer) {
-                zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                fclose(data_fp);
+                fclose(temp_fp);
+                unlink(temp_filename);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                RETURN_LONG(-8);
             }
             dynamic_buffer = temp_buffer;
         }
@@ -2277,7 +2387,9 @@ PHP_FUNCTION(file_insert_line) {
     // Подготовка строки к записи с учетом выравнивания и перевода строки
     char *buffer = (char *)emalloc(line_length + 1); // +1 для '\0'
     if (!buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", line_length + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", line_length + 1);
+        fclose(fp);
+        RETURN_LONG(-8);
     }
 
     memset(buffer, ' ', line_length); // Заполнение пробелами
@@ -2293,6 +2405,9 @@ PHP_FUNCTION(file_insert_line) {
 
         if(ftruncate(fileno(fp), file_size) == -1) {
             zend_error(E_ERROR, "Failed to truncate to the file: %s", filename);
+            efree(buffer);
+            fclose(fp);
+            exit(EXIT_FAILURE);
         }
 
         fclose(fp);
@@ -2358,7 +2473,9 @@ PHP_FUNCTION(file_select_line) {
     // Увеличиваем размер буфера на 1 для возможного символа перевода строки
     char *buffer = (char *)emalloc(align + 1); // +1 для '\0' и +1 для '\n'
     if (!buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", align + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", align + 1);
+        fclose(fp);
+        RETURN_FALSE;
     }
 
     bytes_read = fread(buffer, 1, align, fp);
@@ -2436,7 +2553,9 @@ PHP_FUNCTION(file_update_line) {
     // Подготовка строки к записи с учетом выравнивания и перевода строки
     char *buffer = (char *)emalloc(line_length + 1); // +1 для '\0'
     if (!buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", line_length + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", line_length + 1);
+        fclose(fp);
+        RETURN_LONG(-8);
     }
 
 
@@ -2507,7 +2626,9 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
 
     char *buffer = (char *)emalloc(ini_buffer_size + 1);
     if (!buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", ini_buffer_size + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", ini_buffer_size + 1);
+        fclose(fp);
+        RETURN_LONG(-8);
     }
 
     ssize_t bytes_read;
@@ -2748,7 +2869,14 @@ PHP_FUNCTION(replicate_file) {
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     if (!dynamic_buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        fclose(index_source_fp);
+        fclose(index_destination_fp);
+        fclose(source_fp);
+        fclose(destination_fp);
+        unlink(destination);
+        if(mode == 1) unlink(index_destination);
+        RETURN_LONG(-8);
     }
 
 
@@ -2894,7 +3022,11 @@ PHP_FUNCTION(file_select_array) {
 
                     char *buffer = (char *)emalloc(select_size + 1);
                     if (!buffer) {
-                        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", select_size + 1);
+                        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", select_size + 1);
+                        fclose(fp);
+                        if (re != NULL) pcre2_code_free(re);
+                        if (mode > 19 && match_data != NULL) pcre2_match_data_free(match_data);
+                        RETURN_FALSE;
                     }
 
                     fseek(fp, select_pos, SEEK_SET);
@@ -3195,7 +3327,9 @@ PHP_FUNCTION(file_update_array) {
                     buffer = (char *)emalloc(update_size + 1); // +1 для '\0'
 
                     if (!buffer) {
-                        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", update_size + 1);
+                        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", update_size + 1);
+                        fclose(fp);
+                        RETURN_LONG(-8);
                     }
 
                     memset(buffer, ' ', update_size); // Заполнение пробелами
@@ -3299,7 +3433,9 @@ PHP_FUNCTION(file_callback_line) {
     zend_long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     if (!dynamic_buffer) {
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+        fclose(fp);
+        RETURN_FALSE;
     }
 
     char *found_value = (char *)emalloc(1);
@@ -3348,7 +3484,13 @@ PHP_FUNCTION(file_callback_line) {
                 if(Z_TYPE_P(&retval) == IS_STRING) {
                     char *temp_retval = (char *)erealloc(found_value, Z_STRLEN_P(&retval));
                     if (!temp_retval) {
-                        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", Z_STRLEN_P(&retval));
+                        php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", Z_STRLEN_P(&retval));
+                        fclose(fp);
+                        if (dynamic_buffer) efree(dynamic_buffer);
+                        if (found_value) efree(found_value);
+                        for (int i = 0; i <= mode; i++) zval_dtor(&args[i]);
+                        zval_dtor(&retval);
+                        RETURN_FALSE;
                     }
 
                     found_value = temp_retval;
@@ -3392,7 +3534,12 @@ PHP_FUNCTION(file_callback_line) {
 
             char *temp_buffer = (char *)erealloc(dynamic_buffer, dynamic_buffer_size + 1);
             if (!temp_buffer) {
-                zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+                php_error_docref(NULL, E_WARNING, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
+
+                fclose(fp);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                efree(found_value);
+                RETURN_FALSE;
             }
 
             dynamic_buffer = temp_buffer;
