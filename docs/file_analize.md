@@ -36,7 +36,9 @@ array file_analize(string $filename[, int $mode = 0])
 
 ### Элементы массива
 - min_length - Минимальная длина строки.
+- min_length_offset - Смещение в файле, строки минимальной длины.
 - max_length - Максимальная длина строки.
+- max_length_offset - Смещение в файле, строки максимальной длины.
 - avg_length - Средняя длина строки.
 - line_count - Количество прочитанных строк.
 - total_characters - Всего символов в обнаруженных строках включая символ перевода строки.
@@ -68,9 +70,7 @@ array file_analize(string $filename[, int $mode = 0])
 ```
 <?php
 for($i=0; $i <=500; $i++){
-	print_r(
-		file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 92, '1234567890'), 0, 8192) . ', '
-	);
+	file_insert_line(__DIR__ . '/fast_io1.dat', 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', 92, '1234567890'));
 }
 
 print_r([
@@ -85,25 +85,29 @@ Array
 (
     [0] => Array
         (
-            [min_length] => 8192
-            [max_length] => 8192
-            [avg_length] => 8192
+            [min_length] => 120
+            [min_length_offset] => 1080
+            [max_length] => 124
+            [max_length_offset] => 12180
+            [avg_length] => 123
             [line_count] => 501
-            [total_characters] => 4104192
+            [total_characters] => 61904
             [flow_interruption] => 0
             [last_symbol] => 10
-            [file_size] => 4104192
+            [file_size] => 61904
         )
 
     [1] => Array
         (
-            [min_length] => 8192
-            [max_length] => 8192
-            [avg_length] => 8192
+            [min_length] => 120
+            [min_length_offset] => 0
+            [max_length] => 120
+            [max_length_offset] => 0
+            [avg_length] => 120
             [line_count] => 0
-            [total_characters] => 8192
+            [total_characters] => 120
             [last_symbol] => 10
-            [file_size] => 4104192
+            [file_size] => 61904
         )
 
 )
