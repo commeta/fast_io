@@ -3418,7 +3418,6 @@ PHP_FUNCTION(file_callback_line) {
 
     while ((bytes_read = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytes_read;
-        jump = false;
         
         dynamic_buffer[current_size] = '\0';
 
@@ -3512,7 +3511,11 @@ PHP_FUNCTION(file_callback_line) {
             line_start = line_end + 1;
 
             if (found_match) break;
-            if (jump) break;
+            
+            if (jump) {
+                jump = false;
+                break;
+            }
         }
 
         if (found_match) break;
