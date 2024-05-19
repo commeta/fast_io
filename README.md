@@ -75,7 +75,7 @@ The flock function in Linux is designed to lock files at the kernel level of the
 
 If a process tries to read or write to a file with an established flock LOCK_EX lock, the operation will wait for the release of the lock by another process.
 
-The flock lock remains in effect until the process that established it calls flock LOCK_UN to remove the lock. If the process terminates without removing the lock, it is automatically removed.
+The flock lock is in effect until the process that set it calls flock LOCK_UN to release the lock or closes the file. If a process terminates without releasing the lock, the lock is automatically released.
 
 It is important to note that the flock lock itself is not transactional, i.e., it does not support ACID transactions. If the process that established the lock terminates with an error, data may remain inconsistent. Therefore, flock is usually used for implementing simple synchronization mechanisms rather than ensuring data integrity.
 
