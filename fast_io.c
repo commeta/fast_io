@@ -903,6 +903,7 @@ PHP_FUNCTION(file_search_data) {
     fclose(index_fp);
 
     if (!found_match) {
+        efree(found_value);
         fclose(data_fp);
         RETURN_FALSE;
     }
@@ -936,6 +937,7 @@ PHP_FUNCTION(file_search_data) {
         if(bytes_read != size){
             php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
             fclose(data_fp);
+            efree(data_buffer);
             RETURN_FALSE;
         }
 
@@ -1433,6 +1435,7 @@ PHP_FUNCTION(file_defrag_data) {
                         unlink(temp_filename);
                         unlink(temp_index_filename);
                         efree(dynamic_buffer);
+                        efree(data_buffer);
                         RETURN_LONG(-6);
                     }
 
@@ -1803,7 +1806,7 @@ line_found:
         }
 
         fclose(fp);
-        RETURN_STRING(line_start);
+        RETVAL_STRING(line_start);
         efree(dynamic_buffer);
         return;
     }
@@ -2280,7 +2283,6 @@ PHP_FUNCTION(file_replace_line) {
                 efree(dynamic_buffer);
                 fclose(data_fp);
                 fclose(temp_fp);
-
                 rename(temp_filename, filename);
                 RETURN_LONG(-4);
             }
@@ -2294,7 +2296,6 @@ PHP_FUNCTION(file_replace_line) {
             efree(dynamic_buffer);
             fclose(data_fp);
             fclose(temp_fp);
-
             rename(temp_filename, filename);
             RETURN_LONG(-5);
         }
@@ -2634,9 +2635,7 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
                     fclose(fp);
 
                     add_assoc_long(return_value, "min_length", min_length);
-                    add_assoc_long(return_value, "min_length_offset", min_length_offset);
                     add_assoc_long(return_value, "max_length", max_length);
-                    add_assoc_long(return_value, "max_length_offset", max_length_offset);
                     add_assoc_double(return_value, "avg_length", avg_length);
                     add_assoc_long(return_value, "line_count", line_count - 1);
                     add_assoc_long(return_value, "total_characters", total_characters);
