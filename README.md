@@ -73,7 +73,7 @@ Fast_IO uses a UNIX portable file lock mechanism using the flock function - for 
 
 The flock function in Linux is designed to lock files at the kernel level of the operating system. This function provides the possibility for a process to establish a lock on a file that will prevent it from being changed by other processes until the current process removes this lock.
 
-If a Fast_IO function tries to read or write to a file with an established flock LOCK_EX lock, the operation will wait for the release of the lock by another process.
+If a Fast_IO function tries to read or write to a file with an established flock LOCK_EX lock, the operation will wait for the release of the lock by parallel process.
 
 The flock lock is in effect until the process that set it calls flock LOCK_UN to release the lock or closes the file. If a process terminates without releasing the lock, the lock is automatically released.
 
