@@ -69,7 +69,7 @@ The ACID acronym is explained as follows:
 - Durability - after a successful transaction completion, all changes must be saved, even in case of failure.
 
 
-Fast_IO uses a portable file lock mechanism using the flock function - for synchronizing access between parallel operations.
+Fast_IO uses a UNIX portable file lock mechanism using the flock function - for synchronizing access between parallel operations.
 
 The flock function in Linux is designed to lock files at the kernel level of the operating system. This function provides the possibility for a process to establish a lock on a file that will prevent it from being changed by other processes until the current process removes this lock.
 
