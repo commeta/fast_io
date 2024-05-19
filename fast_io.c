@@ -3374,7 +3374,6 @@ PHP_FUNCTION(file_callback_line) {
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
     ssize_t file_size = ftell(fp);
-
     size_t line_offset = 0; // Смещение начала строки
 
     if(position > 0){
@@ -3441,20 +3440,17 @@ PHP_FUNCTION(file_callback_line) {
                 if(mode > 8) ZVAL_STRING(&args[9], dynamic_buffer);
             }
 
-            // Инициализация retval
-            ZVAL_UNDEF(&retval);
-
             // Вызываем callback-функцию с одним аргументом
             if (call_user_function(EG(function_table), NULL, callback, &retval, mode + 1, args) == SUCCESS) {
                 if(Z_TYPE_P(&retval) == IS_STRING) {
-                    char *temp_retval = (char *)erealloc(found_value, Z_STRLEN_P(&retval));
+                    char *temp_retval = (char *)erealloc(found_value, Z_STRLEN_P(&retval) + 1);
                     if (!temp_retval) {
                         fclose(fp);
                         if (dynamic_buffer) efree(dynamic_buffer);
                         if (found_value) efree(found_value);
                         for (int i = 0; i <= mode; i++) zval_dtor(&args[i]);
                         zval_dtor(&retval);
-                        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", Z_STRLEN_P(&retval));
+                        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", Z_STRLEN_P(&retval) + 1);
                     }
 
                     found_value = temp_retval;
