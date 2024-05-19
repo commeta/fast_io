@@ -63,10 +63,10 @@ Functions: file_defrag_data, file_defrag_lines, file_erase_line, file_get_keys, 
 ACID is a set of rules that a database must follow to ensure the correctness of transaction execution.
 
 The ACID acronym is explained as follows:
-- Atomicity (Atomicity) - each transaction is indivisible and is either completed or not performed at all.
-- Consistency (Consistency) - a transaction should not violate the database integrity constraints.
-- Isolation (Isolation) - transactions should not affect each other.
-- Durability (Durability) - after a successful transaction completion, all changes must be saved, even in case of failure.
+- Atomicity - each transaction is indivisible and is either completed or not performed at all.
+- Consistency - a transaction should not violate the database integrity constraints.
+- Isolation - transactions should not affect each other.
+- Durability - after a successful transaction completion, all changes must be saved, even in case of failure.
 
 
 Fast_IO uses a portable file lock mechanism using the flock function - for synchronizing access between parallel operations.
