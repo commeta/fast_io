@@ -3459,6 +3459,23 @@ PHP_FUNCTION(file_callback_line) {
                     found_value[Z_STRLEN_P(&retval)] = '\0';
                 }
 
+                if(Z_TYPE_P(&retval) == IS_LONG) {
+                    if(Z_LVAL_P(&retval) >= file_size || Z_LVAL_P(&retval) < 0){
+                        php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
+                        fclose(fp);
+                        if (dynamic_buffer) efree(dynamic_buffer);
+                        if (found_value) efree(found_value);
+                        for (int i = 0; i <= mode; i++) zval_dtor(&args[i]);
+                        zval_dtor(&retval);
+                        RETURN_FALSE;
+                    }
+
+                    position = Z_LVAL_P(&retval);
+                    fseek(fp, position, SEEK_SET);
+                    line_offset = position;
+                }
+
+
                 if(Z_TYPE_P(&retval) == IS_FALSE) {
                     found_match = true;
                     break;
