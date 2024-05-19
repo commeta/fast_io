@@ -1654,7 +1654,7 @@ PHP_FUNCTION(file_pop_line) {
 
         if(mode < 1 || mode == 2){
             // Обрезка пробелов справа и символа перевода строки
-            for (int i = bytes_read - 1; i >= 0; --i) {
+            for (ssize_t i = bytes_read - 1; i >= 0; --i) {
                 if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
                 else break;
             }
@@ -1789,7 +1789,7 @@ line_found:
 
         if(mode < 1 || mode == 2){
             // Обрезка пробелов справа и символа перевода строки
-            for (int i = dynamic_buffer_size - 1; i >= 0; --i) {
+            for (ssize_t i = dynamic_buffer_size - 1; i >= 0; --i) {
                 if(dynamic_buffer[i] == ' ' || dynamic_buffer[i] == '\n') dynamic_buffer[i] = '\0';
                 else break;
             }
@@ -2050,7 +2050,7 @@ PHP_FUNCTION(file_get_keys) {
 
                 if(mode == 2 || mode == 5) {
                     // Обрезка пробелов справа и символа перевода строки
-                    int i;
+                    ssize_t i;
 
                     for (i = line_length - 2; i >= 0; --i) {
                         if(line_start[i] == ' ' || line_start[i] == '\n') line_start[i] = '\0';
@@ -3018,7 +3018,7 @@ PHP_FUNCTION(file_select_array) {
                     zval line_arr;
                     array_init(&line_arr);
 
-                    int i;
+                    ssize_t i;
 
                     if(
                         mode == 0 ||
@@ -3453,7 +3453,7 @@ PHP_FUNCTION(file_callback_line) {
                         fclose(fp);
                         if (dynamic_buffer) efree(dynamic_buffer);
                         if (found_value) efree(found_value);
-                        for (int i = 0; i <= mode; i++) zval_dtor(&args[i]);
+                        for (size_t i = 0; i <= mode; i++) zval_dtor(&args[i]);
                         zval_dtor(&retval);
                         zend_error(E_ERROR, "Out of memory to allocate %ld bytes", Z_STRLEN_P(&retval) + 1);
                     }
@@ -3470,7 +3470,7 @@ PHP_FUNCTION(file_callback_line) {
                         fclose(fp);
                         if (dynamic_buffer) efree(dynamic_buffer);
                         if (found_value) efree(found_value);
-                        for (int i = 0; i <= mode; i++) zval_dtor(&args[i]);
+                        for (size_t i = 0; i <= mode; i++) zval_dtor(&args[i]);
                         zval_dtor(&retval);
                         RETURN_FALSE;
                     }
@@ -3493,7 +3493,7 @@ PHP_FUNCTION(file_callback_line) {
                 fclose(fp);
                 if (dynamic_buffer) efree(dynamic_buffer);
                 if (found_value) efree(found_value);
-                for (int i = 0; i <= mode; i++) zval_dtor(&args[i]);
+                for (size_t i = 0; i <= mode; i++) zval_dtor(&args[i]);
                 zval_dtor(&retval);
                 RETURN_FALSE;
             }
@@ -3501,7 +3501,7 @@ PHP_FUNCTION(file_callback_line) {
             zval_dtor(&retval);
 
             // Освобождаем ресурсы
-            for (int i = 0; i <= mode; i++) {
+            for (size_t i = 0; i <= mode; i++) {
                 zval_dtor(&args[i]);
             }
 
