@@ -301,7 +301,6 @@ PHP_FUNCTION(file_search_array) {
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
     ssize_t file_size = ftell(fp);
-
     ssize_t search_offset = 0; // Смещение строки поиска
 
     if(position > 0){
@@ -467,7 +466,7 @@ PHP_FUNCTION(file_search_array) {
 
                     int rc;
                     PCRE2_SIZE *ovector;
-                    ssize_t start_offset = 0;
+                    size_t start_offset = 0;
 
                     bool is_matched = false;
 
@@ -504,7 +503,7 @@ PHP_FUNCTION(file_search_array) {
                             start_offset = ovector[1];
                         } else {
                             start_offset++; // Для продолжения поиска следующего совпадения
-                            if (start_offset >= line_length) break; // Выходим из цикла, если достигнут конец строки
+                            if ((ssize_t) start_offset >= line_length) break; // Выходим из цикла, если достигнут конец строки
                         }
 
                         is_matched = true;
@@ -917,7 +916,7 @@ PHP_FUNCTION(file_search_data) {
 
     *colon_ptr = '\0';
     position = atol(found_value);
-    size_t size = (size_t)strtoul(colon_ptr + 1, NULL, 10);
+    ssize_t size = (ssize_t)strtoul(colon_ptr + 1, NULL, 10);
     efree(found_value);
 
     if (size > 0) {
@@ -957,9 +956,9 @@ PHP_FUNCTION(file_search_data) {
 /* Реализация функции */
 PHP_FUNCTION(file_push_data) {
     char *filename, *line_key, *line_value;
-    size_t filename_len, line_key_len;
+    size_t filename_len;
     size_t mode = 0;
-    ssize_t line_value_len;
+    ssize_t line_value_len, line_key_len;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss|l", &filename, &filename_len, &line_key, &line_key_len, &line_value, &line_value_len, &mode) == FAILURE) {
         RETURN_FALSE;
@@ -1007,7 +1006,6 @@ PHP_FUNCTION(file_push_data) {
     fseek(data_fp, 0, SEEK_END); // Перемещаем указатель в конец файла
     // Получаем текущее смещение в файле данных
     ssize_t position = ftell(data_fp);
-
 
     if (fwrite(line_value, 1, line_value_len, data_fp) != line_value_len) {
         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
@@ -1427,7 +1425,7 @@ PHP_FUNCTION(file_defrag_data) {
                     }
 
                     bytes_read_data = fread(data_buffer, 1, size, data_fp);
-                    if(bytes_read_data != size){
+                    if(bytes_read_data != (ssize_t) size){
                         php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
                         fclose(index_fp);
                         fclose(data_fp);
@@ -2065,8 +2063,8 @@ PHP_FUNCTION(file_get_keys) {
                     }
                 }
 
-                char *spacePos = strchr(line_start, ' ');
-                if (spacePos) *spacePos = '\0';
+                char *space_pos = strchr(line_start, ' ');
+                if (space_pos) *space_pos = '\0';
 
                 if(mode == 0) add_assoc_string(&line_arr, "key", line_start);
 
@@ -3125,7 +3123,7 @@ PHP_FUNCTION(file_select_array) {
 
                         int rc;
                         PCRE2_SIZE *ovector;
-                        ssize_t start_offset = 0;
+                        size_t start_offset = 0;
                         found_match = false;
 
                         while ((rc = pcre2_match(re, (PCRE2_SPTR)buffer, select_size, start_offset, 0, match_data, NULL)) > 0) {
@@ -3161,7 +3159,7 @@ PHP_FUNCTION(file_select_array) {
                                 start_offset = ovector[1];
                             } else {
                                 start_offset++; // Для продолжения поиска следующего совпадения
-                                if (start_offset >= bytes_read) break; // Выходим из цикла, если достигнут конец строки
+                                if ((ssize_t) start_offset >= bytes_read) break; // Выходим из цикла, если достигнут конец строки
                             }
 
                             found_match = true;
@@ -3294,7 +3292,7 @@ PHP_FUNCTION(file_update_array) {
                 } ZEND_HASH_FOREACH_END();
 
                 if(update_pos != -1 && file_size > update_pos && update_size > 0 && found_value != NULL){
-                    len = strlen(found_value);
+                    len = (ssize_t)strlen(found_value);
                     buffer = (char *)emalloc(update_size + 1); // +1 для '\0'
 
                     if (!buffer) {
@@ -3465,7 +3463,7 @@ PHP_FUNCTION(file_callback_line) {
                 }
 
                 if(Z_TYPE_P(&retval) == IS_LONG) {
-                    if(Z_LVAL_P(&retval) >= file_size || Z_LVAL_P(&retval) < 0){
+                    if((ssize_t) Z_LVAL_P(&retval) >= file_size || Z_LVAL_P(&retval) < 0){
                         php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
                         fclose(fp);
                         if (dynamic_buffer) efree(dynamic_buffer);
