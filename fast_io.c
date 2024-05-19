@@ -2351,7 +2351,13 @@ PHP_FUNCTION(file_insert_line) {
     fseek(fp, 0, SEEK_END);
     ssize_t file_size = ftell(fp);
 
-    if(line_length == 0) line_length = line_len + 1; 
+    if(line_length == 0) line_length = line_len + 1;
+    
+    if(line_len == 0){
+        php_error_docref(NULL, E_WARNING, "An empty line");
+        fclose(fp);
+        RETURN_LONG(-4);
+    }
 
     // Подготовка строки к записи с учетом выравнивания и перевода строки
     char *buffer = (char *)emalloc(line_length + 1); // +1 для '\0'
@@ -3409,9 +3415,11 @@ PHP_FUNCTION(file_callback_line) {
     ssize_t current_size = 0; // Текущий размер данных в динамическом буфере
     size_t line_count = 0;
     bool found_match = false;
+    bool jump = false;
 
     while ((bytes_read = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
         current_size += bytes_read;
+        jump = false;
         
         dynamic_buffer[current_size] = '\0';
 
@@ -3471,22 +3479,26 @@ PHP_FUNCTION(file_callback_line) {
                     }
 
                     position = Z_LVAL_P(&retval);
+
                     fseek(fp, position, SEEK_SET);
                     line_offset = position;
+                    jump = true;
                 }
 
 
                 if(Z_TYPE_P(&retval) == IS_FALSE) {
                     found_match = true;
-                    break;
                 }
 
             } else {
                 // Если вызов функции не удался, возвращаем FALSE
                 php_error_docref(NULL, E_WARNING, "Failed call callback function");
-                RETVAL_FALSE;
-                found_match = true;
-                break;
+                fclose(fp);
+                if (dynamic_buffer) efree(dynamic_buffer);
+                if (found_value) efree(found_value);
+                for (int i = 0; i <= mode; i++) zval_dtor(&args[i]);
+                zval_dtor(&retval);
+                RETURN_FALSE;
             }
 
             zval_dtor(&retval);
@@ -3499,6 +3511,9 @@ PHP_FUNCTION(file_callback_line) {
             line_count++; 
             line_offset += line_length; // Обновляем смещение
             line_start = line_end + 1;
+
+            if (found_match) break;
+            if (jump) break;
         }
 
         if (found_match) break;
