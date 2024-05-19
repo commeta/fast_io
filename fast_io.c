@@ -274,7 +274,7 @@ PHP_FUNCTION(file_search_array) {
     size_t search_start = 0;
     size_t search_limit = 1;
     ssize_t position = 0;
-    ssize_t mode = 0;
+    size_t mode = 0;
     
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|llll", &filename, &filename_len, &line_key, &line_key_len, &search_start, &search_limit, &position, &mode) == FAILURE) {
         RETURN_FALSE;
@@ -302,7 +302,7 @@ PHP_FUNCTION(file_search_array) {
     fseek(fp, 0, SEEK_END);
     ssize_t file_size = ftell(fp);
 
-    off_t search_offset = 0; // Смещение строки поиска
+    ssize_t search_offset = 0; // Смещение строки поиска
 
     if(position > 0){
         if(position >= file_size){
@@ -382,7 +382,7 @@ PHP_FUNCTION(file_search_array) {
                     zval line_arr;
                     array_init(&line_arr);
 
-                    int i;
+                    ssize_t i;
 
                     if(mode == 0 || mode == 2){
                         for (i = line_length - 2; i >= 0; --i) {
@@ -425,7 +425,7 @@ PHP_FUNCTION(file_search_array) {
                     zval line_arr;
                     array_init(&line_arr);
 
-                    int i;
+                    ssize_t i;
 
                     if(mode == 10 || mode == 12){
                         for (i = line_length - 2; i >= 0; --i) {
@@ -467,7 +467,7 @@ PHP_FUNCTION(file_search_array) {
 
                     int rc;
                     PCRE2_SIZE *ovector;
-                    size_t start_offset = 0;
+                    ssize_t start_offset = 0;
 
                     bool is_matched = false;
 
@@ -531,7 +531,7 @@ PHP_FUNCTION(file_search_array) {
                         array_init(&line_arr);
 
                         if(mode == 20) {
-                            int i;
+                            ssize_t i;
 
                             for (i = line_length - 2; i >= 0; --i) {
                                 if(line_start[i] == ' ') line_start[i] = '\0';
@@ -612,7 +612,7 @@ PHP_FUNCTION(file_search_array) {
 PHP_FUNCTION(file_search_line) {
     char *filename, *line_key;
     size_t filename_len, line_key_len;
-    ssize_t mode = 0;
+    size_t mode = 0;
     ssize_t position = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|ll", &filename, &filename_len, &line_key, &line_key_len, &position, &mode) == FAILURE) {
@@ -764,7 +764,7 @@ PHP_FUNCTION(file_search_line) {
     } else {
         if(mode == 1 || mode == 11){
             // Обрезка пробелов справа и символа перевода строки
-            for (int i = line_length - 1; i >= 0; --i) {
+            for (ssize_t i = line_length - 1; i >= 0; --i) {
                 if(found_value[i] == ' ' || found_value[i] == '\n') found_value[i] = '\0';
                 else break;
             }
@@ -781,7 +781,7 @@ PHP_FUNCTION(file_search_data) {
     char *filename, *line_key;
     size_t filename_len, line_key_len;
     ssize_t position = 0;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|ll", &filename, &filename_len, &line_key, &line_key_len, &position, &mode) == FAILURE) {
         RETURN_FALSE;
@@ -958,7 +958,7 @@ PHP_FUNCTION(file_search_data) {
 PHP_FUNCTION(file_push_data) {
     char *filename, *line_key, *line_value;
     size_t filename_len, line_key_len, line_value_len;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss|l", &filename, &filename_len, &line_key, &line_key_len, &line_value, &line_value_len, &mode) == FAILURE) {
         RETURN_FALSE;
@@ -1057,7 +1057,7 @@ PHP_FUNCTION(file_push_data) {
 PHP_FUNCTION(file_defrag_lines) {
     char *filename, *line_key = NULL;
     size_t filename_len, line_key_len = 0;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|sl", &filename, &filename_len, &line_key, &line_key_len, &mode) == FAILURE) {
@@ -1233,7 +1233,7 @@ PHP_FUNCTION(file_defrag_lines) {
 PHP_FUNCTION(file_defrag_data) {
     char *filename, *line_key = NULL;
     size_t filename_len, line_key_len = 0;
-    ssize_t mode = 0;
+    size_t mode = 0;
     size_t found_count = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|sl", &filename, &filename_len, &line_key, &line_key_len, &mode) == FAILURE) {
@@ -1380,28 +1380,28 @@ PHP_FUNCTION(file_defrag_data) {
 
                 *line_end = '\0';
 
-                char *offsetPtr = NULL;
-                char *sizePtr = NULL;
+                char *offset_ptr = NULL;
+                char *size_ptr = NULL;
                 bool parsed_err = false;
                 
                 char *token = strtok(line_start, " ");  // Разделяем строку по пробелам
                 
                 while (token != NULL) {
                     if (strchr(token, ':') != NULL) {  // Проверяем наличие двоеточия
-                        offsetPtr = strtok(token, ":");
-                        sizePtr = strtok(NULL, ":");
+                        offset_ptr = strtok(token, ":");
+                        size_ptr = strtok(NULL, ":");
                         break;
                     }
                     token = strtok(NULL, " ");
                 }
                 
-                if (offsetPtr && sizePtr) {
-                    position = strtoul(offsetPtr, NULL, 10);
-                    size = strtoul(sizePtr, NULL, 10);
+                if (offset_ptr && size_ptr) {
+                    position = strtoul(offset_ptr, NULL, 10);
+                    size = strtoul(size_ptr, NULL, 10);
 
                     if (
-                        (position == 0 && *offsetPtr != '0') ||
-                        (size == 0 && *sizePtr != '0')
+                        (position == 0 && *offset_ptr != '0') ||
+                        (size == 0 && *size_ptr != '0')
                     ) {
                         parsed_err = true;
                     }
@@ -1598,7 +1598,7 @@ PHP_FUNCTION(file_pop_line) {
     char *filename;
     size_t filename_len;
     ssize_t offset = -1; // Значение по умолчанию для необязательного аргумента
-    ssize_t mode = 0;
+    size_t mode = 0;
     ssize_t end = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|lll", &filename, &filename_len, &offset, &mode, &end) == FAILURE) {
@@ -1824,7 +1824,7 @@ PHP_FUNCTION(file_erase_line) {
     char *filename, *line_key;
     size_t filename_len, line_key_len;
     ssize_t position = 0;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|ll", &filename, &filename_len, &line_key, &line_key_len, &position, &mode) == FAILURE) {
         RETURN_FALSE;
@@ -1965,7 +1965,7 @@ PHP_FUNCTION(file_get_keys) {
     size_t search_start = 0;
     size_t search_limit = 1;
     ssize_t position = 0;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|llll", &filename, &filename_len, &search_start, &search_limit, &position, &mode) == FAILURE) {
         RETURN_FALSE;
@@ -1991,7 +1991,7 @@ PHP_FUNCTION(file_get_keys) {
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
     ssize_t file_size = ftell(fp);
-    off_t line_offset = 0; // Смещение для записи обновленных данных
+    ssize_t line_offset = 0; // Смещение для записи обновленных данных
 
     if(position > 0){
         if(position > file_size){
@@ -2125,9 +2125,9 @@ PHP_FUNCTION(file_replace_line) {
     size_t filename_len;
     char *line_key;
     char *line;
-    size_t line_len;
+    ssize_t line_len;
     size_t line_key_len;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     // Парсинг аргументов
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss|l", &filename, &filename_len, &line_key, &line_key_len, &line, &line_len, &mode) == FAILURE) {
@@ -2323,9 +2323,9 @@ PHP_FUNCTION(file_insert_line) {
     char *filename;
     size_t filename_len;
     char *line;
-    size_t line_len;
+    ssize_t line_len;
     ssize_t line_length = 0;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     // Парсинг аргументов, переданных в функцию
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|ll", &filename, &filename_len, &line, &line_len, &mode, &line_length) == FAILURE) {
@@ -2404,7 +2404,7 @@ PHP_FUNCTION(file_select_line) {
     size_t filename_len;
     ssize_t row;
     ssize_t align;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     // Парсинг переданных аргументов
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sll|l", &filename, &filename_len, &row, &align, &mode) == FAILURE) {
@@ -2472,7 +2472,7 @@ PHP_FUNCTION(file_select_line) {
         }
 
         // Обрезка пробелов справа и символа перевода строки
-        for (int i = bytes_read - 1; i >= 0; --i) {
+        for (ssize_t i = bytes_read - 1; i >= 0; --i) {
             if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
             else break;
         }
@@ -2488,9 +2488,9 @@ PHP_FUNCTION(file_update_line) {
     char *filename;
     size_t filename_len;
     char *line;
-    size_t line_len;
+    ssize_t line_len;
     ssize_t position, line_length;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     // Парсинг аргументов, переданных в функцию
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ssll|l", &filename, &filename_len, &line, &line_len, &position, &line_length, &mode) == FAILURE) {
@@ -2558,7 +2558,7 @@ PHP_FUNCTION(file_update_line) {
 PHP_FUNCTION(file_analize) { // Анализ таблицы
     char *filename;
     size_t filename_len;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|l", &filename, &filename_len, &mode) == FAILURE) {
         RETURN_FALSE;
@@ -2607,8 +2607,8 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     double avg_length = 0.0;
     size_t min_length = SIZE_MAX;
     size_t line_count = 0;
-    size_t total_characters = 0;
-    size_t flow_interruption = 0;
+    ssize_t total_characters = 0;
+    ssize_t flow_interruption = 0;
 
     array_init(return_value);
 
@@ -2676,7 +2676,7 @@ PHP_FUNCTION(find_matches_pcre2) {
     size_t pattern_len;
     char *subject;
     size_t subject_len;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     /* Парсинг аргументов, переданных из PHP */
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &pattern, &pattern_len, &subject, &subject_len, &mode) == FAILURE) {
@@ -2758,7 +2758,7 @@ PHP_FUNCTION(find_matches_pcre2) {
 PHP_FUNCTION(replicate_file) {
     char *source, *destination;
     size_t source_len, destination_len;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     // Парсинг аргументов
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ss|l", &source, &source_len, &destination, &destination_len, &mode) == FAILURE) {
@@ -2917,7 +2917,7 @@ PHP_FUNCTION(file_select_array) {
     char *pattern;
     size_t pattern_len;
     zval  *array = NULL;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sa|sl", &filename, &filename_len, &array, &pattern, &pattern_len, &mode) == FAILURE) {
         RETURN_FALSE;
@@ -3087,9 +3087,8 @@ PHP_FUNCTION(file_select_array) {
                     
                     if(mode > 9 && mode < 14){
                         int rc;
-                        size_t start_offset = 0;
                     
-                        if(rc = pcre2_match(re, (PCRE2_SPTR)buffer, select_size, start_offset, 0, match_data, NULL) > 0){
+                        if(rc = pcre2_match(re, (PCRE2_SPTR)buffer, select_size, 0, 0, match_data, NULL) > 0){
                             if(mode < 13){
                                 if(mode == 10){
                                     add_assoc_string(&line_arr, "trim_line", buffer);
@@ -3126,7 +3125,7 @@ PHP_FUNCTION(file_select_array) {
 
                         int rc;
                         PCRE2_SIZE *ovector;
-                        size_t start_offset = 0;
+                        ssize_t start_offset = 0;
                         found_match = false;
 
                         while ((rc = pcre2_match(re, (PCRE2_SPTR)buffer, select_size, start_offset, 0, match_data, NULL)) > 0) {
@@ -3241,7 +3240,7 @@ PHP_FUNCTION(file_update_array) {
     size_t filename_len;
     
     zval  *array = NULL;
-    ssize_t mode = 0;
+    size_t mode = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sa|l", &filename, &filename_len, &array, &mode) == FAILURE) {
         RETURN_FALSE;
@@ -3272,7 +3271,7 @@ PHP_FUNCTION(file_update_array) {
     char *buffer = NULL;
     
     ssize_t written = 0;
-    size_t len = 0;
+    ssize_t len = 0;
 
     zval *elem, *value;
 
@@ -3344,8 +3343,8 @@ PHP_FUNCTION(file_update_array) {
 PHP_FUNCTION(file_callback_line) {
     char *filename;
     size_t filename_len;
-    size_t position = 0;
-    ssize_t mode = 0;
+    ssize_t position = 0;
+    size_t mode = 0;
     zval *callback;
     zval retval;
 
@@ -3379,7 +3378,7 @@ PHP_FUNCTION(file_callback_line) {
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
     ssize_t file_size = ftell(fp);
-    size_t line_offset = 0; // Смещение начала строки
+    ssize_t line_offset = 0; // Смещение начала строки
 
     if(position > 0){
         if(position >= file_size){
@@ -3545,5 +3544,3 @@ PHP_FUNCTION(file_callback_line) {
 
     RETURN_STRING(found_value);
 }
-
-
