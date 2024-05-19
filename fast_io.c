@@ -957,8 +957,9 @@ PHP_FUNCTION(file_search_data) {
 /* Реализация функции */
 PHP_FUNCTION(file_push_data) {
     char *filename, *line_key, *line_value;
-    size_t filename_len, line_key_len, line_value_len;
+    size_t filename_len, line_key_len;
     size_t mode = 0;
+    ssize_t line_value_len;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sss|l", &filename, &filename_len, &line_key, &line_key_len, &line_value, &line_value_len, &mode) == FAILURE) {
         RETURN_FALSE;
@@ -1851,8 +1852,7 @@ PHP_FUNCTION(file_erase_line) {
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
     ssize_t file_size = ftell(fp);
-
-    off_t writeOffset = 0; // Смещение для записи обновленных данных
+    ssize_t write_offset = 0; // Смещение для записи обновленных данных
 
     if(position > 0){
         if(position > file_size){
@@ -1862,7 +1862,7 @@ PHP_FUNCTION(file_erase_line) {
         }
 
         fseek(fp, position, SEEK_SET);
-        writeOffset = position;
+        write_offset = position;
     } else {
         fseek(fp, 0, SEEK_SET);
     }
@@ -1909,7 +1909,7 @@ PHP_FUNCTION(file_erase_line) {
                 replacement[0] = SPECIAL_CHAR; // символ DEL
                 
                 // Перемещаемся к началу найденной строки и записываем замену
-                fseek(fp, writeOffset , SEEK_SET);
+                fseek(fp, write_offset , SEEK_SET);
 
                 bytes_write = fwrite(replacement, 1, line_length - 1, fp);
 
@@ -1926,7 +1926,7 @@ PHP_FUNCTION(file_erase_line) {
                 break;
             }
 
-            writeOffset += line_length; // Обновляем смещение
+            write_offset += line_length; // Обновляем смещение
             line_start = line_end + 1;
         }
 
@@ -1952,7 +1952,7 @@ PHP_FUNCTION(file_erase_line) {
     efree(dynamic_buffer);
     fclose(fp);
 
-    if(found_match) RETURN_LONG(writeOffset);
+    if(found_match) RETURN_LONG(write_offset);
     RETURN_LONG(-4);
 }
 
@@ -3322,6 +3322,7 @@ PHP_FUNCTION(file_update_array) {
                     
                     if (bytes_write != update_size) {
                         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
+                        fclose(fp);
                         efree(buffer);
                         RETURN_LONG(-4);
                     }
@@ -3383,7 +3384,6 @@ PHP_FUNCTION(file_callback_line) {
     if(position > 0){
         if(position >= file_size){
             php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
-
             fclose(fp);
             RETURN_FALSE;
         }
