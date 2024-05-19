@@ -58,8 +58,29 @@ The line_key can be any printable character, reserved symbols:
 
 Functions: file_defrag_data, file_defrag_lines, file_erase_line, file_get_keys, file_push_data, file_replace_line, file_search_data - when indexing lines, they analyze the first substring, considering any printable character as the line key. The key must always end with a space.
 
+### Support for ACID transactions
 
-### Behavior of the Fast_IO function in case of transaction abort
+ACID is a set of rules that a database must follow to ensure the correctness of transaction execution.
+
+The ACID acronym is explained as follows:
+- Atomicity (Atomicity) - each transaction is indivisible and is either completed or not performed at all.
+- Consistency (Consistency) - a transaction should not violate the database integrity constraints.
+- Isolation (Isolation) - transactions should not affect each other.
+- Durability (Durability) - after a successful transaction completion, all changes must be saved, even in case of failure.
+
+
+Fast_IO uses a portable file lock mechanism using the flock function - for synchronizing access between parallel operations.
+
+The flock function in Linux is designed to lock files at the kernel level of the operating system. This function provides the possibility for a process to establish a lock on a file that will prevent it from being changed by other processes until the current process removes this lock.
+
+If a process tries to read or write to a file with an established flock LOCK_EX lock, the operation will wait for the release of the lock by another process.
+
+The flock lock remains in effect until the process that established it calls flock LOCK_UN to remove the lock. If the process terminates without removing the lock, it is automatically removed.
+
+It is important to note that the flock lock itself is not transactional, i.e., it does not support ACID transactions. If the process that established the lock terminates with an error, data may remain inconsistent. Therefore, flock is usually used for implementing simple synchronization mechanisms rather than ensuring data integrity.
+
+
+### Ensuring data integrity
 - file_push_data, file_insert_line - always cancel the last record and exit with an error.
 - file_replace_line, file_defrag_data, file_defrag_line - if there is an error during writeback, it renames temporary files and data remains intact. If a parallel copy of the Fast_IO function is waiting for the file lock to be released, it will fail with a lock error.
 - file_erase_line - checks the number of written bytes; if there is an error writing a file (-3), this operation cannot be undone!
