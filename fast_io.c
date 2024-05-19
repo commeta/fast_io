@@ -3507,15 +3507,17 @@ PHP_FUNCTION(file_callback_line) {
             }
 
             line_count++; 
-            line_offset += line_length; // Обновляем смещение
             line_start = line_end + 1;
-
-            if (found_match) break;
-            
+  
             if (jump) {
                 jump = false;
                 break;
+            } else {
+                line_offset += line_length; // Обновляем смещение
             }
+
+
+            if (found_match) break;
         }
 
         if (found_match) break;
