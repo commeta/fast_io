@@ -616,3 +616,69 @@ The example is inspired by the queue_address_manager function in the project [ph
    - The process performs complex analysis or parsing of the content.
    - Thus, the work is distributed across multiple CPU cores (for CPU-BOUND tasks) or queued with long wait cycles for data download (IO-BOUND).
 
+
+## /proc/locks in Linux
+
+The /proc/locks file in Linux contains information about all file locks established in the system. This file is part of the virtual file system /proc, which provides an interface for interacting with the kernel and obtaining information about the system's state.
+
+Each line in /proc/locks describes one lock and contains several fields separated by spaces. Fields on a sample line:
+
+```
+$db_file = __DIR__ . '/fast_io.dat';
+file_insert_line($db_file, ' ');
+file_callback_line(
+	$db_file,
+		function () {
+			$locks = explode("\n", file_get_contents("/proc/locks"));
+			$p_id = getmypid();
+
+			foreach($locks as $lock){
+				$records = explode(" ", $lock);
+				if(isset($records[6]) && $records[6] == $p_id) {
+					print_r($records);
+				}
+			}
+
+			return false;
+		}
+);
+
+Array
+(
+    [0] => 31:
+    [1] => FLOCK
+    [2] => 
+    [3] => ADVISORY
+    [4] => 
+    [5] => WRITE
+    [6] => 1542032
+    [7] => fc:01:4760679
+    [8] => 0
+    [9] => EOF
+)
+```
+
+### Records в /proc/locks
+
+0. 31: Number of lock. This is a unique identifier for each lock.
+1. FLOCK: Type of lock. Possible values:
+   - FLOCK: Lock set using the system call flock.
+   - POSIX: Lock set using the system call fcntl (POSIX-compatible).
+   - LEASE: Means lease lock (lease lock).
+2. ADVISORY: Lock mode. Possible values:
+   - ADVISORY: Advisory lock (optional), which depends on coordination between processes.
+   - MANDATORY: Mandatory lock, which is enforced on all I/O operations.
+3. WRITE: Access type. Possible values:
+   - READ: Lock for reading.
+   - WRITE: Lock for writing.
+4. 1542032: Process ID that set the lock.
+5. fc:01:4760679: Identifier of the file that is locked. This identifier consists of three parts:
+   - fc: Major device number.
+   - 01: Minor device number.
+   - 4760679: Inode number of the file.
+6. 0: Start of the lock range (offset in bytes from the beginning of the file).
+7. EOF: End of the lock range (EOF indicates the end of the file).
+
+
+For a deeper understanding of file lock implementation in the Linux kernel, consider the source code from the locks.c file on GitHub at the link [fs/locks.c](https://github.com/torvalds/linux/blob/master/fs/locks.c).
+
