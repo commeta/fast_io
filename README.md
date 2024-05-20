@@ -665,24 +665,24 @@ Array
 
 ### Records в /proc/locks
 
-0. 31: Number of lock. This is a unique identifier for each lock.
-1. FLOCK: Type of lock. Possible values:
+1. 31: Number of lock. This is a unique identifier for each lock.
+2. FLOCK: Type of lock. Possible values:
    - FLOCK: Lock set using the system call flock.
    - POSIX: Lock set using the system call fcntl (POSIX-compatible).
    - LEASE: Means lease lock (lease lock).
-2. ADVISORY: Lock mode. Possible values:
+3. ADVISORY: Lock mode. Possible values:
    - ADVISORY: Advisory lock (optional), which depends on coordination between processes.
    - MANDATORY: Mandatory lock, which is enforced on all I/O operations.
-3. WRITE: Access type. Possible values:
+4. WRITE: Access type. Possible values:
    - READ: Lock for reading.
    - WRITE: Lock for writing.
-4. 1542032: Process ID that set the lock.
-5. fc:01:4760679: Identifier of the file that is locked. This identifier consists of three parts:
+5. 1542032: Process ID that set the lock.
+6. fc:01:4760679: Identifier of the file that is locked. This identifier consists of three parts:
    - fc: Major device number.
    - 01: Minor device number.
    - 4760679: Inode number of the file.
-6. 0: Start of the lock range (offset in bytes from the beginning of the file).
-7. EOF: End of the lock range (EOF indicates the end of the file).
+7. 0: Start of the lock range (offset in bytes from the beginning of the file).
+8. EOF: End of the lock range (EOF indicates the end of the file).
 
 
 For a deeper understanding of file lock implementation in the Linux kernel, consider the source code from the locks.c file on GitHub at the link [fs/locks.c](https://github.com/torvalds/linux/blob/master/fs/locks.c).
