@@ -633,19 +633,19 @@ $db_file = __DIR__ . '/fast_io.dat';
 file_insert_line($db_file, ' ');
 file_callback_line(
 	$db_file,
-		function () {
-			$locks = explode("\n", file_get_contents("/proc/locks"));
-			$p_id = getmypid();
+	function () {
+		$locks = explode("\n", file_get_contents("/proc/locks"));
+		$p_id = getmypid();
 
-			foreach($locks as $lock){
-				$records = explode(" ", $lock);
-				if(isset($records[6]) && $records[6] == $p_id) {
-					print_r($records);
-				}
+		foreach($locks as $lock){
+			$records = explode(" ", $lock);
+			if(isset($records[6]) && $records[6] == $p_id) {
+				print_r($records);
 			}
-
-			return false;
 		}
+
+		return false;
+	}
 );
 
 Array
