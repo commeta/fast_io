@@ -80,6 +80,10 @@ The flock lock is in effect until the process that set it calls flock LOCK_UN to
 It is important to note that the flock lock itself is not transactional, i.e., it does not support ACID transactions. If the process that established the lock terminates with an error, data may remain inconsistent. Therefore, flock is usually used for implementing simple synchronization mechanisms rather than ensuring data integrity.
 
 
+Details: [Locks in Linux](#locks-in-linux).
+
+
+
 ### Ensuring data integrity
 - file_push_data, file_insert_line - always cancel the last record and exit with an error.
 - file_replace_line, file_defrag_data, file_defrag_line - if there is an error during writeback, it renames temporary files and data remains intact. If a parallel copy of the Fast_IO function is waiting for the file lock to be released, it will fail with a lock error.
@@ -617,7 +621,8 @@ The example is inspired by the queue_address_manager function in the project [ph
    - Thus, the work is distributed across multiple CPU cores (for CPU-BOUND tasks) or queued with long wait cycles for data download (IO-BOUND).
 
 
-## /proc/locks in Linux
+
+## Locks in Linux
 
 The /proc/locks file in Linux contains information about all file locks established in the system. This file is part of the virtual file system /proc, which provides an interface for interacting with the kernel and obtaining information about the system's state.
 
