@@ -141,3 +141,12 @@ cancelled_write_bytes: 154738688 (85.51 millions per sec)
 - cancelled_write_bytes — количество байт, которые были отменены процессом при записи на диск. Этот параметр показывает, сколько байт было отменено процессом при попытке записи на диск.
 
 
+##### Профиль XDEBUG
+
+
+###### Стоимость по времени
+![auto_test_profile_time](https://raw.githubusercontent.com/commeta/fast_io/master/test/auto_test_profile_time.png "auto_test_profile_time")
+
+###### Стоимость по памяти
+![auto_test_profile_mem](https://raw.githubusercontent.com/commeta/fast_io/master/test/auto_test_profile_mem.png "auto_test_profile_mem")
+
