@@ -27,7 +27,7 @@
 
 
 
-## Адресация
+### Адресация
 
 ```
 <?php
@@ -96,7 +96,7 @@ Array
 
 
 
-## Результаты стресс теста: test.php
+### Результаты стресс теста: test.php
 
 ```
 root@api:/home/commeta/project/kernel/fast_io# ./compile.sh
@@ -555,7 +555,7 @@ root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full php -d
 
 ```
 
-## Отчет Valgrind leak-check show-leak-kinds
+### Отчет Valgrind leak-check show-leak-kinds
 
 ```
 root@api:/home/commeta/project/kernel/fast_io# valgrind --leak-check=full --show-leak-kinds=all php test.php
