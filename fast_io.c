@@ -789,7 +789,7 @@ PHP_FUNCTION(file_search_line) {
             // Обрезка пробелов справа и символа перевода строки
             size_t len = strlen(found_value);
             for (size_t i = len; i > 0; --i) {
-                if(found_value[i-1] == ' ' || found_value[i-1] == '\n' || found_value[i-1] == '\r') {
+                if(found_value[i-1] == ' ' || found_value[i-1] == '\n') {
                     found_value[i-1] = '\0';
                 } else {
                     break;
@@ -2190,7 +2190,7 @@ PHP_FUNCTION(file_get_keys) {
                     long str_len = strlen(line_start);
 
                     for (i = str_len - 1; i >= 0; --i) {
-                        if(line_start[i] == ' ' || line_start[i] == '\t' || line_start[i] == '\r') {
+                        if(line_start[i] == ' ' || line_start[i] == '\t' || line_start[i] == '\n') {
                             line_start[i] = '\0';
                         } else {
                             break;
