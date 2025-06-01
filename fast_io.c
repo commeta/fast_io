@@ -2190,7 +2190,7 @@ PHP_FUNCTION(file_get_keys) {
                     long str_len = strlen(line_start);
 
                     for (i = str_len - 1; i >= 0; --i) {
-                        if(line_start[i] == ' ' || line_start[i] == '\n' || line_start[i] == '\0') {
+                        if(line_start[i] == ' ' || line_start[i] == '\n') {
                             line_start[i] = '\0';
                         } else {
                             break;
