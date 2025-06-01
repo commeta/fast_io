@@ -1254,34 +1254,6 @@ PHP_FUNCTION(file_defrag_lines) {
         }
     }
 
-    // Обрабатываем остаток буфера, если он не заканчивается на \n
-    if (current_size > 0) {
-        found_match = false;
-
-        if (line_key != NULL) {
-            if (*dynamic_buffer == SPECIAL_CHAR || strstr(dynamic_buffer, line_key) != NULL) {
-                found_match = true;
-            }
-        } else {
-            if (*dynamic_buffer == SPECIAL_CHAR) {
-                found_match = true;
-            }
-        }
-
-        if (!found_match) {
-            bytes_write = fwrite(dynamic_buffer, 1, current_size, temp_fp);
-            if (bytes_write != current_size) {
-                php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
-                fclose(data_fp);
-                fclose(temp_fp);
-                unlink(temp_filename);
-                efree(dynamic_buffer);
-                RETURN_LONG(-4);
-            }
-        } else {
-            found_count++;
-        }
-    }
 
     if(mode == 0){
         fseek(data_fp, 0 , SEEK_SET);
