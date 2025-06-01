@@ -2564,12 +2564,23 @@ PHP_FUNCTION(file_insert_line)
 PHP_FUNCTION(file_select_line) {
     char *filename;
     size_t filename_len;
-    ssize_t row;
-    ssize_t align;
-    size_t mode = 0;
+    zend_long row;
+    zend_long align;
+    zend_long mode = 0;
 
     // Парсинг переданных аргументов
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sll|l", &filename, &filename_len, &row, &align, &mode) == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    // Проверка валидности параметров
+    if (align <= 0) {
+        php_error_docref(NULL, E_WARNING, "Align parameter must be positive");
+        RETURN_FALSE;
+    }
+
+    if (row < 0) {
+        php_error_docref(NULL, E_WARNING, "Row parameter must be non-negative");
         RETURN_FALSE;
     }
 
@@ -2580,7 +2591,7 @@ PHP_FUNCTION(file_select_line) {
     }
 
     // Попытка установить блокирующую блокировку на запись
-    if(mode < 100){
+    if (mode < 100) {
         if (flock(fileno(fp), LOCK_EX) == -1) {
             php_error_docref(NULL, E_WARNING, "Failed to lock file: %s", filename);
             fclose(fp);
@@ -2588,60 +2599,79 @@ PHP_FUNCTION(file_select_line) {
         }
     }
 
-    if(mode > 99) mode -= 100;
+    if (mode > 99) mode -= 100;
 
-    ssize_t bytes_read;
-    ssize_t position;
+    long bytes_read;
+    long position;
 
-    if(mode == 0 || mode == 2) position = row * align;
-    if(mode == 1 || mode == 3) position = row;
+    if (mode == 0 || mode == 2) position = row * align;
+    if (mode == 1 || mode == 3) position = row;
 
-
+    // Получаем размер файла
     fseek(fp, 0, SEEK_END);
-    ssize_t file_size = ftell(fp);
+    long file_size = ftell(fp);
 
-    if(position < 0 || position > file_size || fseek(fp, position , SEEK_SET) == -1){
+    if (position < 0 || position >= file_size) {
+        php_error_docref(NULL, E_WARNING, "Position out of file bounds: %s", filename);
+        fclose(fp);
+        RETURN_FALSE;
+    }
+
+    if (fseek(fp, position, SEEK_SET) == -1) {
         php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
         fclose(fp);
         RETURN_FALSE;
     }
 
-    // Увеличиваем размер буфера на 1 для возможного символа перевода строки
-    char *buffer = (char *)emalloc(align + 1); // +1 для '\0' и +1 для '\n'
+    // Вычисляем размер для чтения (не больше оставшейся части файла)
+    long remaining_bytes = file_size - position;
+    long read_size = (align < remaining_bytes) ? align : remaining_bytes;
+
+    // Увеличиваем размер буфера на 1 для нуль-терминатора
+    char *buffer = (char *)emalloc(read_size + 1);
     if (!buffer) {
         fclose(fp);
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", align + 1);
-    }
-
-    bytes_read = fread(buffer, 1, align, fp);
-    if(bytes_read != align){
-        php_error_docref(NULL, E_WARNING, "Failed to read to the file: %s", filename);
-        efree(buffer);
-        fclose(fp);
+        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", read_size + 1);
         RETURN_FALSE;
     }
+
+    bytes_read = fread(buffer, 1, read_size, fp);
     fclose(fp);
+
+    if (bytes_read < 0) {
+        php_error_docref(NULL, E_WARNING, "Failed to read from file: %s", filename);
+        efree(buffer);
+        RETURN_FALSE;
+    }
 
     // Убедимся, что строка нуль-терминирована
     buffer[bytes_read] = '\0';
 
-    if(mode == 0 || mode == 1){
+    if (mode == 0 || mode == 1) {
         if (mode == 1) {
             char *line_end = strchr(buffer, '\n');
             if (line_end != NULL) {
                 *line_end = '\0'; // Заменяем перевод строки на нуль-терминатор
+                bytes_read = line_end - buffer; // Обновляем длину
             }
         }
 
         // Обрезка пробелов справа и символа перевода строки
-        for (ssize_t i = bytes_read - 1; i >= 0; --i) {
-            if(buffer[i] == ' ' || buffer[i] == '\n') buffer[i] = '\0';
-            else break;
+        for (long i = bytes_read - 1; i >= 0; --i) {
+            if (buffer[i] == ' ' || buffer[i] == '\n') {
+                buffer[i] = '\0';
+            } else {
+                break;
+            }
         }
     }
 
+    // Создаем PHP строку и освобождаем буфер
+    zend_string *result = zend_string_init(buffer, strlen(buffer), 0);
+    efree(buffer);
+
     // Возврат строки в PHP
-    RETURN_STRING(buffer);
+    RETURN_STR(result);
 }
 
 
@@ -2720,7 +2750,7 @@ PHP_FUNCTION(file_update_line) {
 PHP_FUNCTION(file_analize) { // Анализ таблицы
     char *filename;
     size_t filename_len;
-    size_t mode = 0;
+    zend_long mode = 0;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|l", &filename, &filename_len, &mode) == FAILURE) {
         RETURN_FALSE;
@@ -2745,15 +2775,22 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
 
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
-    ssize_t file_size = ftell(fp);
+    long file_size = ftell(fp);
+    if (file_size < 0) {
+        php_error_docref(NULL, E_WARNING, "Failed to get file size: %s", filename);
+        fclose(fp);
+        RETURN_LONG(-1);
+    }
 
-    char last_symbol;
-    fseek(fp, file_size - 1, SEEK_SET);
-    last_symbol = fgetc(fp);
+    char last_symbol = 0;
+    if (file_size > 0) {
+        fseek(fp, file_size - 1, SEEK_SET);
+        last_symbol = fgetc(fp);
+    }
 
     fseek(fp, 0, SEEK_SET);
 
-    ssize_t ini_buffer_size = FAST_IO_G(buffer_size);
+    long ini_buffer_size = FAST_IO_G(buffer_size);
 
     if(file_size < ini_buffer_size) ini_buffer_size = file_size;
     if(ini_buffer_size < 16) ini_buffer_size = 16;
@@ -2761,45 +2798,47 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
     char *buffer = (char *)emalloc(ini_buffer_size + 1);
     if (!buffer) {
         fclose(fp);
-        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", ini_buffer_size + 1);
+        php_error_docref(NULL, E_ERROR, "Out of memory to allocate %ld bytes", ini_buffer_size + 1);
+        RETURN_LONG(-8);
     }
 
-    ssize_t bytes_read;
-    size_t max_length = 0, max_length_offset = 0, min_length_offset = 0, current_length = 0;
-    double avg_length = 0.0;
+    size_t bytes_read;
+    size_t max_length = 0, current_length = 0;
     size_t min_length = SIZE_MAX;
     size_t line_count = 0;
-    ssize_t total_characters = 0;
-    ssize_t flow_interruption = 0;
+    long total_characters = 0;
+    long max_length_offset = 0, min_length_offset = 0;
+    long current_offset = 0;
+    long flow_interruption = 0;
 
     array_init(return_value);
 
     while ((bytes_read = fread(buffer, 1, ini_buffer_size, fp)) > 0) {
-        for (ssize_t i = 0; i < bytes_read; ++i) {
+        for (size_t i = 0; i < bytes_read; ++i) {
             if (buffer[i] == '\n') { // Конец текущей строки
                 line_count++;
 
-                if (current_length > max_length) {
+                if (current_length + 1 > max_length) {
                     max_length = current_length + 1; // Обновляем максимальную длину
-                    max_length_offset = total_characters;
+                    max_length_offset = current_offset - current_length;
                 }
 
-                if(current_length < min_length){
+                if(current_length + 1 < min_length){
                     min_length = current_length + 1;
-                    min_length_offset = total_characters;
+                    min_length_offset = current_offset - current_length;
                 }
 
                 total_characters += current_length + 1;
-                avg_length = total_characters / line_count; // Вычисляем среднюю длину
 
                 if(mode == 1) { // Возвращаем длину первой строки.
                     efree(buffer);
                     fclose(fp);
 
+                    double avg_length = (double)total_characters / line_count;
                     add_assoc_long(return_value, "min_length", min_length);
                     add_assoc_long(return_value, "max_length", max_length);
                     add_assoc_double(return_value, "avg_length", avg_length);
-                    add_assoc_long(return_value, "line_count", line_count - 1);
+                    add_assoc_long(return_value, "line_count", 0); // По спецификации в mode=1 должно быть 0
                     add_assoc_long(return_value, "total_characters", total_characters);
                     add_assoc_long(return_value, "last_symbol", last_symbol);
                     add_assoc_long(return_value, "file_size", file_size);
@@ -2810,21 +2849,36 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
             } else {
                 ++current_length; // Увеличиваем длину текущей строки
             }
+            current_offset++;
         }
+    }
+
+    // Обработка последней строки без символа перевода строки
+    if (current_length > 0) {
+        if (current_length > max_length) {
+            max_length = current_length;
+            max_length_offset = current_offset - current_length;
+        }
+        if (current_length < min_length) {
+            min_length = current_length;
+            min_length_offset = current_offset - current_length;
+        }
+        total_characters += current_length;
+        flow_interruption = current_length;
     }
 
     efree(buffer);
     fclose(fp);
 
-    add_assoc_long(return_value, "min_length", min_length);
+    double avg_length = line_count > 0 ? (double)total_characters / line_count : 0.0;
+
+    add_assoc_long(return_value, "min_length", min_length == SIZE_MAX ? 0 : min_length);
     add_assoc_long(return_value, "min_length_offset", min_length_offset);
     add_assoc_long(return_value, "max_length", max_length);
     add_assoc_long(return_value, "max_length_offset", max_length_offset);
     add_assoc_double(return_value, "avg_length", avg_length);
     add_assoc_long(return_value, "line_count", line_count);
     add_assoc_long(return_value, "total_characters", total_characters);
-
-    if(file_size > total_characters) flow_interruption = file_size - total_characters;
     add_assoc_long(return_value, "flow_interruption", flow_interruption);
     add_assoc_long(return_value, "last_symbol", last_symbol);
     add_assoc_long(return_value, "file_size", file_size);
@@ -3534,10 +3588,9 @@ PHP_FUNCTION(file_update_array) {
 PHP_FUNCTION(file_callback_line) {
     char *filename;
     size_t filename_len;
-    ssize_t position = 0;
-    size_t mode = 0;
+    zend_long position = 0;
+    zend_long mode = 0;
     zval *callback;
-    zval retval;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "sz|ll", &filename, &filename_len, &callback, &position, &mode) == FAILURE) {
         RETURN_FALSE;
@@ -3568,8 +3621,8 @@ PHP_FUNCTION(file_callback_line) {
 
     // Перемещение указателя в конец файла для получения его размера
     fseek(fp, 0, SEEK_END);
-    ssize_t file_size = ftell(fp);
-    ssize_t line_offset = 0; // Смещение начала строки
+    long file_size = ftell(fp);
+    long line_offset = 0; // Смещение начала строки
 
     if(position > 0){
         if(position >= file_size){
@@ -3578,18 +3631,18 @@ PHP_FUNCTION(file_callback_line) {
             RETURN_FALSE;
         }
 
-        fseek(fp, position, SEEK_SET);
-        line_offset = position;
+        fseek(fp, (long)position, SEEK_SET);
+        line_offset = (long)position;
     } else {
         fseek(fp, 0, SEEK_SET);
     }
 
-    ssize_t ini_buffer_size = FAST_IO_G(buffer_size);
+    long ini_buffer_size = FAST_IO_G(buffer_size);
 
     if(file_size < ini_buffer_size) ini_buffer_size = file_size;
     if(ini_buffer_size < 16) ini_buffer_size = 16;
 
-    ssize_t dynamic_buffer_size = ini_buffer_size;
+    long dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     if (!dynamic_buffer) {
         fclose(fp);
@@ -3597,26 +3650,36 @@ PHP_FUNCTION(file_callback_line) {
     }
 
     char *found_value = (char *)emalloc(1);
+    if (!found_value) {
+        efree(dynamic_buffer);
+        fclose(fp);
+        zend_error(E_ERROR, "Out of memory to allocate 1 byte");
+    }
     found_value[0] = '\0';
 
-    ssize_t bytes_read;
-    ssize_t current_size = 0; // Текущий размер данных в динамическом буфере
-    size_t line_count = 0;
-    bool found_match = false;
-    bool jump = false;
+    size_t bytes_read;
+    long current_size = 0; // Текущий размер данных в динамическом буфере
+    zend_long line_count = 0;
+    zend_bool found_match = 0;
+    zend_bool jump = 0;
 
-    while ((bytes_read = fread(dynamic_buffer + current_size, 1, ini_buffer_size, fp)) > 0) {
-        current_size += bytes_read;
+    while ((bytes_read = fread(dynamic_buffer + current_size, 1, (size_t)ini_buffer_size, fp)) > 0) {
+        current_size += (long)bytes_read;
         
         dynamic_buffer[current_size] = '\0';
 
         char *line_start = dynamic_buffer;
         char *line_end;
         while ((line_end = strchr(line_start, '\n')) != NULL) {
-            ssize_t line_length = line_end - line_start + 1;
+            long line_length = line_end - line_start + 1;
 
             zval retval; // Инициализация переменной для возвращаемого значения
             zval args[10];
+            
+            // Инициализируем все элементы массива args
+            for (int i = 0; i < 10; i++) {
+                ZVAL_UNDEF(&args[i]);
+            }
 
             *line_end = '\0';
             ZVAL_STRING(&args[0], line_start);
@@ -3635,46 +3698,50 @@ PHP_FUNCTION(file_callback_line) {
                 if(mode > 8) ZVAL_STRING(&args[9], dynamic_buffer);
             }
 
-            // Вызываем callback-функцию с одним аргументом
-            if (call_user_function(EG(function_table), NULL, callback, &retval, mode + 1, args) == SUCCESS) {
-                if(Z_TYPE_P(&retval) == IS_STRING) {
-                    char *temp_retval = (char *)erealloc(found_value, Z_STRLEN_P(&retval) + 1);
+            // Вызываем callback-функцию с аргументами
+            if (call_user_function(EG(function_table), NULL, callback, &retval, (uint32_t)(mode + 1), args) == SUCCESS) {
+                if(Z_TYPE(retval) == IS_STRING) {
+                    size_t new_len = Z_STRLEN(retval) + 1;
+                    char *temp_retval = (char *)erealloc(found_value, new_len);
                     if (!temp_retval) {
                         fclose(fp);
                         if (dynamic_buffer) efree(dynamic_buffer);
                         if (found_value) efree(found_value);
-                        for (size_t i = 0; i <= mode; i++) zval_dtor(&args[i]);
+                        for (int i = 0; i < 10; i++) {
+                            if (Z_TYPE(args[i]) != IS_UNDEF) zval_dtor(&args[i]);
+                        }
                         zval_dtor(&retval);
-                        zend_error(E_ERROR, "Out of memory to allocate %ld bytes", Z_STRLEN_P(&retval) + 1);
+                        zend_error(E_ERROR, "Out of memory to allocate %zu bytes", new_len);
                     }
 
                     found_value = temp_retval;
 
-                    strncpy(found_value, Z_STRVAL_P(&retval), Z_STRLEN_P(&retval));
-                    found_value[Z_STRLEN_P(&retval)] = '\0';
+                    strncpy(found_value, Z_STRVAL(retval), Z_STRLEN(retval));
+                    found_value[Z_STRLEN(retval)] = '\0';
                 }
 
-                if(Z_TYPE_P(&retval) == IS_LONG) {
-                    if((ssize_t) Z_LVAL_P(&retval) >= file_size || Z_LVAL_P(&retval) < 0){
+                if(Z_TYPE(retval) == IS_LONG) {
+                    if(Z_LVAL(retval) >= file_size || Z_LVAL(retval) < 0){
                         php_error_docref(NULL, E_WARNING, "Failed to seek file: %s", filename);
                         fclose(fp);
                         if (dynamic_buffer) efree(dynamic_buffer);
                         if (found_value) efree(found_value);
-                        for (size_t i = 0; i <= mode; i++) zval_dtor(&args[i]);
+                        for (int i = 0; i < 10; i++) {
+                            if (Z_TYPE(args[i]) != IS_UNDEF) zval_dtor(&args[i]);
+                        }
                         zval_dtor(&retval);
                         RETURN_FALSE;
                     }
 
-                    position = Z_LVAL_P(&retval);
+                    position = Z_LVAL(retval);
 
-                    fseek(fp, position, SEEK_SET);
-                    line_offset = position;
-                    jump = true;
+                    fseek(fp, (long)position, SEEK_SET);
+                    line_offset = (long)position;
+                    jump = 1;
                 }
 
-
-                if(Z_TYPE_P(&retval) == IS_FALSE) {
-                    found_match = true;
+                if(Z_TYPE(retval) == IS_FALSE) {
+                    found_match = 1;
                 }
 
             } else {
@@ -3683,7 +3750,9 @@ PHP_FUNCTION(file_callback_line) {
                 fclose(fp);
                 if (dynamic_buffer) efree(dynamic_buffer);
                 if (found_value) efree(found_value);
-                for (size_t i = 0; i <= mode; i++) zval_dtor(&args[i]);
+                for (int i = 0; i < 10; i++) {
+                    if (Z_TYPE(args[i]) != IS_UNDEF) zval_dtor(&args[i]);
+                }
                 zval_dtor(&retval);
                 RETURN_FALSE;
             }
@@ -3691,20 +3760,21 @@ PHP_FUNCTION(file_callback_line) {
             zval_dtor(&retval);
 
             // Освобождаем ресурсы
-            for (size_t i = 0; i <= mode; i++) {
-                zval_dtor(&args[i]);
+            for (int i = 0; i < 10; i++) {
+                if (Z_TYPE(args[i]) != IS_UNDEF) {
+                    zval_dtor(&args[i]);
+                }
             }
 
             line_count++; 
             line_start = line_end + 1;
   
             if (jump) {
-                jump = false;
+                jump = 0;
                 break;
             } else {
                 line_offset += line_length; // Обновляем смещение
             }
-
 
             if (found_match) break;
         }
@@ -3712,7 +3782,7 @@ PHP_FUNCTION(file_callback_line) {
         if (found_match) break;
 
         current_size -= (line_start - dynamic_buffer);
-        memmove(dynamic_buffer, line_start, current_size);
+        memmove(dynamic_buffer, line_start, (size_t)current_size);
 
         if (current_size + ini_buffer_size > dynamic_buffer_size) {
             dynamic_buffer_size += ini_buffer_size;
@@ -3721,7 +3791,7 @@ PHP_FUNCTION(file_callback_line) {
             if (!temp_buffer) {
                 fclose(fp);
                 if (dynamic_buffer) efree(dynamic_buffer);
-                efree(found_value);
+                if (found_value) efree(found_value);
                 zend_error(E_ERROR, "Out of memory to allocate %ld bytes", dynamic_buffer_size + 1);
             }
 
@@ -3732,5 +3802,7 @@ PHP_FUNCTION(file_callback_line) {
     efree(dynamic_buffer);
     fclose(fp);
 
-    RETURN_STRING(found_value);
+    zend_string *result = zend_string_init(found_value, strlen(found_value), 0);
+    efree(found_value);
+    RETURN_STR(result);
 }
