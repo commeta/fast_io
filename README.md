@@ -2,6 +2,9 @@
 
 [Описание на русском](README.RU.md)
 
+![Fast_IO Extension for PHP 8]([https://raw.githubusercontent.com/commeta/php-cron-requests-events/master/docs/php_cron_in_php-fpm_htop_process_list.png](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/auto_test_profile_mem.png) "fast_io")
+
+
 ## Overview
 
 Fast_IO is a high-performance PHP 8 extension designed for efficient data file management, focusing on key-value pairs. It offers a suite of functions for reading, writing, and deleting data using low-level sector access and portable file locking to synchronize access across concurrent instances. This extension facilitates the storage and maintenance of arbitrarily large database files, with buffered functions reading files in chunks of 4096 bytes (1 OS kernel-cached page), ensuring high efficiency and performance.
