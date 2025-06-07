@@ -2,7 +2,8 @@
 
 [Описание на русском](README.RU.md)
 
-![Fast_IO Extension for PHP 8]([https://raw.githubusercontent.com/commeta/php-cron-requests-events/master/docs/php_cron_in_php-fpm_htop_process_list.png](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/auto_test_profile_mem.png) "fast_io")
+![Fast_IO Extension for PHP 8](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/auto_test_profile_mem.png "fast_io")
+
 
 
 ## Overview
