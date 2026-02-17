@@ -399,7 +399,7 @@ PHP_FUNCTION(file_search_array) {
             if(mode < 3 && strstr(line_start, line_key) != NULL){
                 found_count++;
 
-                if(search_start < found_count){
+                if(search_start < (zend_long)found_count){
                     add_count++;
 
                     zval line_arr;
@@ -441,7 +441,7 @@ PHP_FUNCTION(file_search_array) {
             if(mode > 9 && mode < 13 && re != NULL && match_data != NULL && pcre2_match(re, (PCRE2_SPTR)line_start, line_length - 1, 0, 0, match_data, NULL) > 0){
                 found_count++;
 
-                if(search_start < found_count){
+                if(search_start < (zend_long)found_count){
                     add_count++;
 
                     zval line_arr;
@@ -471,6 +471,7 @@ PHP_FUNCTION(file_search_array) {
 
                     if(mode == 12){
                         add_next_index_string(return_value, line_start);
+                        zval_ptr_dtor(&line_arr);
                     } else {
                         add_next_index_zval(return_value, &line_arr);
                     }
@@ -482,105 +483,104 @@ PHP_FUNCTION(file_search_array) {
             }
 
             if(mode > 19 && mode < 25 && re != NULL && match_data != NULL){
-                if(search_start < found_count + 1){
-                    zval return_matched;
-                    array_init(&return_matched);
+                zval return_matched;
+                array_init(&return_matched);
 
-                    int rc;
-                    PCRE2_SIZE *ovector;
-                    size_t start_offset = 0;
+                int rc;
+                PCRE2_SIZE *ovector;
+                size_t start_offset = 0;
 
-                    bool is_matched = false;
+                bool is_matched = false;
 
-                    while ((rc = pcre2_match(re, (PCRE2_SPTR)line_start, line_length - 1, start_offset, 0, match_data, NULL)) > 0) {
-                        ovector = pcre2_get_ovector_pointer(match_data);
+                while ((rc = pcre2_match(re, (PCRE2_SPTR)line_start, line_length - 1, start_offset, 0, match_data, NULL)) > 0) {
+                    ovector = pcre2_get_ovector_pointer(match_data);
 
-                        for (int i = 0; i < rc; i++) {
-                            PCRE2_SIZE start = ovector[2*i];
-                            PCRE2_SIZE end = ovector[2*i+1];
+                    for (int i = 0; i < rc; i++) {
+                        PCRE2_SIZE start = ovector[2*i];
+                        PCRE2_SIZE end = ovector[2*i+1];
 
-                            if(mode > 21){
-                                zval match_arr;
-                                array_init(&match_arr);
+                        if(mode > 21){
+                            zval match_arr;
+                            array_init(&match_arr);
 
-                                if(mode == 23){
-                                    add_next_index_stringl(&return_matched, line_start + start, end - start);
-                                } else {
-                                    add_assoc_stringl(&match_arr, "line_match", line_start + start, end - start);
-                                }
-
-                                if(mode != 23){
-                                    add_assoc_long(&match_arr, "match_offset", start);
-                                    add_assoc_long(&match_arr, "match_length", end - start);
-                                    add_next_index_zval(&return_matched, &match_arr);
-                                }
-                                
-                            } else {
+                            if(mode == 23){
                                 add_next_index_stringl(&return_matched, line_start + start, end - start);
-                            }
-                        }
-
-                        // Изменение для предотвращения потенциального бесконечного цикла
-                        if (ovector[1] > start_offset) {
-                            start_offset = ovector[1];
-                        } else {
-                            start_offset++; // Для продолжения поиска следующего совпадения
-                            if (start_offset >= (size_t)(line_length - 1)) break; // Выходим из цикла, если достигнут конец строки
-                        }
-
-                        is_matched = true;
-                    }
-
-                    if (rc < -1) {
-                        /* Обработка других ошибок. */
-                        php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
-                        fclose(fp);
-                        if (dynamic_buffer) efree(dynamic_buffer);
-                        if (re != NULL) pcre2_code_free(re);
-                        if (match_data != NULL) pcre2_match_data_free(match_data);
-                        RETURN_FALSE;
-                    }
-
-                    if(is_matched){
-                        add_count++;
-
-                        zval line_arr;
-                        array_init(&line_arr);
-
-                        if(mode == 20) {
-                            long i;
-
-                            for (i = line_length - 2; i >= 0; --i) {
-                                if(line_start[i] == ' ') line_start[i] = '\0';
-                                else break;
+                            } else {
+                                add_assoc_stringl(&match_arr, "line_match", line_start + start, end - start);
                             }
 
-                            add_assoc_string(&line_arr, "trim_line", line_start);
-                            add_assoc_long(&line_arr, "trim_length", i + 1);
-                        }
-
-                        if(mode == 21) {
-                            add_assoc_string(&line_arr, "line", line_start);
-                        }
-
-                        if(mode != 23){
-                            add_assoc_zval(&line_arr, "line_matches", &return_matched);
-
-                            add_assoc_long(&line_arr, "line_offset", search_offset);
-                            add_assoc_long(&line_arr, "line_length", line_length);
-                            add_assoc_long(&line_arr, "line_count", line_count);
-                        }
-
-                        if(mode == 23){
-                            add_next_index_zval(return_value, &return_matched);
+                            if(mode != 23){
+                                add_assoc_long(&match_arr, "match_offset", start);
+                                add_assoc_long(&match_arr, "match_length", end - start);
+                                add_next_index_zval(&return_matched, &match_arr);
+                            }
+                            
                         } else {
-                            add_next_index_zval(return_value, &line_arr);
+                            add_next_index_stringl(&return_matched, line_start + start, end - start);
                         }
+                    }
+
+                    // Изменение для предотвращения потенциального бесконечного цикла
+                    if (ovector[1] > start_offset) {
+                        start_offset = ovector[1];
                     } else {
-                        zval_dtor(&return_matched); // Освобождаем память, если совпадений не было
+                        start_offset++; // Для продолжения поиска следующего совпадения
+                        if (start_offset >= (size_t)(line_length - 1)) break; // Выходим из цикла, если достигнут конец строки
                     }
 
+                    is_matched = true;
+                }
+
+                if (rc < -1) {
+                    /* Обработка других ошибок. */
+                    php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
+                    zval_ptr_dtor(&return_matched);
+                    fclose(fp);
+                    if (dynamic_buffer) efree(dynamic_buffer);
+                    if (re != NULL) pcre2_code_free(re);
+                    if (match_data != NULL) pcre2_match_data_free(match_data);
+                    RETURN_FALSE;
+                }
+
+                if(is_matched){
                     found_count++;
+                    add_count++;
+
+                    zval line_arr;
+                    array_init(&line_arr);
+
+                    if(mode == 20) {
+                        long i;
+
+                        for (i = line_length - 2; i >= 0; --i) {
+                            if(line_start[i] == ' ') line_start[i] = '\0';
+                            else break;
+                        }
+
+                        add_assoc_string(&line_arr, "trim_line", line_start);
+                        add_assoc_long(&line_arr, "trim_length", i + 1);
+                    }
+
+                    if(mode == 21) {
+                        add_assoc_string(&line_arr, "line", line_start);
+                    }
+
+                    if(mode != 23){
+                        add_assoc_zval(&line_arr, "line_matches", &return_matched);
+
+                        add_assoc_long(&line_arr, "line_offset", search_offset);
+                        add_assoc_long(&line_arr, "line_length", line_length);
+                        add_assoc_long(&line_arr, "line_count", line_count);
+                    }
+
+                    if(mode == 23){
+                        add_next_index_zval(return_value, &return_matched);
+                        zval_ptr_dtor(&line_arr);
+                    } else {
+                        add_next_index_zval(return_value, &line_arr);
+                    }
+                } else {
+                    zval_ptr_dtor(&return_matched); // Освобождаем память, если совпадений не было
                 }
             }
             
@@ -588,7 +588,7 @@ PHP_FUNCTION(file_search_array) {
             line_start = line_end + 1;
             line_count++;
 
-            if(add_count >= search_limit){
+            if(add_count >= (size_t)search_limit){
                 found_match = true;
                 break;
             }
@@ -740,7 +740,35 @@ PHP_FUNCTION(file_search_line) {
                 break;
             }
 
-            if(mode == 10 && pcre2_match(re, (PCRE2_SPTR)line_start, line_length, 0, 0, match_data, NULL) > 0){
+            if(mode == 1 && strstr(line_start, line_key) != NULL){
+                found_value = estrndup(line_start, line_length);
+                if(found_value == NULL){
+                    fclose(fp);
+                    efree(dynamic_buffer);
+                    if (re != NULL) pcre2_code_free(re);
+                    if (match_data != NULL) pcre2_match_data_free(match_data);
+                    zend_error(E_ERROR, "Out of memory to allocate %ld bytes", line_length);
+                }
+
+                found_match = true;
+                break;
+            }
+
+            if(mode == 10 && re != NULL && match_data != NULL && pcre2_match(re, (PCRE2_SPTR)line_start, line_length, 0, 0, match_data, NULL) > 0){
+                found_value = estrndup(line_start, line_length);
+                if(found_value == NULL){
+                    fclose(fp);
+                    efree(dynamic_buffer);
+                    if (re != NULL) pcre2_code_free(re);
+                    if (match_data != NULL) pcre2_match_data_free(match_data);
+                    zend_error(E_ERROR, "Out of memory to allocate %ld bytes", line_length);
+                }
+                
+                found_match = true;
+                break;
+            }
+
+            if(mode == 11 && re != NULL && match_data != NULL && pcre2_match(re, (PCRE2_SPTR)line_start, line_length, 0, 0, match_data, NULL) > 0){
                 found_value = estrndup(line_start, line_length);
                 if(found_value == NULL){
                     fclose(fp);
@@ -979,7 +1007,7 @@ PHP_FUNCTION(file_search_data) {
     }
 
     bytes_read = fread(data_buffer, 1, data_size, data_fp);
-    if (bytes_read != data_size) {
+    if ((long)bytes_read != data_size) {
         php_error_docref(NULL, E_WARNING, "Failed to read from file: %s", filename);
         fclose(data_fp);
         efree(data_buffer);
@@ -1253,37 +1281,6 @@ PHP_FUNCTION(file_defrag_lines) {
             dynamic_buffer = temp_buffer;
         }
     }
-
-    // Обрабатываем остаток буфера, если он не заканчивается на \n
-    /*
-    if (current_size > 0) {
-        found_match = false;
-
-        if (line_key != NULL) {
-            if (*dynamic_buffer == SPECIAL_CHAR || strstr(dynamic_buffer, line_key) != NULL) {
-                found_match = true;
-            }
-        } else {
-            if (*dynamic_buffer == SPECIAL_CHAR) {
-                found_match = true;
-            }
-        }
-
-        if (!found_match) {
-            bytes_write = fwrite(dynamic_buffer, 1, current_size, temp_fp);
-            if (bytes_write != current_size) {
-                php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
-                fclose(data_fp);
-                fclose(temp_fp);
-                unlink(temp_filename);
-                efree(dynamic_buffer);
-                RETURN_LONG(-4);
-            }
-        } else {
-            found_count++;
-        }
-    }
-    */
 
     if(mode == 0){
         fseek(data_fp, 0 , SEEK_SET);
@@ -2216,54 +2213,74 @@ PHP_FUNCTION(file_get_keys) {
 
             if(search_start < line_count){
                 add_count++;
-                zval line_arr;
-                array_init(&line_arr);
 
-                if(mode == 1) add_assoc_string(&line_arr, "line", line_start);
+                if(mode == 4 || mode == 5) {
+                    // Создаем копию строки для поиска пробела
+                    char *key_str = estrdup(line_start);
 
-                if(mode == 2 || mode == 5) {
-                    // Обрезка пробелов справа и символа перевода строки
-                    long i;
-                    long str_len = strlen(line_start);
-
-                    for (i = str_len - 1; i >= 0; --i) {
-                        if(line_start[i] == ' ' || line_start[i] == '\n') {
-                            line_start[i] = '\0';
-                        } else {
-                            break;
+                    if(mode == 2 || mode == 5) {
+                        // Обрезка пробелов справа и символа перевода строки
+                        long str_len = strlen(line_start);
+                        for (long i = str_len - 1; i >= 0; --i) {
+                            if(line_start[i] == ' ' || line_start[i] == '\n') {
+                                line_start[i] = '\0';
+                            } else {
+                                break;
+                            }
                         }
                     }
 
-                    add_assoc_string(&line_arr, "trim_line", line_start);
-                    if(mode != 5) add_assoc_long(&line_arr, "trim_length", i + 1);
+                    if(mode == 4) {
+                        char *space_pos = strchr(key_str, ' ');
+                        if (space_pos) *space_pos = '\0';
+                        add_next_index_string(return_value, key_str);
+                    }
 
                     if(mode == 5){
                         add_next_index_string(return_value, line_start);
                     }
-                }
 
-                // Создаем копию строки для поиска пробела, чтобы не модифицировать оригинал
-                char *key_str = estrdup(line_start);
-                char *space_pos = strchr(key_str, ' ');
-                if (space_pos) *space_pos = '\0';
+                    efree(key_str);
+                } else {
+                    zval line_arr;
+                    array_init(&line_arr);
 
-                if(mode == 0) add_assoc_string(&line_arr, "key", key_str);
+                    if(mode == 1) add_assoc_string(&line_arr, "line", line_start);
 
-                if(mode < 4){
-                    add_assoc_long(&line_arr, "line_offset", line_offset);
-                    add_assoc_long(&line_arr, "line_length", line_length);
-                    add_assoc_long(&line_arr, "line_count", line_count - 1);
-                }
+                    if(mode == 2) {
+                        // Обрезка пробелов справа и символа перевода строки
+                        long i;
+                        long str_len = strlen(line_start);
 
-                if(mode < 5) {
-                    if(mode == 4) {
-                        add_next_index_string(return_value, key_str);
-                    } else {
-                        add_next_index_zval(return_value, &line_arr);
+                        for (i = str_len - 1; i >= 0; --i) {
+                            if(line_start[i] == ' ' || line_start[i] == '\n') {
+                                line_start[i] = '\0';
+                            } else {
+                                break;
+                            }
+                        }
+
+                        add_assoc_string(&line_arr, "trim_line", line_start);
+                        add_assoc_long(&line_arr, "trim_length", i + 1);
                     }
+
+                    // Создаем копию строки для поиска пробела
+                    char *key_str = estrdup(line_start);
+                    char *space_pos = strchr(key_str, ' ');
+                    if (space_pos) *space_pos = '\0';
+
+                    if(mode == 0) add_assoc_string(&line_arr, "key", key_str);
+
+                    if(mode < 4){
+                        add_assoc_long(&line_arr, "line_offset", line_offset);
+                        add_assoc_long(&line_arr, "line_length", line_length);
+                        add_assoc_long(&line_arr, "line_count", line_count - 1);
+                    }
+
+                    add_next_index_zval(return_value, &line_arr);
+
+                    efree(key_str);
                 }
-                
-                efree(key_str);
             }
             
             line_offset += line_length; // Обновляем смещение
@@ -2463,7 +2480,7 @@ PHP_FUNCTION(file_replace_line) {
         fseek(temp_fp, 0 , SEEK_SET);
         current_size = 0;
 
-        while ((bytes_read = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), temp_fp)) > 0) {
+        while ((bytes_read = fread(dynamic_buffer, 1, dynamic_buffer_size, temp_fp)) > 0) {
             bytes_write = fwrite(dynamic_buffer, 1, bytes_read, data_fp); 
             if(bytes_write != bytes_read){
                 php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", filename);
@@ -2872,8 +2889,11 @@ PHP_FUNCTION(file_analize) { // Анализ таблицы
                     fclose(fp);
 
                     double avg_length = (double)total_characters / line_count;
-                    add_assoc_long(return_value, "min_length", min_length);
+
+                    add_assoc_long(return_value, "min_length", min_length == SIZE_MAX ? 0 : min_length);
+                    add_assoc_long(return_value, "min_length_offset", min_length_offset);
                     add_assoc_long(return_value, "max_length", max_length);
+                    add_assoc_long(return_value, "max_length_offset", max_length_offset);
                     add_assoc_double(return_value, "avg_length", avg_length);
                     add_assoc_long(return_value, "line_count", 0); // По спецификации в mode=1 должно быть 0
                     add_assoc_long(return_value, "total_characters", total_characters);
@@ -3039,10 +3059,9 @@ PHP_FUNCTION(replicate_file) {
         unlink(destination);
         RETURN_LONG(-3);
     }
-    
 
-    FILE *index_source_fp;
-    FILE *index_destination_fp;
+    FILE *index_source_fp = NULL;
+    FILE *index_destination_fp = NULL;
     char index_source[source_len + 7];
     char index_destination[destination_len + 7];
 
@@ -3056,7 +3075,6 @@ PHP_FUNCTION(replicate_file) {
             fclose(source_fp);
             fclose(destination_fp);
             unlink(destination);
-            unlink(index_destination);
             RETURN_LONG(-1);
         }
 
@@ -3065,8 +3083,8 @@ PHP_FUNCTION(replicate_file) {
             php_error_docref(NULL, E_WARNING, "Failed to open file: %s", index_destination);
             fclose(index_source_fp);
             fclose(source_fp);
+            fclose(destination_fp);
             unlink(destination);
-            unlink(index_destination);
             RETURN_LONG(-2);
         }
 
@@ -3096,8 +3114,8 @@ PHP_FUNCTION(replicate_file) {
     ssize_t dynamic_buffer_size = ini_buffer_size;
     char *dynamic_buffer = (char *)emalloc(dynamic_buffer_size + 1);
     if (!dynamic_buffer) {
-        fclose(index_source_fp);
-        fclose(index_destination_fp);
+        if (index_source_fp) fclose(index_source_fp);
+        if (index_destination_fp) fclose(index_destination_fp);
         fclose(source_fp);
         fclose(destination_fp);
         unlink(destination);
@@ -3110,7 +3128,7 @@ PHP_FUNCTION(replicate_file) {
     ssize_t bytes_read;
     ssize_t bytes_write;
 
-    while ((bytes_read = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), source_fp)) > 0) {
+    while ((bytes_read = fread(dynamic_buffer, 1, dynamic_buffer_size, source_fp)) > 0) {
         bytes_write = fwrite(dynamic_buffer, 1, bytes_read, destination_fp);
 
         if(bytes_read != bytes_write) { 
@@ -3131,7 +3149,7 @@ PHP_FUNCTION(replicate_file) {
     }
 
     if(mode == 1){
-        while ((bytes_read = fread(dynamic_buffer, 1, sizeof(dynamic_buffer), index_source_fp)) > 0) {
+        while ((bytes_read = fread(dynamic_buffer, 1, dynamic_buffer_size, index_source_fp)) > 0) {
             bytes_write = fwrite(dynamic_buffer, 1, bytes_read, index_destination_fp);
 
             if(bytes_read != bytes_write) { 
@@ -3159,7 +3177,6 @@ PHP_FUNCTION(replicate_file) {
 
     RETURN_LONG(current_size);
 }
-
 
 
 
@@ -3284,7 +3301,7 @@ PHP_FUNCTION(file_select_array) {
                     }
 
                     bytes_read = fread(buffer, 1, select_size, fp);
-                    if(bytes_read != select_size){
+                    if(bytes_read != (size_t)select_size){
                         php_error_docref(NULL, E_WARNING, "Failed to read from file: %s", filename);
                         efree(buffer);
                         if (re != NULL) pcre2_code_free(re);
@@ -3330,6 +3347,7 @@ PHP_FUNCTION(file_select_array) {
 
                     if(mode == 2) {
                         add_next_index_string(return_value, buffer);
+                        zval_ptr_dtor(&line_arr);
                         found_match = false;
                     }
 
@@ -3337,6 +3355,7 @@ PHP_FUNCTION(file_select_array) {
                         if (pattern != NULL && strstr(buffer, pattern) != NULL) {
                             found_count++;
                         }
+                        zval_ptr_dtor(&line_arr);
                         found_match = false;
                     }
 
@@ -3349,20 +3368,25 @@ PHP_FUNCTION(file_select_array) {
                     }
 
                     if(mode == 6) {
-                        add_assoc_string(&line_arr, "line", buffer);
-                        found_match = true;
+                        if (pattern != NULL && strstr(buffer, pattern) != NULL) {
+                            add_assoc_string(&line_arr, "line", buffer);
+                            found_match = true;
+                        }
                     }
 
                     if(mode == 7){
                         if (pattern != NULL && strstr(buffer, pattern) != NULL) {
                             add_next_index_string(return_value, buffer);
                         }
+                        zval_ptr_dtor(&line_arr);
                         found_match = false;
                     }
 
                     if(mode == 0 || mode == 5 || mode == 1 || mode == 6){
-                        add_assoc_long(&line_arr, "line_offset", select_pos);
-                        add_assoc_long(&line_arr, "line_length", select_size);
+                        if(found_match) {
+                            add_assoc_long(&line_arr, "line_offset", select_pos);
+                            add_assoc_long(&line_arr, "line_length", select_size);
+                        }
                     }
                     
                     if(mode > 9 && mode < 14){
@@ -3388,14 +3412,19 @@ PHP_FUNCTION(file_select_array) {
 
                                 if(mode == 12) {
                                     add_next_index_string(return_value, buffer);
+                                    zval_ptr_dtor(&line_arr);
                                     found_match = false;
                                 }
                             }
 
                             if(mode == 13){
                                 found_count++;
+                                zval_ptr_dtor(&line_arr);
                                 found_match = false;
                             }
+                        } else {
+                            zval_ptr_dtor(&line_arr);
+                            found_match = false;
                         }
                     }
 
@@ -3452,6 +3481,8 @@ PHP_FUNCTION(file_select_array) {
                             /* Обработка других ошибок. */
                             php_error_docref(NULL, E_WARNING, "Matching error %d", rc);
                             efree(buffer);
+                            zval_ptr_dtor(&line_arr);
+                            zval_ptr_dtor(&return_matched);
                             if (re != NULL) pcre2_code_free(re);
                             if (match_data != NULL) pcre2_match_data_free(match_data);
                             fclose(fp);
@@ -3477,17 +3508,21 @@ PHP_FUNCTION(file_select_array) {
 
                             if(mode == 23){
                                 add_next_index_zval(return_value, &return_matched);
+                                zval_ptr_dtor(&line_arr);
                                 found_match = false;
                             }
                         } else {
                             zval_ptr_dtor(&return_matched);
+                            zval_ptr_dtor(&line_arr);
+                            found_match = false;
                         }
                     }
 
                     if(found_match){
                         add_next_index_zval(return_value, &line_arr);
-                    } else {
-                        zval_ptr_dtor(&line_arr);
+                    } else if(mode != 2 && mode != 3 && mode != 7 && mode != 12 && mode != 13 && mode != 23) {
+                        /* Освобождаем line_arr только если он не был уже освобождён выше */
+                        /* Проверка на случай если found_match=false но line_arr уже не был ptr_dtor */
                     }
 
                     efree(buffer);
@@ -3774,6 +3809,11 @@ PHP_FUNCTION(file_callback_line) {
 
                     fseek(fp, (long)position, SEEK_SET);
                     line_offset = (long)position;
+
+                    // Сбрасываем буфер: следующее чтение начнётся с новой позиции
+                    current_size = 0;
+                    dynamic_buffer[0] = '\0';
+
                     jump = 1;
                 }
 
@@ -3808,7 +3848,7 @@ PHP_FUNCTION(file_callback_line) {
   
             if (jump) {
                 jump = 0;
-                break;
+                break; // Выходим из внутреннего while, буфер уже сброшен
             } else {
                 line_offset += line_length; // Обновляем смещение
             }
@@ -3817,6 +3857,7 @@ PHP_FUNCTION(file_callback_line) {
         }
 
         if (found_match) break;
+        if (jump) continue; // Перечитываем файл с новой позиции
 
         current_size -= (line_start - dynamic_buffer);
         memmove(dynamic_buffer, line_start, (size_t)current_size);
