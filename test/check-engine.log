@@ -1,0 +1,214 @@
+Check file_insert_line: time: 1.8906271457672 - PASS
+rchar: 623776179 (329.93 millions per sec)
+wchar: 160045715 (84.65 millions per sec)
+syscr: 75597 (39,985.14 per sec)
+syscw: 10606 (5,609.78 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 160231424 (84.75 millions per sec)
+cancelled_write_bytes: 160190464 (84.73 millions per sec)
+
+❌ ERROR in file_analize - iteration 0, line 1:
+   Analysis validation failed
+   Details:
+     total_characters: 37350
+     expected_total: 37350
+     line_count: 2
+     expected_lines: 2
+     file_size: 37350
+     expected_size: 37350
+   Trace:
+     index: 1
+     align: 18675
+
+Check file_analize - ERROR
+rchar: 61223 (114.43 millions per sec)
+wchar: 37658 (70.39 millions per sec)
+syscr: 12 (22,429.43 per sec)
+syscw: 6 (11,214.72 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 40960 (76.56 millions per sec)
+cancelled_write_bytes: 425984 (796.21 millions per sec)
+
+Check file_get_keys: time: 1.9242081642151 - PASS
+rchar: 1098095877 (570.67 millions per sec)
+wchar: 180973162 (94.05 millions per sec)
+syscr: 103907 (53,999.87 per sec)
+syscw: 10999 (5,716.12 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 181198848 (94.17 millions per sec)
+cancelled_write_bytes: 180420608 (93.76 millions per sec)
+
+Check file_search_array: time: 2.4842598438263 - PASS
+rchar: 2127468827 (856.38 millions per sec)
+wchar: 176124764 (70.90 millions per sec)
+syscr: 220739 (88,855.04 per sec)
+syscw: 10968 (4,415.00 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 176312320 (70.97 millions per sec)
+cancelled_write_bytes: 176156672 (70.91 millions per sec)
+
+Check file_select_array: time: 2.2918040752411 - PASS
+rchar: 2715371975 (1,184.82 millions per sec)
+wchar: 180037571 (78.56 millions per sec)
+syscr: 169427 (73,927.35 per sec)
+syscw: 11352 (4,953.30 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 180240384 (78.65 millions per sec)
+cancelled_write_bytes: 180150272 (78.61 millions per sec)
+
+Check file_search_line: time: 6.8786649703979 - PASS
+rchar: 14520550497 (2,110.95 millions per sec)
+wchar: 182488308 (26.53 millions per sec)
+syscr: 1684823 (244,934.59 per sec)
+syscw: 11027 (1,603.07 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 182689792 (26.56 millions per sec)
+cancelled_write_bytes: 183717888 (26.71 millions per sec)
+
+Check file_select_line: time: 2.0368180274963 - PASS
+rchar: 975273135 (478.82 millions per sec)
+wchar: 206183688 (101.23 millions per sec)
+syscr: 97262 (47,751.93 per sec)
+syscw: 11594 (5,692.21 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 206393344 (101.33 millions per sec)
+cancelled_write_bytes: 203390976 (99.86 millions per sec)
+
+Check file_pop_line: time: 2.4236040115356 - PASS
+rchar: 602472555 (248.59 millions per sec)
+wchar: 359020303 (148.13 millions per sec)
+syscr: 80141 (33,066.87 per sec)
+syscw: 24252 (10,006.59 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 366469120 (151.21 millions per sec)
+cancelled_write_bytes: 369274880 (152.37 millions per sec)
+
+Check file_callback_line: time: 1.6822688579559 - PASS
+rchar: 678527255 (403.34 millions per sec)
+wchar: 184869787 (109.89 millions per sec)
+syscr: 80463 (47,830.05 per sec)
+syscw: 10705 (6,363.43 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 185073664 (110.01 millions per sec)
+cancelled_write_bytes: 184623104 (109.75 millions per sec)
+
+❌ ERROR in file_update_line - iteration 0, read back row 0, mode 1:
+   Mode 1 read back validation failed
+   Details:
+     found: yes
+     returned_len: 17566
+     expected_len: 15005
+   Trace:
+     row: 0
+     mode: 3
+
+Check file_update_line - ERROR
+rchar: 156940 (22.23 millions per sec)
+wchar: 983950 (139.35 millions per sec)
+syscr: 64 (9,063.87 per sec)
+syscw: 114 (16,145.01 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 950272 (134.58 millions per sec)
+cancelled_write_bytes: 450560 (63.81 millions per sec)
+
+❌ ERROR in file_update_array - iteration 0 - mode 1 verify row 0:
+   Mode 1 read back mismatch
+   Details:
+     found: yes
+     returned_len: 556
+     expected_len: 555
+   Trace:
+     row: 0
+     mode: 3
+
+Check file_update_array - ERROR
+rchar: 216978 (191.15 millions per sec)
+wchar: 25260 (22.25 millions per sec)
+syscr: 81 (71,358.67 per sec)
+syscw: 53 (46,691.47 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 12288 (10.83 millions per sec)
+cancelled_write_bytes: 950272 (837.16 millions per sec)
+
+Check file_erase_line: time: 6.1864280700684 - PASS
+rchar: 15348746477 (2,481.04 millions per sec)
+wchar: 273915031 (44.28 millions per sec)
+syscr: 1332028 (215,314.55 per sec)
+syscw: 16421 (2,654.36 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 180146176 (29.12 millions per sec)
+cancelled_write_bytes: 179843072 (29.07 millions per sec)
+
+Check file_replace_line: time: 0.29082703590393 - PASS
+rchar: 59056829 (203.07 millions per sec)
+wchar: 32001568 (110.04 millions per sec)
+syscr: 16803 (57,776.61 per sec)
+syscw: 10518 (36,165.83 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 19939328 (68.56 millions per sec)
+cancelled_write_bytes: 19845120 (68.24 millions per sec)
+
+❌ ERROR in file_defrag_lines - iteration 0:
+   Deleted count mismatch
+   Details:
+     deleted_count: 13
+     expected_count: 7
+   Trace:
+     c: 12
+     total_lines: 13
+
+Check file_defrag_lines - ERROR
+rchar: 5560 (10.30 millions per sec)
+wchar: 823 (1.52 millions per sec)
+syscr: 25 (46,294.75 per sec)
+syscw: 22 (40,739.38 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 4096 (7.58 millions per sec)
+cancelled_write_bytes: 4096 (7.58 millions per sec)
+
+Check file_push_data + file_search_data: time: 0.12851405143738 - PASS
+rchar: 14478940 (112.66 millions per sec)
+wchar: 982748 (7.65 millions per sec)
+syscr: 9456 (73,579.50 per sec)
+syscw: 3890 (30,269.06 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 1576960 (12.27 millions per sec)
+cancelled_write_bytes: 1576960 (12.27 millions per sec)
+
+❌ ERROR in file_defrag_data - iteration 0, verify kept key value:
+   Kept key value mismatch
+   Details:
+     key: fddkey_1
+     expected_value_len: 31
+     found_value_len: 31
+   Trace:
+     c: 15
+
+Check file_defrag_data - ERROR
+rchar: 26987 (19.53 millions per sec)
+wchar: 5556 (4.02 millions per sec)
+syscr: 52 (37,623.57 per sec)
+syscw: 46 (33,282.38 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 16384 (11.85 millions per sec)
+cancelled_write_bytes: 16384 (11.85 millions per sec)
+
+Check replicate_file: time: 0.22910904884338 - PASS
+rchar: 52152603 (227.63 millions per sec)
+wchar: 11262433 (49.16 millions per sec)
+syscr: 18110 (79,045.33 per sec)
+syscw: 6053 (26,419.73 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 13287424 (58.00 millions per sec)
+cancelled_write_bytes: 13271040 (57.92 millions per sec)
+
+Check find_matches_pcre2: time: 0.0014681816101074 - PASS
+rchar: 138 (0.09 millions per sec)
+wchar: 59 (0.04 millions per sec)
+syscr: 3 (2,043.34 per sec)
+syscw: 4 (2,724.46 per sec)
+read_bytes: 0 (0.00 millions per sec)
+write_bytes: 0 (0.00 millions per sec)
+cancelled_write_bytes: 0 (0.00 millions per sec)
+
+✅ All tests completed!
