@@ -1,5 +1,5 @@
 /*
- * Fast_IO (pre-release beta) Extension for PHP 8
+ * Fast_IO Extension for PHP 8
  * https://github.com/commeta/fast_io
  * 
  * Copyright 2025 commeta <dcs-spb@ya.ru>
@@ -1343,6 +1343,9 @@ PHP_FUNCTION(file_defrag_data) {
         RETURN_FALSE;
     }
 
+    /* (data): empty string key means "delete only SPECIAL_CHAR lines" */
+    if (line_key != NULL && line_key_len == 0) line_key = NULL;
+
     char temp_filename[filename_len + 5];
     snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
     char index_filename[filename_len + 7];
@@ -1407,7 +1410,6 @@ PHP_FUNCTION(file_defrag_data) {
  
     if(mode > 99) mode -= 100;
 
-    // Перемещение указателя в конец файла для получения его размера
     fseek(index_fp, 0, SEEK_END);
     long file_size = ftell(index_fp);
     fseek(index_fp, 0, SEEK_SET);
@@ -1437,7 +1439,7 @@ PHP_FUNCTION(file_defrag_data) {
 
     bool found_match;
 
-    off_t position;
+    off_t old_position;
     size_t size;
 
     while ((bytes_read = fread(dynamic_buffer + current_size, 1, ini_buffer_size, index_fp)) > 0) {
@@ -1464,22 +1466,8 @@ PHP_FUNCTION(file_defrag_data) {
             }
 
             if(!found_match){
-                *line_end = '\n';
-                bytes_write = fwrite(line_start, 1, line_length, temp_index_fp);
-
-                if (bytes_write != line_length) {
-                    php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_index_filename);
-                    fclose(index_fp);
-                    fclose(data_fp);
-                    fclose(temp_fp);
-                    fclose(temp_index_fp);
-                    unlink(temp_filename);
-                    unlink(temp_index_filename);
-                    efree(dynamic_buffer);
-                    RETURN_LONG(-4);
-                }
-
-                *line_end = '\0';
+                /* Parse old offset:size, read data, get new offset via ftell,
+                 *         write data to temp, then write UPDATED index entry */
 
                 char *line_copy = estrdup(line_start);
                 if (!line_copy) {
@@ -1493,6 +1481,10 @@ PHP_FUNCTION(file_defrag_data) {
                     efree(dynamic_buffer);
                     RETURN_LONG(-8);
                 }
+
+                /* Find where the key ends (first space) so we can rebuild the index line */
+                char *key_end_ptr = strchr(line_start, ' ');
+                size_t key_len = key_end_ptr ? (size_t)(key_end_ptr - line_start) : strlen(line_start);
 
                 char *offset_ptr = NULL;
                 char *size_ptr = NULL;
@@ -1511,7 +1503,7 @@ PHP_FUNCTION(file_defrag_data) {
                 
                 if (offset_ptr && size_ptr) {
                     char *endptr;
-                    position = strtoul(offset_ptr, &endptr, 10);
+                    old_position = strtoul(offset_ptr, &endptr, 10);
                     if (*endptr != '\0') {
                         parsed_err = true;
                     } else {
@@ -1525,7 +1517,10 @@ PHP_FUNCTION(file_defrag_data) {
                 }
 
                 if(parsed_err == false){
-                    if (fseek(data_fp, position, SEEK_SET) != 0) {
+                    /* Get the new offset BEFORE writing to temp_fp */
+                    long new_offset = ftell(temp_fp);
+
+                    if (fseek(data_fp, old_position, SEEK_SET) != 0) {
                         php_error_docref(NULL, E_WARNING, "Failed to seek in file: %s", filename);
                         fclose(index_fp);
                         fclose(data_fp);
@@ -1567,6 +1562,7 @@ PHP_FUNCTION(file_defrag_data) {
                     }
 
                     bytes_write_data = fwrite(data_buffer, 1, bytes_read_data, temp_fp);
+                    efree(data_buffer);
 
                     if(bytes_read_data != bytes_write_data){
                         php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_filename);
@@ -1577,12 +1573,26 @@ PHP_FUNCTION(file_defrag_data) {
                         unlink(temp_filename);
                         unlink(temp_index_filename);
                         efree(dynamic_buffer);
-                        efree(data_buffer);
                         efree(line_copy);
                         RETURN_LONG(-4);
                     }
 
-                    efree(data_buffer);
+                    /* Write updated index entry with new_offset (not old_position) */
+                    int idx_written = fprintf(temp_index_fp, "%.*s %ld:%zu\n",
+                                              (int)key_len, line_start, new_offset, size);
+                    if (idx_written < 0) {
+                        php_error_docref(NULL, E_WARNING, "Failed to write to the file: %s", temp_index_filename);
+                        fclose(index_fp);
+                        fclose(data_fp);
+                        fclose(temp_fp);
+                        fclose(temp_index_fp);
+                        unlink(temp_filename);
+                        unlink(temp_index_filename);
+                        efree(dynamic_buffer);
+                        efree(line_copy);
+                        RETURN_LONG(-4);
+                    }
+
                 } else {
                     php_error_docref(NULL, E_WARNING, "Failed to parse offset:size");
                     fclose(index_fp);
