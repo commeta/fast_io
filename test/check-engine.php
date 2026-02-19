@@ -277,6 +277,8 @@ for($ii = 0; $ii < 100; $ii++){
         $str = 'index_' . $i . ' file_insert_line_' . $i . ' ' . str_pad('', $shuffle, '1234567890');
         $file_offset = file_insert_line($db_file, $str, 2, $align);
 
+        clearstatcache(true, $db_file);
+
         $analize = file_analize($db_file);
 
         if(
