@@ -4,6 +4,11 @@
 
 ## Отчет
 
+---
+
+### 19.02.2026
+
+file_defrag_data - Update index with new offsets tracked with ftell()
 
 ---
 
