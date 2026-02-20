@@ -1,198 +1,172 @@
-```
-php auto-test.php
-```
-
-```
-Check file_insert_line: time: 2.1781578063965 - PASS
-rchar: 698593906 (320.73 millions per sec)
-wchar: 183732457 (84.35 millions per sec)
-syscr: 94228 (43,260.41 per sec)
-syscw: 10803 (4,959.70 per sec)
+Check file_insert_line: time: 2.4999310970306 - PASS
+rchar: 792684351 (317.08 millions per sec)
+wchar: 215247950 (86.10 millions per sec)
+syscr: 107773 (43,110.39 per sec)
+syscw: 11736 (4,694.53 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 183939072 (84.45 millions per sec)
-cancelled_write_bytes: 178176000 (81.80 millions per sec)
+write_bytes: 215465984 (86.19 millions per sec)
+cancelled_write_bytes: 210649088 (84.26 millions per sec)
 
-Check file_analize: time: 5.3078379631042 - PASS
-rchar: 6496297933 (1,223.91 millions per sec)
-wchar: 178875868 (33.70 millions per sec)
-syscr: 566192 (106,670.93 per sec)
-syscw: 11209 (2,111.78 per sec)
+Check file_analize: time: 5.2790398597717 - PASS
+rchar: 6394761804 (1,211.35 millions per sec)
+wchar: 185040165 (35.05 millions per sec)
+syscr: 519442 (98,397.06 per sec)
+syscw: 11033 (2,089.96 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 179077120 (33.74 millions per sec)
-cancelled_write_bytes: 180486144 (34.00 millions per sec)
+write_bytes: 185249792 (35.09 millions per sec)
+cancelled_write_bytes: 177987584 (33.72 millions per sec)
 
-Check file_get_keys: time: 1.7216610908508 - PASS
-rchar: 987065349 (573.32 millions per sec)
-wchar: 162472960 (94.37 millions per sec)
-syscr: 104565 (60,734.95 per sec)
-syscw: 10627 (6,172.53 per sec)
+Check file_get_keys: time: 1.9856760501862 - PASS
+rchar: 1142712099 (575.48 millions per sec)
+wchar: 188279860 (94.82 millions per sec)
+syscr: 120121 (60,493.75 per sec)
+syscw: 11679 (5,881.62 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 162676736 (94.49 millions per sec)
-cancelled_write_bytes: 164933632 (95.80 millions per sec)
+write_bytes: 188485632 (94.92 millions per sec)
+cancelled_write_bytes: 189194240 (95.28 millions per sec)
 
-Check file_search_array: time: 2.497349023819 - PASS
-rchar: 2067006951 (827.68 millions per sec)
-wchar: 171184110 (68.55 millions per sec)
-syscr: 199234 (79,778.20 per sec)
-syscw: 10270 (4,112.36 per sec)
+Check file_search_array: time: 2.5619571208954 - PASS
+rchar: 2237970748 (873.54 millions per sec)
+wchar: 185397684 (72.37 millions per sec)
+syscr: 204160 (79,689.08 per sec)
+syscw: 10648 (4,156.20 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 171393024 (68.63 millions per sec)
-cancelled_write_bytes: 171425792 (68.64 millions per sec)
+write_bytes: 185597952 (72.44 millions per sec)
+cancelled_write_bytes: 186191872 (72.68 millions per sec)
 
-Check file_select_array: time: 2.4243080615997 - PASS
-rchar: 2921458372 (1,205.07 millions per sec)
-wchar: 193744470 (79.92 millions per sec)
-syscr: 170631 (70,383.38 per sec)
-syscw: 11713 (4,831.48 per sec)
+Check file_select_array: time: 2.3278748989105 - PASS
+rchar: 2896979849 (1,244.47 millions per sec)
+wchar: 192146288 (82.54 millions per sec)
+syscr: 170334 (73,171.46 per sec)
+syscw: 11291 (4,850.35 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 193933312 (80.00 millions per sec)
-cancelled_write_bytes: 187203584 (77.22 millions per sec)
+write_bytes: 192331776 (82.62 millions per sec)
+cancelled_write_bytes: 194727936 (83.65 millions per sec)
 
-Check file_search_line: time: 5.8059368133545 - PASS
-rchar: 13296418152 (2,290.14 millions per sec)
-wchar: 181255542 (31.22 millions per sec)
-syscr: 1101135 (189,656.73 per sec)
-syscw: 10224 (1,760.96 per sec)
+Check file_search_line: time: 7.0545010566711 - PASS
+rchar: 15736763383 (2,230.74 millions per sec)
+wchar: 199494543 (28.28 millions per sec)
+syscr: 1441859 (204,388.52 per sec)
+syscw: 11382 (1,613.44 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 181473280 (31.26 millions per sec)
-cancelled_write_bytes: 181276672 (31.22 millions per sec)
+write_bytes: 199700480 (28.31 millions per sec)
+cancelled_write_bytes: 194498560 (27.57 millions per sec)
 
-Check file_select_line: time: 1.7029819488525 - PASS
-rchar: 822765982 (483.13 millions per sec)
-wchar: 169403420 (99.47 millions per sec)
-syscr: 87812 (51,563.67 per sec)
-syscw: 10512 (6,172.70 per sec)
+Check file_select_line: time: 2.0736870765686 - PASS
+rchar: 1034350469 (498.80 millions per sec)
+wchar: 218613319 (105.42 millions per sec)
+syscr: 101517 (48,954.83 per sec)
+syscw: 12164 (5,865.88 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 169598976 (99.59 millions per sec)
-cancelled_write_bytes: 172101632 (101.06 millions per sec)
+write_bytes: 218828800 (105.53 millions per sec)
+cancelled_write_bytes: 218210304 (105.23 millions per sec)
 
-Check file_pop_line: time: 2.918518781662 - PASS
-rchar: 654997798 (224.43 millions per sec)
-wchar: 368973906 (126.43 millions per sec)
-syscr: 97749 (33,492.67 per sec)
-syscw: 24476 (8,386.45 per sec)
+Check file_pop_line: time: 7.1036438941956 - PASS
+rchar: 621721581 (87.52 millions per sec)
+wchar: 355163415 (50.00 millions per sec)
+syscr: 92544 (13,027.68 per sec)
+syscw: 22472 (3,163.45 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 376397824 (128.97 millions per sec)
-cancelled_write_bytes: 376872960 (129.13 millions per sec)
+write_bytes: 362553344 (51.04 millions per sec)
+cancelled_write_bytes: 364634112 (51.33 millions per sec)
 
-Check file_callback_line: time: 1.7045369148254 - PASS
-rchar: 679886220 (398.87 millions per sec)
-wchar: 177577117 (104.18 millions per sec)
-syscr: 71982 (42,229.65 per sec)
-syscw: 11740 (6,887.50 per sec)
+Check file_callback_line: time: 1.7499251365662 - PASS
+rchar: 769175751 (439.55 millions per sec)
+wchar: 210092914 (120.06 millions per sec)
+syscr: 73015 (41,724.64 per sec)
+syscw: 11473 (6,556.28 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 177795072 (104.31 millions per sec)
-cancelled_write_bytes: 173797376 (101.96 millions per sec)
+write_bytes: 210305024 (120.18 millions per sec)
+cancelled_write_bytes: 207355904 (118.49 millions per sec)
 
-❌ ERROR in file_update_line - iteration 0, read back row 0, mode 1:
-   Mode 1 read back validation failed
-   Details:
-     found: yes
-     returned_len: 36293
-     expected_len: 27568
-   Trace:
-     row: 0
-     mode: 3
-
-Check file_update_line - ERROR
-rchar: 160457 (14.63 millions per sec)
-wchar: 1633439 (148.90 millions per sec)
-syscr: 53 (4,831.31 per sec)
-syscw: 92 (8,386.42 per sec)
+Check file_update_line: time: 2.9792420864105 - PASS
+rchar: 542588120 (182.12 millions per sec)
+wchar: 582662274 (195.57 millions per sec)
+syscr: 73711 (24,741.53 per sec)
+syscw: 34405 (11,548.24 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 1564672 (142.63 millions per sec)
-cancelled_write_bytes: 3997696 (364.42 millions per sec)
+write_bytes: 196059136 (65.81 millions per sec)
+cancelled_write_bytes: 195411968 (65.59 millions per sec)
 
-❌ ERROR in file_update_array - iteration 0 - mode 1 verify row 0:
-   Mode 1 read back mismatch
-   Details:
-     found: yes
-     returned_len: 61702
-     expected_len: 61701
-   Trace:
-     row: 0
-     mode: 3
-
-Check file_update_array - ERROR
-rchar: 3274752 (64.97 millions per sec)
-wchar: 7589590 (150.57 millions per sec)
-syscr: 291 (5,773.12 per sec)
-syscw: 248 (4,920.05 per sec)
+Check file_update_array - PASS (0.9052s)
+rchar: 248064017 (274.05 millions per sec)
+wchar: 241340730 (266.62 millions per sec)
+syscr: 41487 (45,832.78 per sec)
+syscw: 22989 (25,397.11 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 2531328 (50.22 millions per sec)
-cancelled_write_bytes: 1564672 (31.04 millions per sec)
+write_bytes: 80642048 (89.09 millions per sec)
+cancelled_write_bytes: 80793600 (89.26 millions per sec)
 
-Check file_erase_line: time: 8.1663961410522 - PASS
-rchar: 19066948797 (2,334.81 millions per sec)
-wchar: 318828437 (39.04 millions per sec)
-syscr: 2145055 (262,668.50 per sec)
-syscw: 18148 (2,222.28 per sec)
+Check file_erase_line: time: 7.4133200645447 - PASS
+rchar: 15381122511 (2,074.80 millions per sec)
+wchar: 265042310 (35.75 millions per sec)
+syscr: 1634071 (220,423.64 per sec)
+syscw: 16482 (2,223.30 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 209854464 (25.70 millions per sec)
-cancelled_write_bytes: 208113664 (25.48 millions per sec)
+write_bytes: 174182400 (23.50 millions per sec)
+cancelled_write_bytes: 169791488 (22.90 millions per sec)
 
-Check file_replace_line: time: 0.25862812995911 - PASS
-rchar: 56754887 (219.45 millions per sec)
-wchar: 30881932 (119.41 millions per sec)
-syscr: 16168 (62,514.47 per sec)
-syscw: 10153 (39,257.14 per sec)
+Check file_replace_line: time: 0.30357313156128 - PASS
+rchar: 63978138 (210.75 millions per sec)
+wchar: 35643686 (117.41 millions per sec)
+syscr: 18861 (62,130.00 per sec)
+syscw: 11523 (37,957.90 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 19243008 (74.40 millions per sec)
-cancelled_write_bytes: 21798912 (84.29 millions per sec)
+write_bytes: 21913600 (72.19 millions per sec)
+cancelled_write_bytes: 21688320 (71.44 millions per sec)
 
 ❌ ERROR in file_defrag_lines - iteration 0:
    Deleted count mismatch
    Details:
-     deleted_count: 12
-     expected_count: 6
+     deleted_count: 14
+     expected_count: 7
    Trace:
-     c: 11
-     total_lines: 12
+     c: 13
+     total_lines: 14
 
 Check file_defrag_lines - ERROR
-rchar: 5555 (11.25 millions per sec)
-wchar: 853 (1.73 millions per sec)
-syscr: 23 (46,580.87 per sec)
-syscw: 20 (40,505.11 per sec)
+rchar: 7009 (12.93 millions per sec)
+wchar: 900 (1.66 millions per sec)
+syscr: 26 (47,977.08 per sec)
+syscw: 23 (42,441.26 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 4096 (8.30 millions per sec)
-cancelled_write_bytes: 4096 (8.30 millions per sec)
+write_bytes: 4096 (7.56 millions per sec)
+cancelled_write_bytes: 4096 (7.56 millions per sec)
 
-Check file_push_data + file_search_data: time: 0.10777497291565 - PASS
-rchar: 14718986 (136.57 millions per sec)
-wchar: 1014352 (9.41 millions per sec)
-syscr: 9548 (88,592.00 per sec)
-syscw: 3928 (36,446.31 per sec)
+Check file_push_data + file_search_data: time: 0.10701704025269 - PASS
+rchar: 14000618 (130.83 millions per sec)
+wchar: 972286 (9.09 millions per sec)
+syscr: 9253 (86,462.87 per sec)
+syscw: 3802 (35,527.05 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 1581056 (14.67 millions per sec)
-cancelled_write_bytes: 1581056 (14.67 millions per sec)
+write_bytes: 1548288 (14.47 millions per sec)
+cancelled_write_bytes: 1548288 (14.47 millions per sec)
 
-Check file_defrag_data: time: 0.15375304222107 - PASS
-rchar: 2684188 (17.46 millions per sec)
-wchar: 439076 (2.86 millions per sec)
-syscr: 7601 (49,436.42 per sec)
-syscw: 5331 (34,672.48 per sec)
+Check file_defrag_data: time: 0.15414118766785 - PASS
+rchar: 2741314 (17.78 millions per sec)
+wchar: 435015 (2.82 millions per sec)
+syscr: 7609 (49,363.83 per sec)
+syscw: 5339 (34,637.08 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 3276800 (21.31 millions per sec)
-cancelled_write_bytes: 2457600 (15.98 millions per sec)
+write_bytes: 3276800 (21.26 millions per sec)
+cancelled_write_bytes: 2457600 (15.94 millions per sec)
 
-Check replicate_file: time: 0.21738409996033 - PASS
-rchar: 60757124 (279.49 millions per sec)
-wchar: 13224821 (60.84 millions per sec)
-syscr: 20044 (92,205.46 per sec)
-syscw: 6608 (30,397.81 per sec)
+Check replicate_file: time: 0.20806193351746 - PASS
+rchar: 55493877 (266.72 millions per sec)
+wchar: 11363685 (54.62 millions per sec)
+syscr: 18481 (88,824.51 per sec)
+syscw: 6064 (29,145.17 per sec)
 read_bytes: 0 (0.00 millions per sec)
-write_bytes: 15204352 (69.94 millions per sec)
-cancelled_write_bytes: 15159296 (69.74 millions per sec)
+write_bytes: 13328384 (64.06 millions per sec)
+cancelled_write_bytes: 13041664 (62.68 millions per sec)
 
-Check find_matches_pcre2: time: 0.0012171268463135 - PASS
+Check find_matches_pcre2: time: 0.0012059211730957 - PASS
 rchar: 138 (0.11 millions per sec)
 wchar: 59 (0.05 millions per sec)
-syscr: 3 (2,464.82 per sec)
-syscw: 4 (3,286.43 per sec)
+syscr: 3 (2,487.72 per sec)
+syscw: 4 (3,316.97 per sec)
 read_bytes: 0 (0.00 millions per sec)
 write_bytes: 0 (0.00 millions per sec)
 cancelled_write_bytes: 0 (0.00 millions per sec)
 
 ✅ All tests completed!
-```
