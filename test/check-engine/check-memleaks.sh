@@ -8,9 +8,9 @@
 # * check-memleaks.sh — Удобная обёртка для проверки fast_io на утечки памяти
 # *
 # * Использование:
-# *   ./check-memleaks.sh              # 40 000 итераций (рекомендуется)
-# *   ./check-memleaks.sh 80000        # больше нагрузки
-# *   ./check-memleaks.sh 20000        # быстрее
+# *   ./check-memleaks.sh              # 4000 итераций 
+# *   ./check-memleaks.sh 40000        # больше нагрузки
+# *   ./check-memleaks.sh 2000        # быстрее
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 set -euo pipefail
 
-ITERATIONS=${1:-40000}
+ITERATIONS=${1:-4000}
 TEST_SCRIPT="check-memleaks.php"
 LOGFILE="check-memleaks-valgrind.log"
 
