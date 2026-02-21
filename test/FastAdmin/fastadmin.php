@@ -2595,7 +2595,6 @@ if ($is_ajax) {
             <div id="pop-result" class="result-area" style="display:none;margin-top:8px"></div>
         </div>
 
-<!--
         <div class="op-card">
             <div class="oc-title">file_defrag_lines — дефрагментация</div>
             <div class="form-group" style="margin-bottom:8px">
@@ -2614,7 +2613,6 @@ if ($is_ajax) {
             </div>
             <div id="defrag-result" style="display:none;margin-top:8px"></div>
         </div>
--->        
 
         <div class="op-card">
             <div class="oc-title">file_erase_line — стереть строку</div>
