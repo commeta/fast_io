@@ -7,7 +7,7 @@
 - **Современный cyber-tech дизайн** с тёмной/светлой темой и сканлайн-эффектом  
 - **Мгновенная работа** даже с таблицами в десятки гигабайт  
 
-![FastAdmin Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/fastadmin-screenshot.png "FastAdmin")
+![FastAdmin Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/fastadmin-screenshot.png "FastAdmin")
 
 ---
 
