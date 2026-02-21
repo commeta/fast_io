@@ -24,7 +24,7 @@ set -euo pipefail
 
 ITERATIONS=${1:-40000}
 TEST_SCRIPT="check-memleaks.php"
-LOGFILE="check-memleaks.log"
+LOGFILE="check-memleaks-valgrind.log"
 
 echo "╔══════════════════════════════════════════════════════════════════════╗"
 echo "║               fast_io VALGRIND MEMORY LEAK WRAPPER                   ║"
