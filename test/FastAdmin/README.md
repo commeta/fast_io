@@ -109,20 +109,29 @@ FastAdmin — это **одностраничное SPA-приложение** (
   - 5 — только полные строки
 - Для **Binary** автоматически открывается отдельная вкладка **Browse Index** (показывает `offset:size`).
 
+![Browse Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/browse.png "FastAdmin Browse")
+
 #### 2. Search (Поиск)
 - Поле для ключа **или** PCRE2-регулярного выражения.
 - Поддержка всех режимов `file_search_array` (включая 10–23 с выделением совпадений).
 - Результаты в виде красивой таблицы + счётчик найденного.
 - Кнопка «Test PCRE2» открывает встроенный тестер регулярных выражений.
 
+![Search Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/search.png "FastAdmin Search")
+
 #### 3. Insert (Вставка)
 - **Text**: многострочное поле + Align (4096 по умолчанию) + Mode.
 - **Binary**: отдельные поля Key + Value (поддерживает любой бинарный контент через textarea).
+
+![Insert Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/insert.png "FastAdmin Insert")
 
 #### 4. Update (Обновление)
 - **Одиночное** — `file_update_line`: новая строка + позиция + align + mode.
 - **Пакетное** — `file_update_array`: JSON-редактор вида  
   `[[ "новый контент", offset, size ], ... ]`
+
+![Update Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/update.png "FastAdmin Update")
+
 
 #### 5. Operations (Операции)
 **Для Text-таблиц:**
@@ -137,15 +146,26 @@ FastAdmin — это **одностраничное SPA-приложение** (
 - Replicate (data + index)
 - Erase из индекса (отдельная кнопка)
 
+![Operations Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/ops.png "FastAdmin Operations")
+
 #### 6. Analyze (Анализ)
 - Полная статистика `file_analize` (mode 0 и 1).
 - Для Binary — отдельный блок статистики индекса.
 - Графическое отображение `flow_interruption`, min/max/avg длины, last_symbol и сырой JSON.
 
+![Analyze Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/analyze.png "FastAdmin Analyze")
+
 #### 7. PCRE2 Tester (глобальный инструмент)
 - Отдельная панель (открывается кнопкой в любой вкладке).
 - Ввод паттерна и subject → мгновенный результат со всеми совпадениями, смещениями и длинами.
 - Использует ту же библиотеку PCRE2 10.42, что и все поисковые функции.
+
+#### 8. Select (Выборка)
+
+![Select Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/select.png "FastAdmin Select")
+
+![Callback Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/callback.png "FastAdmin Callback")
+
 
 ### Дополнительные возможности UI
 
