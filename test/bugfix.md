@@ -6,6 +6,12 @@
 
 ---
 
+### 20.02.2026
+
+Причина: В fast_io.c в функции file_defrag_lines не обрабатывается случай когда line_key = "" (пустая строка).
+
+---
+
 ### 19.02.2026
 
 file_defrag_data - Update index with new offsets tracked with ftell()
