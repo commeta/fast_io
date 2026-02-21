@@ -22,17 +22,20 @@ if (!function_exists('file_get_keys')) {
 
 // ==================== КОНФИГ ====================
 $data_dir = __DIR__ . '/fast_io_data';
-if (!is_dir($data_dir)) mkdir($data_dir, 0777, true);
+if (!is_dir($data_dir))
+    mkdir($data_dir, 0777, true);
 define('DEFAULT_ALIGN', 4096);
 ini_set('fast_io.buffer_size', 65536);
 
 // ==================== УТИЛИТЫ ====================
-function get_tables(): array {
+function get_tables(): array
+{
     global $data_dir;
     $files = @scandir($data_dir) ?: [];
     $tables = [];
     foreach ($files as $f) {
-        if (!str_ends_with($f, '.dat')) continue;
+        if (!str_ends_with($f, '.dat'))
+            continue;
         $path = $data_dir . '/' . $f;
         $has_index = file_exists($path . '.index');
         $size = filesize($path);
@@ -46,20 +49,25 @@ function get_tables(): array {
     return $tables;
 }
 
-function fmt_size(int $bytes): string {
-    if ($bytes < 1024) return $bytes . ' B';
-    if ($bytes < 1048576) return round($bytes/1024, 1) . ' KB';
-    return round($bytes/1048576, 1) . ' MB';
+function fmt_size(int $bytes): string
+{
+    if ($bytes < 1024)
+        return $bytes . ' B';
+    if ($bytes < 1048576)
+        return round($bytes / 1024, 1) . ' KB';
+    return round($bytes / 1048576, 1) . ' MB';
 }
 
-function parse_kv(string $line): array {
+function parse_kv(string $line): array
+{
     $pos = strpos($line, ' ');
     return $pos === false
         ? ['key' => $line, 'value' => '']
         : ['key' => substr($line, 0, $pos), 'value' => substr($line, $pos + 1)];
 }
 
-function json_resp(mixed $data): never {
+function json_resp(mixed $data): never
+{
     header('Content-Type: application/json');
     echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
@@ -73,6 +81,20 @@ if ($is_ajax) {
     $table = basename($_POST['table'] ?? $_GET['table'] ?? '');
     $tpath = $data_dir . '/' . $table;
 
+
+    // ====================== ЗАЩИТА ОТ ПУСТОГО КЛЮЧА ======================
+    // Критично для деструктивных и поисковых операций
+    if (in_array($op, ['erase_line', 'replace_line', 'search_line'])) {
+        $key = trim($_POST['key'] ?? '');
+        if ($key === '') {
+            $msg = ($op === 'search_line')
+                ? 'Ключ поиска не может быть пустым'
+                : 'Ключ не может быть пустым. Операция отменена для защиты данных.';
+            json_resp(['error' => $msg]);
+        }
+    }
+    // =====================================================================
+
     switch ($op) {
 
         // --- Список таблиц ---
@@ -83,163 +105,188 @@ if ($is_ajax) {
         case 'create_table': {
             $name = basename($_POST['name'] ?? '');
             $type = $_POST['type'] ?? 'text';
-            if (!$name) json_resp(['error' => 'Имя не указано']);
-            if (!str_ends_with($name, '.dat')) $name .= '.dat';
+            if (!$name)
+                json_resp(['error' => 'Имя не указано']);
+            if (!str_ends_with($name, '.dat'))
+                $name .= '.dat';
             $p = $data_dir . '/' . $name;
-            if (file_exists($p)) json_resp(['error' => 'Таблица уже существует']);
+            if (file_exists($p))
+                json_resp(['error' => 'Таблица уже существует']);
             file_put_contents($p, '');
-            if ($type === 'binary') file_put_contents($p . '.index', '');
+            if ($type === 'binary')
+                file_put_contents($p . '.index', '');
             json_resp(['ok' => true, 'name' => $name, 'type' => $type]);
         }
 
         // --- Удалить таблицу ---
         case 'drop_table': {
-            if (!file_exists($tpath)) json_resp(['error' => 'Не найдена']);
+            if (!file_exists($tpath))
+                json_resp(['error' => 'Не найдена']);
             unlink($tpath);
-            if (file_exists($tpath . '.index')) unlink($tpath . '.index');
+            if (file_exists($tpath . '.index'))
+                unlink($tpath . '.index');
             json_resp(['ok' => true]);
         }
 
         // --- file_analize ---
         case 'analize': {
-            $mode = (int)($_POST['mode'] ?? 0);
+            $mode = (int) ($_POST['mode'] ?? 0);
             $res = @file_analize($tpath, $mode);
             json_resp(['result' => $res]);
         }
 
         // --- file_get_keys (browse text) ---
         case 'get_keys': {
-            $start = (int)($_POST['start'] ?? 0);
-            $limit = (int)($_POST['limit'] ?? 25);
-            $mode  = (int)($_POST['mode'] ?? 2);
-            $pos   = (int)($_POST['position'] ?? 0);
-            $rows  = @file_get_keys($tpath, $start, $limit, $pos, $mode) ?: [];
-            $anal  = @file_analize($tpath) ?: [];
+            $start = (int) ($_POST['start'] ?? 0);
+            $limit = (int) ($_POST['limit'] ?? 25);
+            $mode = (int) ($_POST['mode'] ?? 2);
+            $pos = (int) ($_POST['position'] ?? 0);
+            $rows = @file_get_keys($tpath, $start, $limit, $pos, $mode) ?: [];
+            $anal = @file_analize($tpath) ?: [];
             json_resp(['rows' => $rows, 'analize' => $anal]);
         }
 
         // --- file_insert_line ---
         case 'insert_line': {
-            $line   = $_POST['line'] ?? '';
-            $align  = (int)($_POST['align'] ?? DEFAULT_ALIGN);
-            $mode   = (int)($_POST['mode'] ?? 2);
+            $line = $_POST['line'] ?? '';
+            $align = (int) ($_POST['align'] ?? DEFAULT_ALIGN);
+            $mode = (int) ($_POST['mode'] ?? 2);
             $res = file_insert_line($tpath, $line, $mode, $align);
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
         // --- file_replace_line ---
         case 'replace_line': {
-            $key    = $_POST['key'] ?? '';
+            $key = trim($_POST['key'] ?? '');
             $newline = $_POST['newline'] ?? '';
-            $mode   = (int)($_POST['mode'] ?? 0);
+            $mode = (int) ($_POST['mode'] ?? 0);
             $res = file_replace_line($tpath, $key, $newline, $mode);
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
         // --- file_erase_line ---
         case 'erase_line': {
-            $key  = $_POST['key'] ?? '';
-            $pos  = (int)($_POST['position'] ?? 0);
-            $mode = (int)($_POST['mode'] ?? 0);
-            $res  = file_erase_line($tpath, $key, $pos, $mode);
+            $key = trim($_POST['key'] ?? '');
+            $pos = (int) ($_POST['position'] ?? 0);
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = file_erase_line($tpath, $key, $pos, $mode);
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
         // --- file_search_line ---
         case 'search_line': {
-            $key  = $_POST['key'] ?? '';
-            $pos  = (int)($_POST['position'] ?? 0);
-            $mode = (int)($_POST['mode'] ?? 0);
-            $res  = file_search_line($tpath, $key, $pos, $mode);
+            $key = trim($_POST['key'] ?? '');
+            $pos = (int) ($_POST['position'] ?? 0);
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = file_search_line($tpath, $key, $pos, $mode);
             json_resp(['result' => $res, 'found' => $res !== false]);
         }
 
         // --- file_search_array ---
         case 'search_array': {
-            $key   = $_POST['key'] ?? '';
-            $start = (int)($_POST['start'] ?? 0);
-            $limit = (int)($_POST['limit'] ?? 50);
-            $pos   = (int)($_POST['position'] ?? 0);
-            $mode  = (int)($_POST['mode'] ?? 0);
-            $res   = @file_search_array($tpath, $key, $start, $limit, $pos, $mode) ?: [];
-            json_resp(['result' => $res, 'count' => count((array)$res)]);
+            $key = $_POST['key'] ?? '';
+            $start = (int) ($_POST['start'] ?? 0);
+            $limit = (int) ($_POST['limit'] ?? 50);
+            $pos = (int) ($_POST['position'] ?? 0);
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = @file_search_array($tpath, $key, $start, $limit, $pos, $mode) ?: [];
+
+            // Режимы 3 и 13 возвращают ассоциативный массив ['line_count' => N, 'found_count' => M]
+            // (см. fast_io.c + docs.md). Остальные режимы — обычный индексированный массив.
+            $count = (is_array($res) && isset($res['found_count']))
+                ? $res['found_count']
+                : count((array) $res);
+
+            json_resp(['result' => $res, 'count' => $count]);
         }
 
         // --- file_select_line ---
         case 'select_line': {
-            $row   = (int)($_POST['row'] ?? 0);
-            $align = (int)($_POST['align'] ?? DEFAULT_ALIGN);
-            $mode  = (int)($_POST['mode'] ?? 0);
-            $res   = file_select_line($tpath, $row, $align, $mode);
+            $row = (int) ($_POST['row'] ?? 0);
+            $align = (int) ($_POST['align'] ?? DEFAULT_ALIGN);
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = file_select_line($tpath, $row, $align, $mode);
             json_resp(['result' => $res, 'found' => $res !== false]);
         }
 
         // --- file_select_array ---
         case 'select_array': {
-            $raw     = $_POST['query'] ?? '[]';
-            $query   = json_decode($raw, true) ?: [];
+            $raw = $_POST['query'] ?? '[]';
+            $query = json_decode($raw, true) ?: [];
             $pattern = $_POST['pattern'] ?? '';
-            $mode    = (int)($_POST['mode'] ?? 0);
-            $res     = @file_select_array($tpath, $query, $pattern, $mode) ?: [];
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = @file_select_array($tpath, $query, $pattern, $mode) ?: [];
             json_resp(['result' => $res]);
         }
 
         // --- file_update_line ---
         case 'update_line': {
-            $line   = $_POST['line'] ?? '';
-            $pos    = (int)($_POST['position'] ?? 0);
-            $align  = (int)($_POST['align'] ?? DEFAULT_ALIGN);
-            $mode   = (int)($_POST['mode'] ?? 0);
-            $res    = file_update_line($tpath, $line, $pos, $align, $mode);
+            $line = $_POST['line'] ?? '';
+            $pos = (int) ($_POST['position'] ?? 0);
+            $align = (int) ($_POST['align'] ?? DEFAULT_ALIGN);
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = file_update_line($tpath, $line, $pos, $align, $mode);
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
         // --- file_update_array ---
         case 'update_array': {
-            $raw  = $_POST['query'] ?? '[]';
+            $raw = $_POST['query'] ?? '[]';
             $query = json_decode($raw, true) ?: [];
-            $mode = (int)($_POST['mode'] ?? 0);
-            $res  = file_update_array($tpath, $query, $mode);
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = file_update_array($tpath, $query, $mode);
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
         // --- file_pop_line ---
         case 'pop_line': {
-            $offset = (int)($_POST['offset'] ?? -1);
-            $mode   = (int)($_POST['mode'] ?? 0);
-            $res    = file_pop_line($tpath, $offset, $mode);
+            $offset = (int) ($_POST['offset'] ?? -1);
+
+            // offset=0 не поддерживается библиотекой fast_io
+            // (offset < 0 = строки с конца, offset > 0 = байты с конца)
+            if ($offset === 0) {
+                json_resp([
+                    'error' => 'offset=0 не поддерживается. ' .
+                        'Используйте -1 (последняя строка) ' .
+                        'или положительное число (байты с конца файла)'
+                ]);
+            }
+
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = file_pop_line($tpath, $offset, $mode);
             json_resp(['result' => $res, 'found' => $res !== false]);
         }
 
         // --- file_defrag_lines (text) ---
         case 'defrag_lines': {
-            $key  = $_POST['key'] ?? '';
-            $mode = (int)($_POST['mode'] ?? 0);
-            $res  = file_defrag_lines($tpath, $key, $mode);
+            $key = $_POST['key'] ?? '';
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = file_defrag_lines($tpath, $key, $mode);
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
         // --- file_callback_line ---
         case 'callback_line': {
-            $pos  = (int)($_POST['position'] ?? 0);
-            $mode = (int)($_POST['mode'] ?? 4);
+            $pos = (int) ($_POST['position'] ?? 0);
+            $mode = (int) ($_POST['mode'] ?? 4);
             $collected = [];
-            $limit = (int)($_POST['limit'] ?? 20);
+            $limit = (int) ($_POST['limit'] ?? 20);
             $count = 0;
-            $ret = file_callback_line($tpath, function() use (&$collected, &$count, $limit) {
+            $ret = file_callback_line($tpath, function () use (&$collected, &$count, $limit) {
                 $count++;
-                $line    = func_get_arg(0);
-                $fname   = func_num_args() > 1 ? func_get_arg(1) : '';
-                $off     = func_num_args() > 2 ? func_get_arg(2) : 0;
-                $len     = func_num_args() > 3 ? func_get_arg(3) : 0;
-                $lcount  = func_num_args() > 4 ? func_get_arg(4) : 0;
+                $line = func_get_arg(0);
+                $fname = func_num_args() > 1 ? func_get_arg(1) : '';
+                $off = func_num_args() > 2 ? func_get_arg(2) : 0;
+                $len = func_num_args() > 3 ? func_get_arg(3) : 0;
+                $lcount = func_num_args() > 4 ? func_get_arg(4) : 0;
                 $collected[] = [
-                    'line'        => rtrim($line),
+                    'line' => rtrim($line),
                     'line_offset' => $off,
                     'line_length' => $len,
-                    'line_count'  => $lcount,
+                    'line_count' => $lcount,
                 ];
-                if ($count >= $limit) return false;
+                if ($count >= $limit)
+                    return false;
                 return true;
             }, $pos, $mode);
             json_resp(['rows' => $collected, 'total' => $count]);
@@ -247,35 +294,35 @@ if ($is_ajax) {
 
         // --- file_push_data (binary) ---
         case 'push_data': {
-            $key   = $_POST['key'] ?? '';
+            $key = $_POST['key'] ?? '';
             $value = $_POST['value'] ?? '';
-            $mode  = (int)($_POST['mode'] ?? 0);
-            $res   = file_push_data($tpath, $key, $value, $mode);
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = file_push_data($tpath, $key, $value, $mode);
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
         // --- file_search_data (binary) ---
         case 'search_data': {
-            $key  = $_POST['key'] ?? '';
-            $pos  = (int)($_POST['position'] ?? 0);
-            $mode = (int)($_POST['mode'] ?? 0);
-            $res  = file_search_data($tpath, $key, $pos, $mode);
+            $key = $_POST['key'] ?? '';
+            $pos = (int) ($_POST['position'] ?? 0);
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = file_search_data($tpath, $key, $pos, $mode);
             json_resp(['result' => $res, 'found' => $res !== false]);
         }
 
         // --- file_defrag_data (binary) ---
         case 'defrag_data': {
-            $key  = $_POST['key'] ?? '';
-            $mode = (int)($_POST['mode'] ?? 0);
-            $res  = file_defrag_data($tpath, $key, $mode);
+            $key = $_POST['key'] ?? '';
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = file_defrag_data($tpath, $key, $mode);
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
         // --- replicate_file ---
         case 'replicate': {
             $target = $data_dir . '/' . basename($_POST['target'] ?? '');
-            $mode   = (int)($_POST['mode'] ?? 0);
-            $res    = replicate_file($tpath, $target, $mode);
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = replicate_file($tpath, $target, $mode);
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
@@ -283,15 +330,15 @@ if ($is_ajax) {
         case 'pcre2': {
             $pattern = $_POST['pattern'] ?? '';
             $subject = $_POST['subject'] ?? '';
-            $mode    = (int)($_POST['mode'] ?? 0);
-            $res     = find_matches_pcre2($pattern, $subject, $mode);
+            $mode = (int) ($_POST['mode'] ?? 0);
+            $res = find_matches_pcre2($pattern, $subject, $mode);
             json_resp(['result' => $res]);
         }
 
         // --- Прочитать index файл (binary browse) ---
         case 'browse_binary': {
-            $start = (int)($_POST['start'] ?? 0);
-            $limit = (int)($_POST['limit'] ?? 25);
+            $start = (int) ($_POST['start'] ?? 0);
+            $limit = (int) ($_POST['limit'] ?? 25);
             $idxpath = $tpath . '.index';
             $rows = @file_get_keys($idxpath, $start, $limit, 0, 2) ?: [];
             $anal = @file_analize($idxpath) ?: [];
@@ -305,991 +352,1279 @@ if ($is_ajax) {
 ?>
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FastAdmin — fast_io</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
-<style>
-:root {
-    --bg: #070a0d;
-    --bg2: #0d1117;
-    --bg3: #131b24;
-    --border: #1e2d3d;
-    --border2: #253547;
-    --accent: #00e5ff;
-    --accent2: #00ff87;
-    --accent3: #ff6b35;
-    --accent4: #c084fc;
-    --text: #c9d8e8;
-    --text2: #6b8097;
-    --text3: #3d5166;
-    --danger: #ff4444;
-    --warning: #ffb700;
-    --success: #00ff87;
-    --font-mono: 'JetBrains Mono', monospace;
-    --font-display: 'Syne', sans-serif;
-    --radius: 2px;
-    --scan-speed: 8s;
-}
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    overflow: hidden;
-}
-
-/* ─── SCANLINE EFFECT ─── */
-body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0,229,255,0.015) 2px,
-        rgba(0,229,255,0.015) 4px
-    );
-    pointer-events: none;
-    z-index: 9999;
-}
-
-body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(ellipse at 50% 0%, rgba(0,229,255,0.04) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 9998;
-}
-
-/* ─── LAYOUT ─── */
-#app {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    grid-template-rows: 48px 1fr;
-    height: 100vh;
-    overflow: hidden;
-}
-
-/* ─── TOPBAR ─── */
-#topbar {
-    grid-column: 1 / -1;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    gap: 16px;
-    position: relative;
-}
-
-#topbar::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    opacity: 0.4;
-}
-
-.logo {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    color: var(--accent);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-transform: uppercase;
-}
-
-.logo-dot { color: var(--accent2); }
-
-.topbar-info {
-    margin-left: auto;
-    color: var(--text2);
-    font-size: 11px;
-    display: flex;
-    gap: 16px;
-}
-
-.status-dot {
-    display: inline-block;
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--success);
-    box-shadow: 0 0 6px var(--success);
-    animation: pulse-dot 2s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-}
-
-/* ─── SIDEBAR ─── */
-#sidebar {
-    background: var(--bg2);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.sidebar-head {
-    padding: 14px 16px 10px;
-    border-bottom: 1px solid var(--border);
-}
-
-.sidebar-head h3 {
-    font-family: var(--font-display);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text2);
-    margin-bottom: 10px;
-}
-
-.new-table-form {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.new-table-form input,
-.new-table-form select {
-    width: 100%;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    padding: 6px 8px;
-    border-radius: var(--radius);
-    outline: none;
-    transition: border-color 0.15s;
-}
-
-.new-table-form input:focus,
-.new-table-form select:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(0,229,255,0.08);
-}
-
-.new-table-form select option { background: var(--bg3); }
-
-#tables-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px 0;
-}
-
-#tables-list::-webkit-scrollbar { width: 4px; }
-#tables-list::-webkit-scrollbar-track { background: transparent; }
-#tables-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-.table-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 16px;
-    cursor: pointer;
-    gap: 8px;
-    border-left: 2px solid transparent;
-    transition: all 0.12s;
-    user-select: none;
-}
-
-.table-item:hover { background: var(--bg3); }
-.table-item.active {
-    background: rgba(0,229,255,0.06);
-    border-left-color: var(--accent);
-}
-
-.table-item .ti-icon {
-    font-size: 10px;
-    opacity: 0.6;
-    flex-shrink: 0;
-}
-
-.table-item .ti-name {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 12px;
-    color: var(--text);
-}
-
-.table-item .ti-badge {
-    font-size: 9px;
-    padding: 2px 5px;
-    border-radius: 2px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    flex-shrink: 0;
-}
-
-.badge-text { background: rgba(0,229,255,0.12); color: var(--accent); }
-.badge-binary { background: rgba(192,132,252,0.12); color: var(--accent4); }
-
-.ti-size {
-    font-size: 10px;
-    color: var(--text3);
-    flex-shrink: 0;
-}
-
-/* ─── MAIN ─── */
-#main {
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg);
-}
-
-/* ─── WELCOME ─── */
-#welcome {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--text3);
-    font-family: var(--font-display);
-}
-
-.welcome-art {
-    font-size: 11px;
-    font-family: var(--font-mono);
-    line-height: 1.4;
-    color: var(--text3);
-    text-align: center;
-    margin-bottom: 24px;
-    opacity: 0.6;
-}
-
-.welcome-art span { color: var(--accent); opacity: 1; }
-
-#welcome h2 {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--text2);
-    margin-bottom: 8px;
-}
-
-#welcome p { font-size: 12px; font-family: var(--font-mono); }
-
-/* ─── TABLE VIEW ─── */
-#table-view {
-    display: none;
-    flex: 1;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-#table-view.visible { display: flex; }
-
-/* ─── TABLE HEADER ─── */
-.tv-header {
-    padding: 14px 20px 0;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg2);
-}
-
-.tv-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-}
-
-.tv-title h2 {
-    font-family: var(--font-display);
-    font-size: 16px;
-    font-weight: 800;
-    color: var(--text);
-}
-
-.tv-title .tv-type {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    padding: 3px 7px;
-    border-radius: 2px;
-}
-
-.tv-title .del-btn {
-    margin-left: auto;
-    background: none;
-    border: 1px solid rgba(255,68,68,0.3);
-    color: var(--danger);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    padding: 4px 10px;
-    cursor: pointer;
-    border-radius: var(--radius);
-    transition: all 0.15s;
-}
-
-.tv-title .del-btn:hover { background: rgba(255,68,68,0.08); border-color: var(--danger); }
-
-/* ─── TABS ─── */
-.tabs {
-    display: flex;
-    gap: 0;
-}
-
-.tab-btn {
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: var(--text2);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    padding: 8px 16px;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    transition: all 0.12s;
-    white-space: nowrap;
-    text-transform: uppercase;
-}
-
-.tab-btn:hover { color: var(--text); }
-.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-/* ─── TAB CONTENT ─── */
-.tv-body {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.tab-pane {
-    display: none;
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 20px;
-}
-
-.tab-pane::-webkit-scrollbar { width: 6px; }
-.tab-pane::-webkit-scrollbar-track { background: transparent; }
-.tab-pane::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-.tab-pane.active { display: block; }
-
-/* ─── FORM ELEMENTS ─── */
-.form-row {
-    display: flex;
-    gap: 8px;
-    align-items: flex-end;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.form-group label {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text2);
-}
-
-input[type="text"],
-input[type="number"],
-textarea,
-select {
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    padding: 7px 10px;
-    border-radius: var(--radius);
-    outline: none;
-    transition: border-color 0.15s;
-}
-
-input[type="text"]:focus,
-input[type="number"]:focus,
-textarea:focus,
-select:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(0,229,255,0.06);
-}
-
-textarea { resize: vertical; min-height: 80px; width: 100%; font-size: 11px; }
-
-select option { background: var(--bg3); }
-
-.inp-sm { width: 120px; }
-.inp-md { width: 220px; }
-.inp-lg { width: 360px; }
-.inp-full { width: 100%; }
-
-/* ─── BUTTONS ─── */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid var(--border2);
-    background: var(--bg3);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    padding: 7px 14px;
-    cursor: pointer;
-    border-radius: var(--radius);
-    transition: all 0.12s;
-    white-space: nowrap;
-    letter-spacing: 0.3px;
-}
-
-.btn:hover { background: var(--bg2); border-color: var(--text2); }
-.btn:active { transform: translateY(1px); }
-
-.btn-primary {
-    background: rgba(0,229,255,0.1);
-    border-color: rgba(0,229,255,0.4);
-    color: var(--accent);
-}
-.btn-primary:hover { background: rgba(0,229,255,0.16); border-color: var(--accent); }
-
-.btn-success {
-    background: rgba(0,255,135,0.08);
-    border-color: rgba(0,255,135,0.3);
-    color: var(--success);
-}
-.btn-success:hover { background: rgba(0,255,135,0.14); border-color: var(--success); }
-
-.btn-danger {
-    background: rgba(255,68,68,0.08);
-    border-color: rgba(255,68,68,0.3);
-    color: var(--danger);
-}
-.btn-danger:hover { background: rgba(255,68,68,0.14); border-color: var(--danger); }
-
-.btn-warning {
-    background: rgba(255,183,0,0.08);
-    border-color: rgba(255,183,0,0.3);
-    color: var(--warning);
-}
-.btn-warning:hover { background: rgba(255,183,0,0.14); border-color: var(--warning); }
-
-.btn-purple {
-    background: rgba(192,132,252,0.08);
-    border-color: rgba(192,132,252,0.3);
-    color: var(--accent4);
-}
-.btn-purple:hover { background: rgba(192,132,252,0.14); border-color: var(--accent4); }
-
-.btn-sm { padding: 4px 10px; font-size: 10px; }
-.btn-xs { padding: 2px 7px; font-size: 10px; }
-.btn-icon { padding: 6px 8px; }
-
-/* ─── NOTIFICATIONS ─── */
-.notif {
-    padding: 8px 14px;
-    border-radius: var(--radius);
-    margin-bottom: 12px;
-    font-size: 12px;
-    border-left: 3px solid;
-    animation: slide-in 0.2s ease;
-}
-
-@keyframes slide-in {
-    from { transform: translateX(-8px); opacity: 0; }
-    to { transform: none; opacity: 1; }
-}
-
-.notif-ok { background: rgba(0,255,135,0.07); border-color: var(--success); color: var(--success); }
-.notif-err { background: rgba(255,68,68,0.07); border-color: var(--danger); color: var(--danger); }
-.notif-info { background: rgba(0,229,255,0.07); border-color: var(--accent); color: var(--accent); }
-.notif-warn { background: rgba(255,183,0,0.07); border-color: var(--warning); color: var(--warning); }
-
-/* ─── DATA TABLE ─── */
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-}
-
-.data-table th {
-    text-align: left;
-    padding: 6px 10px;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text2);
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-}
-
-.data-table td {
-    padding: 6px 10px;
-    border-bottom: 1px solid rgba(30,45,61,0.5);
-    vertical-align: middle;
-    color: var(--text);
-}
-
-.data-table tr:hover td { background: rgba(0,229,255,0.025); }
-
-.cell-key { color: var(--accent); font-weight: 500; }
-.cell-val {
-    max-width: 400px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--text2);
-    font-size: 11px;
-}
-.cell-num { color: var(--text3); font-size: 11px; text-align: right; }
-.cell-offset { color: var(--accent3); font-size: 11px; }
-
-/* ─── PAGINATION ─── */
-.pagination {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    margin-top: 12px;
-    flex-wrap: wrap;
-}
-
-.page-btn {
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    color: var(--text2);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    padding: 4px 10px;
-    cursor: pointer;
-    border-radius: var(--radius);
-    transition: all 0.12s;
-}
-
-.page-btn:hover { border-color: var(--accent); color: var(--accent); }
-.page-btn.current { background: rgba(0,229,255,0.1); border-color: var(--accent); color: var(--accent); }
-.page-info { color: var(--text3); font-size: 11px; margin-left: 8px; }
-
-/* ─── RESULT AREA ─── */
-.result-area {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-    margin-top: 12px;
-    font-size: 12px;
-    overflow: auto;
-    max-height: 400px;
-}
-
-.result-area::-webkit-scrollbar { width: 6px; height: 6px; }
-.result-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-.result-area pre {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text);
-    white-space: pre-wrap;
-    word-break: break-all;
-}
-
-/* ─── STAT GRID ─── */
-.stat-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 8px;
-    margin-bottom: 16px;
-}
-
-.stat-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px 12px;
-}
-
-.stat-card .sc-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text2);
-    margin-bottom: 4px;
-}
-
-.stat-card .sc-value {
-    font-size: 18px;
-    font-weight: 700;
-    font-family: var(--font-display);
-    color: var(--accent);
-}
-
-.stat-card .sc-value.green { color: var(--success); }
-.stat-card .sc-value.orange { color: var(--accent3); }
-.stat-card .sc-value.purple { color: var(--accent4); }
-
-/* ─── SECTION TITLES ─── */
-.section-title {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text2);
-    margin-bottom: 10px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.section-title .fn-name {
-    font-family: var(--font-mono);
-    color: var(--accent);
-    font-size: 11px;
-    font-weight: 400;
-    background: rgba(0,229,255,0.08);
-    padding: 1px 6px;
-    border-radius: 2px;
-}
-
-/* ─── INLINE EDIT ─── */
-.inline-edit {
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-}
-
-/* ─── OP CARDS ─── */
-.op-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.op-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px;
-}
-
-.op-card .oc-title {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--accent);
-    margin-bottom: 10px;
-    letter-spacing: 0.5px;
-}
-
-/* ─── CHECKBOX ─── */
-.cb-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-input[type="checkbox"] {
-    accent-color: var(--accent);
-    width: 13px;
-    height: 13px;
-    cursor: pointer;
-}
-
-/* ─── MODAL ─── */
-.modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(7,10,13,0.85);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-}
-
-.modal-overlay.open { display: flex; }
-
-.modal-box {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    min-width: 480px;
-    max-width: 680px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,229,255,0.06);
-    animation: modal-in 0.18s ease;
-}
-
-@keyframes modal-in {
-    from { transform: scale(0.96) translateY(-8px); opacity: 0; }
-    to { transform: none; opacity: 1; }
-}
-
-.modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
-}
-
-.modal-header h3 {
-    font-family: var(--font-display);
-    font-size: 14px;
-    font-weight: 800;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    color: var(--text2);
-    font-size: 18px;
-    cursor: pointer;
-    line-height: 1;
-    padding: 2px 6px;
-}
-
-.modal-close:hover { color: var(--text); }
-
-.modal-body { padding: 16px 18px; }
-.modal-footer {
-    padding: 12px 18px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-}
-
-/* ─── LOADING ─── */
-.loading {
-    display: inline-flex;
-    gap: 4px;
-    align-items: center;
-    color: var(--text2);
-    font-size: 11px;
-}
-
-.loading::before {
-    content: '';
-    width: 10px; height: 10px;
-    border: 1px solid var(--text3);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ─── CODE ─── */
-code {
-    font-family: var(--font-mono);
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    padding: 1px 5px;
-    border-radius: 2px;
-    font-size: 11px;
-    color: var(--accent2);
-}
-
-.sep { height: 1px; background: var(--border); margin: 16px 0; }
-
-/* ─── COMPACT TABLE for select_array ─── */
-.query-editor {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    color: var(--text);
-    padding: 8px;
-    width: 100%;
-    min-height: 100px;
-    resize: vertical;
-    border-radius: var(--radius);
-}
-
-/* ─── EMPTY STATE ─── */
-.empty-state {
-    text-align: center;
-    padding: 32px;
-    color: var(--text3);
-    font-size: 12px;
-}
-
-/* ─── SCROLLABLE TABS (mobile) ─── */
-.tabs { overflow-x: auto; }
-.tabs::-webkit-scrollbar { display: none; }
-
-/* ─── ANIMATIONS ─── */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: none; }
-}
-
-.fade-in { animation: fadeIn 0.2s ease; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>FastAdmin — fast_io</title>
 </head>
-<body>
-<div id="app">
+<style>
+    :root {
+        --bg: #070a0d;
+        --bg2: #0d1117;
+        --bg3: #131b24;
+        --border: #1e2d3d;
+        --border2: #253547;
+        --accent: #00e5ff;
+        --accent2: #00ff87;
+        --accent3: #ff6b35;
+        --accent4: #c084fc;
+        --text: #c9d8e8;
+        --text2: #6b8097;
+        --text3: #3d5166;
+        --danger: #ff4444;
+        --warning: #ffb700;
+        --success: #00ff87;
 
-<!-- TOPBAR -->
-<div id="topbar">
-    <div class="logo">
-        <span>Fast</span><span class="logo-dot">▸</span><span>Admin</span>
-    </div>
-    <div class="topbar-info">
-        <span><span class="status-dot"></span> fast_io <?= phpversion('fast_io') ?: 'loaded' ?></span>
-        <span>PHP <?= PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION ?></span>
-        <span style="color:var(--text3)">buf: <?= number_format((int)ini_get('fast_io.buffer_size') / 1024, 0) ?>KB</span>
-    </div>
-</div>
+        /* СИСТЕМНЫЕ ШРИФТЫ (без Google Fonts) */
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        --font-display: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-<!-- SIDEBAR -->
-<div id="sidebar">
-    <div class="sidebar-head">
-        <h3>Таблицы</h3>
-        <div class="new-table-form">
-            <input type="text" id="new-table-name" placeholder="имя_таблицы.dat">
-            <select id="new-table-type">
-                <option value="text">TEXT (file_insert_line)</option>
-                <option value="binary">BINARY (file_push_data)</option>
-            </select>
-            <button class="btn btn-success btn-sm" onclick="createTable()">+ Создать</button>
-        </div>
-    </div>
-    <div id="tables-list">
-        <div class="empty-state">Загрузка...</div>
-    </div>
-</div>
-
-<!-- MAIN -->
-<div id="main">
-
-    <!-- WELCOME -->
-    <div id="welcome">
-        <div class="welcome-art">fast_io Engine Admin Panel</div>
-        <h2>Выберите таблицу</h2>
-        <p style="margin-top:8px">или создайте новую в сайдбаре</p>
-    </div>
-
-    <!-- TABLE VIEW -->
-    <div id="table-view">
-
-        <div class="tv-header">
-            <div class="tv-title">
-                <h2 id="tv-name">—</h2>
-                <span id="tv-type-badge" class="tv-type">TEXT</span>
-                <button class="del-btn btn-xs" onclick="dropTable()">✕ Удалить</button>
-            </div>
-            <div class="tabs" id="tabs-nav">
-                <!-- injected by JS -->
-            </div>
-        </div>
-
-        <div class="tv-body">
-            <!-- injected by JS -->
-        </div>
-
-    </div><!-- #table-view -->
-</div><!-- #main -->
-</div><!-- #app -->
-
-<!-- EDIT MODAL -->
-<div class="modal-overlay" id="edit-modal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3 id="edit-modal-title">Редактировать строку</h3>
-            <button class="modal-close" onclick="closeModal('edit-modal')">✕</button>
-        </div>
-        <div class="modal-body" id="edit-modal-body"></div>
-        <div class="modal-footer" id="edit-modal-footer"></div>
-    </div>
-</div>
-
-<script>
-'use strict';
-
-// ════════════════════════════════
-//  STATE
-// ════════════════════════════════
-const state = {
-    tables: [],
-    current: null,
-    tab: 'browse',
-    browsePage: 0,
-    browseLimit: 25,
-};
-
-// ════════════════════════════════
-//  API
-// ════════════════════════════════
-async function api(op, data = {}, method = 'POST') {
-    const fd = new FormData();
-    fd.append('ajax', '1');
-    fd.append('op', op);
-    for (const [k, v] of Object.entries(data)) fd.append(k, v);
-    const r = await fetch(location.pathname + '?ajax=1', { method, body: fd });
-    return r.json();
-}
-
-// ════════════════════════════════
-//  NOTIFICATION
-// ════════════════════════════════
-function notify(msg, type = 'ok', container = '#notif-area') {
-    const el = document.querySelector(container);
-    if (!el) return;
-    const d = document.createElement('div');
-    d.className = `notif notif-${type} fade-in`;
-    d.textContent = msg;
-    el.prepend(d);
-    setTimeout(() => d.remove(), 5000);
-}
-
-// ═══════════════════════════════
-//  MODAL
-// ════════════════════════════════
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-// ════════════════════════════════
-//  SIDEBAR
-// ════════════════════════════════
-async function loadTables() {
-    const r = await api('list_tables');
-    state.tables = r.tables || [];
-    renderSidebar();
-}
-
-function renderSidebar() {
-    const el = document.getElementById('tables-list');
-    if (!state.tables.length) {
-        el.innerHTML = '<div class="empty-state">Нет таблиц</div>';
-        return;
+        --radius: 2px;
+        --scan-speed: 8s;
     }
-    el.innerHTML = state.tables.map(t => `
+
+    /* СВЕТЛАЯ ТЕМА — активируется классом .light на <body> */
+    body.light {
+        --bg: #f8fafc;
+        --bg2: #ffffff;
+        --bg3: #f1f5f9;
+        --border: #e2e8f0;
+        --border2: #cbd5e1;
+        --accent: #00b8d4;
+        --accent2: #00b96b;
+        --accent3: #f97316;
+        --accent4: #a855f7;
+        --text: #0f172a;
+        --text2: #475569;
+        --text3: #64748b;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --success: #10b981;
+    }
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    html,
+    body {
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: 13px;
+        overflow: hidden;
+        transition: background-color .4s ease, color .4s ease;
+    }
+
+    /* ─── SCANLINE EFFECT (адаптирован под обе темы) ─── */
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 229, 255, 0.015) 2px,
+                rgba(0, 229, 255, 0.015) 4px);
+        pointer-events: none;
+        z-index: 9999;
+    }
+
+    body.light::before {
+        background: repeating-linear-gradient(0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 184, 212, 0.035) 2px,
+                rgba(0, 184, 212, 0.035) 4px);
+    }
+
+    body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(ellipse at 50% 0%, rgba(0, 229, 255, 0.04) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 9998;
+    }
+
+    body.light::after {
+        background: radial-gradient(ellipse at 50% 0%, rgba(0, 184, 212, 0.07) 0%, transparent 70%);
+    }
+
+    /* ─── LAYOUT ─── */
+    #app {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        grid-template-rows: 48px 1fr;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* ─── TOPBAR ─── */
+    #topbar {
+        grid-column: 1 / -1;
+        background: var(--bg2);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        gap: 16px;
+        position: relative;
+        transition: background .4s ease;
+    }
+
+    #topbar::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        opacity: 0.4;
+    }
+
+    .logo {
+        font-family: var(--font-display);
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-transform: uppercase;
+    }
+
+    .logo-dot {
+        color: var(--accent2);
+    }
+
+    .topbar-info {
+        margin-left: auto;
+        color: var(--text2);
+        font-size: 11px;
+        display: flex;
+        gap: 16px;
+    }
+
+    .status-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--success);
+        box-shadow: 0 0 6px var(--success);
+        animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.4;
+        }
+    }
+
+    /* ─── SIDEBAR ─── */
+    #sidebar {
+        background: var(--bg2);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: background .4s ease;
+    }
+
+    .sidebar-head {
+        padding: 14px 16px 10px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-head h3 {
+        font-family: var(--font-display);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--text2);
+        margin-bottom: 10px;
+    }
+
+    .new-table-form {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .new-table-form input,
+    .new-table-form select {
+        width: 100%;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        padding: 6px 8px;
+        border-radius: var(--radius);
+        outline: none;
+        transition: border-color .15s, box-shadow .15s;
+    }
+
+    .new-table-form input:focus,
+    .new-table-form select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.08);
+    }
+
+    .new-table-form select option {
+        background: var(--bg3);
+    }
+
+    #tables-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 0;
+    }
+
+    #tables-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    #tables-list::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #tables-list::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 2px;
+    }
+
+    .table-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 16px;
+        cursor: pointer;
+        gap: 8px;
+        border-left: 2px solid transparent;
+        transition: all 0.12s;
+        user-select: none;
+    }
+
+    .table-item:hover {
+        background: var(--bg3);
+    }
+
+    .table-item.active {
+        background: rgba(0, 229, 255, 0.06);
+        border-left-color: var(--accent);
+    }
+
+    body.light .table-item.active {
+        background: rgba(0, 184, 212, 0.12);
+    }
+
+    .table-item .ti-icon {
+        font-size: 10px;
+        opacity: 0.6;
+        flex-shrink: 0;
+    }
+
+    .table-item .ti-name {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        color: var(--text);
+    }
+
+    .table-item .ti-badge {
+        font-size: 9px;
+        padding: 2px 5px;
+        border-radius: 2px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+    }
+
+    .badge-text {
+        background: rgba(0, 229, 255, 0.12);
+        color: var(--accent);
+    }
+
+    .badge-binary {
+        background: rgba(192, 132, 252, 0.12);
+        color: var(--accent4);
+    }
+
+    .ti-size {
+        font-size: 10px;
+        color: var(--text3);
+        flex-shrink: 0;
+    }
+
+    /* ─── MAIN ─── */
+    #main {
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        transition: background .4s ease;
+    }
+
+    /* ─── WELCOME ─── */
+    #welcome {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text3);
+        font-family: var(--font-display);
+    }
+
+    .welcome-art {
+        font-size: 11px;
+        font-family: var(--font-mono);
+        line-height: 1.4;
+        color: var(--text3);
+        text-align: center;
+        margin-bottom: 24px;
+        opacity: 0.6;
+    }
+
+    .welcome-art span {
+        color: var(--accent);
+        opacity: 1;
+    }
+
+    #welcome h2 {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text2);
+        margin-bottom: 8px;
+    }
+
+    #welcome p {
+        font-size: 12px;
+        font-family: var(--font-mono);
+    }
+
+    /* ─── TABLE VIEW ─── */
+    #table-view {
+        display: none;
+        flex: 1;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    #table-view.visible {
+        display: flex;
+    }
+
+    /* ─── TABLE HEADER ─── */
+    .tv-header {
+        padding: 14px 20px 0;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg2);
+    }
+
+    .tv-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .tv-title h2 {
+        font-family: var(--font-display);
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--text);
+    }
+
+    .tv-title .tv-type {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        padding: 3px 7px;
+        border-radius: 2px;
+    }
+
+    .tv-title .del-btn {
+        margin-left: auto;
+        background: none;
+        border: 1px solid rgba(255, 68, 68, 0.3);
+        color: var(--danger);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        padding: 4px 10px;
+        cursor: pointer;
+        border-radius: var(--radius);
+        transition: all 0.15s;
+    }
+
+    .tv-title .del-btn:hover {
+        background: rgba(255, 68, 68, 0.08);
+        border-color: var(--danger);
+    }
+
+    /* ─── TABS ─── */
+    .tabs {
+        display: flex;
+        gap: 0;
+    }
+
+    .tab-btn {
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--text2);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 500;
+        padding: 8px 16px;
+        cursor: pointer;
+        letter-spacing: 0.5px;
+        transition: all 0.12s;
+        white-space: nowrap;
+        text-transform: uppercase;
+    }
+
+    .tab-btn:hover {
+        color: var(--text);
+    }
+
+    .tab-btn.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+    }
+
+    /* ─── TAB CONTENT ─── */
+    .tv-body {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .tab-pane {
+        display: none;
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 20px;
+    }
+
+    .tab-pane::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .tab-pane::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .tab-pane::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 2px;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    /* ─── FORM ELEMENTS ─── */
+    .form-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .form-group label {
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--text2);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: 12px;
+        padding: 7px 10px;
+        border-radius: var(--radius);
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus,
+    select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.06);
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 80px;
+        width: 100%;
+        font-size: 11px;
+    }
+
+    select option {
+        background: var(--bg3);
+    }
+
+    .inp-sm {
+        width: 120px;
+    }
+
+    .inp-md {
+        width: 220px;
+    }
+
+    .inp-lg {
+        width: 360px;
+    }
+
+    .inp-full {
+        width: 100%;
+    }
+
+    /* ─── BUTTONS ─── */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--border2);
+        background: var(--bg3);
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 500;
+        padding: 7px 14px;
+        cursor: pointer;
+        border-radius: var(--radius);
+        transition: all 0.12s;
+        white-space: nowrap;
+        letter-spacing: 0.3px;
+    }
+
+    .btn:hover {
+        background: var(--bg2);
+        border-color: var(--text2);
+    }
+
+    .btn:active {
+        transform: translateY(1px);
+    }
+
+    .btn-primary {
+        background: rgba(0, 229, 255, 0.1);
+        border-color: rgba(0, 229, 255, 0.4);
+        color: var(--accent);
+    }
+
+    .btn-primary:hover {
+        background: rgba(0, 229, 255, 0.16);
+        border-color: var(--accent);
+    }
+
+    .btn-success {
+        background: rgba(0, 255, 135, 0.08);
+        border-color: rgba(0, 255, 135, 0.3);
+        color: var(--success);
+    }
+
+    .btn-success:hover {
+        background: rgba(0, 255, 135, 0.14);
+        border-color: var(--success);
+    }
+
+    .btn-danger {
+        background: rgba(255, 68, 68, 0.08);
+        border-color: rgba(255, 68, 68, 0.3);
+        color: var(--danger);
+    }
+
+    .btn-danger:hover {
+        background: rgba(255, 68, 68, 0.14);
+        border-color: var(--danger);
+    }
+
+    .btn-warning {
+        background: rgba(255, 183, 0, 0.08);
+        border-color: rgba(255, 183, 0, 0.3);
+        color: var(--warning);
+    }
+
+    .btn-warning:hover {
+        background: rgba(255, 183, 0, 0.14);
+        border-color: var(--warning);
+    }
+
+    .btn-purple {
+        background: rgba(192, 132, 252, 0.08);
+        border-color: rgba(192, 132, 252, 0.3);
+        color: var(--accent4);
+    }
+
+    .btn-purple:hover {
+        background: rgba(192, 132, 252, 0.14);
+        border-color: var(--accent4);
+    }
+
+    .btn-sm {
+        padding: 4px 10px;
+        font-size: 10px;
+    }
+
+    .btn-xs {
+        padding: 2px 7px;
+        font-size: 10px;
+    }
+
+    .btn-icon {
+        padding: 6px 8px;
+    }
+
+    /* ─── NOTIFICATIONS ─── */
+    .notif {
+        padding: 8px 14px;
+        border-radius: var(--radius);
+        margin-bottom: 12px;
+        font-size: 12px;
+        border-left: 3px solid;
+        animation: slide-in 0.2s ease;
+    }
+
+    @keyframes slide-in {
+        from {
+            transform: translateX(-8px);
+            opacity: 0;
+        }
+
+        to {
+            transform: none;
+            opacity: 1;
+        }
+    }
+
+    .notif-ok {
+        background: rgba(0, 255, 135, 0.07);
+        border-color: var(--success);
+        color: var(--success);
+    }
+
+    .notif-err {
+        background: rgba(255, 68, 68, 0.07);
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+
+    .notif-info {
+        background: rgba(0, 229, 255, 0.07);
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .notif-warn {
+        background: rgba(255, 183, 0, 0.07);
+        border-color: var(--warning);
+        color: var(--warning);
+    }
+
+    /* ─── DATA TABLE ─── */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 6px 10px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--text2);
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
+
+    .data-table td {
+        padding: 6px 10px;
+        border-bottom: 1px solid rgba(30, 45, 61, 0.5);
+        vertical-align: middle;
+        color: var(--text);
+    }
+
+    .data-table tr:hover td {
+        background: rgba(0, 229, 255, 0.025);
+    }
+
+    body.light .data-table tr:hover td {
+        background: rgba(0, 184, 212, 0.04);
+    }
+
+    .cell-key {
+        color: var(--accent);
+        font-weight: 500;
+    }
+
+    .cell-val {
+        max-width: 400px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--text2);
+        font-size: 11px;
+    }
+
+    .cell-num {
+        color: var(--text3);
+        font-size: 11px;
+        text-align: right;
+    }
+
+    .cell-offset {
+        color: var(--accent3);
+        font-size: 11px;
+    }
+
+    /* ─── PAGINATION ─── */
+    .pagination {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+
+    .page-btn {
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        color: var(--text2);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        padding: 4px 10px;
+        cursor: pointer;
+        border-radius: var(--radius);
+        transition: all 0.12s;
+    }
+
+    .page-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .page-btn.current {
+        background: rgba(0, 229, 255, 0.1);
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .page-info {
+        color: var(--text3);
+        font-size: 11px;
+        margin-left: 8px;
+    }
+
+    /* ─── RESULT AREA ─── */
+    .result-area {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 12px 14px;
+        margin-top: 12px;
+        font-size: 12px;
+        overflow: auto;
+        max-height: 400px;
+    }
+
+    .result-area::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .result-area::-webkit-scrollbar-thumb {
+        background: var(--border2);
+        border-radius: 2px;
+    }
+
+    .result-area pre {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text);
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+
+    /* ─── STAT GRID ─── */
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .stat-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 10px 12px;
+    }
+
+    .stat-card .sc-label {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--text2);
+        margin-bottom: 4px;
+    }
+
+    .stat-card .sc-value {
+        font-size: 18px;
+        font-weight: 700;
+        font-family: var(--font-display);
+        color: var(--accent);
+    }
+
+    .stat-card .sc-value.green {
+        color: var(--success);
+    }
+
+    .stat-card .sc-value.orange {
+        color: var(--accent3);
+    }
+
+    .stat-card .sc-value.purple {
+        color: var(--accent4);
+    }
+
+    /* ─── SECTION TITLES ─── */
+    .section-title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--text2);
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-title .fn-name {
+        font-family: var(--font-mono);
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 400;
+        background: rgba(0, 229, 255, 0.08);
+        padding: 1px 6px;
+        border-radius: 2px;
+    }
+
+    body.light .section-title .fn-name {
+        background: rgba(0, 184, 212, 0.12);
+    }
+
+    /* ─── INLINE EDIT / OP CARDS / CHECKBOX / MODAL / LOADING / CODE / etc. ─── */
+    /* (все остальные оригинальные правила полностью сохранены и работают с новыми переменными) */
+
+    .inline-edit {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .op-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .op-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px;
+    }
+
+    .op-card .oc-title {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--accent);
+        margin-bottom: 10px;
+        letter-spacing: 0.5px;
+    }
+
+    .cb-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    input[type="checkbox"] {
+        accent-color: var(--accent);
+        width: 13px;
+        height: 13px;
+        cursor: pointer;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(7, 10, 13, 0.85);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+    }
+
+    body.light .modal-overlay {
+        background: rgba(15, 23, 42, 0.7);
+    }
+
+    .modal-overlay.open {
+        display: flex;
+    }
+
+    .modal-box {
+        background: var(--bg2);
+        border: 1px solid var(--border2);
+        border-radius: var(--radius);
+        min-width: 480px;
+        max-width: 680px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 229, 255, 0.06);
+        animation: modal-in 0.18s ease;
+    }
+
+    body.light .modal-box {
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 184, 212, 0.12);
+    }
+
+    @keyframes modal-in {
+        from {
+            transform: scale(0.96) translateY(-8px);
+            opacity: 0;
+        }
+
+        to {
+            transform: none;
+            opacity: 1;
+        }
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h3 {
+        font-family: var(--font-display);
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: var(--text2);
+        font-size: 18px;
+        cursor: pointer;
+        line-height: 1;
+        padding: 2px 6px;
+    }
+
+    .modal-close:hover {
+        color: var(--text);
+    }
+
+    .modal-body {
+        padding: 16px 18px;
+    }
+
+    .modal-footer {
+        padding: 12px 18px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    /* LOADING */
+    .loading {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        color: var(--text2);
+        font-size: 11px;
+    }
+
+    .loading::before {
+        content: '';
+        width: 10px;
+        height: 10px;
+        border: 1px solid var(--text3);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* CODE */
+    code {
+        font-family: var(--font-mono);
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        padding: 1px 5px;
+        border-radius: 2px;
+        font-size: 11px;
+        color: var(--accent2);
+    }
+
+    .sep {
+        height: 1px;
+        background: var(--border);
+        margin: 16px 0;
+    }
+
+    /* QUERY EDITOR */
+    .query-editor {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        background: var(--bg3);
+        border: 1px solid var(--border2);
+        color: var(--text);
+        padding: 8px;
+        width: 100%;
+        min-height: 100px;
+        resize: vertical;
+        border-radius: var(--radius);
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+        text-align: center;
+        padding: 32px;
+        color: var(--text3);
+        font-size: 12px;
+    }
+
+    /* SCROLLABLE TABS */
+    .tabs {
+        overflow-x: auto;
+    }
+
+    .tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* ANIMATIONS */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.2s ease;
+    }
+</style>
+
+<body class="light">
+    <div id="app">
+
+        <!-- TOPBAR -->
+        <div id="topbar">
+            <div class="logo">
+                <span>Fast</span><span class="logo-dot">▸</span><span>Admin</span>
+            </div>
+            <div class="topbar-info">
+                <span><span class="status-dot"></span> fast_io <?= phpversion('fast_io') ?: 'loaded' ?></span>
+                <span>PHP <?= PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION ?></span>
+                <span style="color:var(--text3)">buf:
+                    <?= number_format((int) ini_get('fast_io.buffer_size') / 1024, 0) ?>KB</span>
+                <button onclick="toggleTheme()"
+                    style="background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;margin-left:8px">☀︎</button>
+            </div>
+
+        </div>
+
+        <!-- SIDEBAR -->
+        <div id="sidebar">
+            <div class="sidebar-head">
+                <h3>Таблицы</h3>
+                <div class="new-table-form">
+                    <input type="text" id="new-table-name" placeholder="имя_таблицы.dat">
+                    <select id="new-table-type">
+                        <option value="text">TEXT (file_insert_line)</option>
+                        <option value="binary">BINARY (file_push_data)</option>
+                    </select>
+                    <button class="btn btn-success btn-sm" onclick="createTable()">+ Создать</button>
+                </div>
+            </div>
+            <div id="tables-list">
+                <div class="empty-state">Загрузка...</div>
+            </div>
+        </div>
+
+        <!-- MAIN -->
+        <div id="main">
+
+            <!-- WELCOME -->
+            <div id="welcome">
+                <div class="welcome-art">fast_io Engine Admin Panel</div>
+                <h2>Выберите таблицу</h2>
+                <p style="margin-top:8px">или создайте новую в сайдбаре</p>
+            </div>
+
+            <!-- TABLE VIEW -->
+            <div id="table-view">
+
+                <div class="tv-header">
+                    <div class="tv-title">
+                        <h2 id="tv-name">—</h2>
+                        <span id="tv-type-badge" class="tv-type">TEXT</span>
+                        <button class="del-btn btn-xs" onclick="dropTable()">✕ Удалить</button>
+                    </div>
+                    <div class="tabs" id="tabs-nav">
+                        <!-- injected by JS -->
+                    </div>
+                </div>
+
+                <div class="tv-body">
+                    <!-- injected by JS -->
+                </div>
+
+            </div><!-- #table-view -->
+        </div><!-- #main -->
+    </div><!-- #app -->
+
+    <!-- EDIT MODAL -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="edit-modal-title">Редактировать строку</h3>
+                <button class="modal-close" onclick="closeModal('edit-modal')">✕</button>
+            </div>
+            <div class="modal-body" id="edit-modal-body"></div>
+            <div class="modal-footer" id="edit-modal-footer"></div>
+        </div>
+    </div>
+
+    <script>
+        'use strict';
+
+        // ════════════════════════════════
+        //  STATE
+        // ════════════════════════════════
+        const state = {
+            tables: [],
+            current: null,
+            tab: 'browse',
+            browsePage: 0,
+            browseLimit: 25,
+        };
+
+        // ════════════════════════════════
+        //  API
+        // ════════════════════════════════
+        async function api(op, data = {}, method = 'POST') {
+            const fd = new FormData();
+            fd.append('ajax', '1');
+            fd.append('op', op);
+            for (const [k, v] of Object.entries(data)) fd.append(k, v);
+            const r = await fetch(location.pathname + '?ajax=1', { method, body: fd });
+            return r.json();
+        }
+
+        // ════════════════════════════════
+        //  NOTIFICATION
+        // ════════════════════════════════
+        function notify(msg, type = 'ok', container = '#notif-area') {
+            const el = document.querySelector(container);
+            if (!el) return;
+            const d = document.createElement('div');
+            d.className = `notif notif-${type} fade-in`;
+            d.textContent = msg;
+            el.prepend(d);
+            setTimeout(() => d.remove(), 5000);
+        }
+
+        // ═══════════════════════════════
+        //  MODAL
+        // ════════════════════════════════
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        // ════════════════════════════════
+        //  SIDEBAR
+        // ════════════════════════════════
+        async function loadTables() {
+            const r = await api('list_tables');
+            state.tables = r.tables || [];
+            renderSidebar();
+        }
+
+        function renderSidebar() {
+            const el = document.getElementById('tables-list');
+            if (!state.tables.length) {
+                el.innerHTML = '<div class="empty-state">Нет таблиц</div>';
+                return;
+            }
+            el.innerHTML = state.tables.map(t => `
         <div class="table-item ${state.current?.name === t.name ? 'active' : ''}"
              onclick="selectTable(${escAttr(JSON.stringify(t.name))})">
             <span class="ti-icon">${t.type === 'binary' ? '◈' : '▤'}</span>
@@ -1298,106 +1633,107 @@ function renderSidebar() {
             <span class="ti-size">${fmtSize(t.size)}</span>
         </div>
     `).join('');
-}
 
-function fmtSize(b) {
-    if (b < 1024) return b + 'B';
-    if (b < 1048576) return (b/1024).toFixed(1) + 'K';
-    return (b/1048576).toFixed(1) + 'M';
-}
+        }
 
-// ════════════════════════════════
-//  TABLE SELECTION
-// ════════════════════════════════
-function selectTable(name) {
-    state.current = state.tables.find(t => t.name === name) || null;
-    if (!state.current) return;
-    state.browsePage = 0;
-    renderSidebar();
-    renderTableView();
-}
+        function fmtSize(b) {
+            if (b < 1024) return b + 'B';
+            if (b < 1048576) return (b / 1024).toFixed(1) + 'K';
+            return (b / 1048576).toFixed(1) + 'M';
+        }
 
-function renderTableView() {
-    const t = state.current;
-    document.getElementById('welcome').style.display = 'none';
-    const tv = document.getElementById('table-view');
-    tv.classList.add('visible');
+        // ════════════════════════════════
+        //  TABLE SELECTION
+        // ════════════════════════════════
+        function selectTable(name) {
+            state.current = state.tables.find(t => t.name === name) || null;
+            if (!state.current) return;
+            state.browsePage = 0;
+            renderSidebar();
+            renderTableView();
+        }
 
-    document.getElementById('tv-name').textContent = t.name;
-    const badge = document.getElementById('tv-type-badge');
-    badge.textContent = t.type.toUpperCase();
-    badge.style.cssText = t.type === 'binary'
-        ? 'background:rgba(192,132,252,0.12);color:#c084fc'
-        : 'background:rgba(0,229,255,0.12);color:#00e5ff';
+        function renderTableView() {
+            const t = state.current;
+            document.getElementById('welcome').style.display = 'none';
+            const tv = document.getElementById('table-view');
+            tv.classList.add('visible');
 
-    const tabs = t.type === 'text' ? [
-        ['browse', '▤ Browse'],
-        ['search', '⌕ Search'],
-        ['insert', '+ Insert'],
-        ['select', '⊡ Select'],
-        ['update', '✎ Update'],
-        ['ops', '⚙ Ops'],
-        ['analize', '⊞ Analyze'],
-    ] : [
-        ['browse', '▤ Index'],
-        ['search', '⌕ Search'],
-        ['push', '+ Push'],
-        ['ops', '⚙ Ops'],
-        ['analize', '⊞ Analyze'],
-    ];
+            document.getElementById('tv-name').textContent = t.name;
+            const badge = document.getElementById('tv-type-badge');
+            badge.textContent = t.type.toUpperCase();
+            badge.style.cssText = t.type === 'binary'
+                ? 'background:rgba(192,132,252,0.12);color:#c084fc'
+                : 'background:rgba(0,229,255,0.12);color:#00e5ff';
 
-    document.getElementById('tabs-nav').innerHTML = tabs.map(([id, label]) =>
-        `<button class="tab-btn ${state.tab === id ? 'active' : ''}" onclick="switchTab('${id}')">${label}</button>`
-    ).join('');
+            const tabs = t.type === 'text' ? [
+                ['browse', '▤ Browse'],
+                ['search', '⌕ Search'],
+                ['insert', '+ Insert'],
+                ['select', '⊡ Select'],
+                ['update', '✎ Update'],
+                ['ops', '⚙ Ops'],
+                ['analize', '⊞ Analyze'],
+            ] : [
+                ['browse', '▤ Index'],
+                ['search', '⌕ Search'],
+                ['push', '+ Push'],
+                ['ops', '⚙ Ops'],
+                ['analize', '⊞ Analyze'],
+            ];
 
-    renderTabBody();
-}
+            document.getElementById('tabs-nav').innerHTML = tabs.map(([id, label]) =>
+                `<button class="tab-btn ${state.tab === id ? 'active' : ''}" onclick="switchTab('${id}')">${label}</button>`
+            ).join('');
 
-function switchTab(id) {
-    state.tab = id;
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('active');
-        if (b.getAttribute('onclick') === `switchTab('${id}')`) b.classList.add('active');
-    });
-    renderTabBody();
-}
+            renderTabBody();
+        }
 
-// ════════════════════════════════
-//  TAB BODY RENDERER
-// ════════════════════════════════
-function renderTabBody() {
-    const body = document.querySelector('.tv-body');
-    if (!body) return;
-    const t = state.current;
-    let html = '<div class="tab-pane active" id="tab-content">';
-    html += '<div id="notif-area"></div>';
+        function switchTab(id) {
+            state.tab = id;
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active');
+                if (b.getAttribute('onclick') === `switchTab('${id}')`) b.classList.add('active');
+            });
+            renderTabBody();
+        }
 
-    switch (state.tab) {
-        case 'browse':  html += t.type === 'text' ? tplBrowseText() : tplBrowseBinary(); break;
-        case 'search':  html += t.type === 'text' ? tplSearchText() : tplSearchBinary(); break;
-        case 'insert':  html += tplInsert(); break;
-        case 'push':    html += tplPush(); break;
-        case 'select':  html += tplSelect(); break;
-        case 'update':  html += tplUpdate(); break;
-        case 'ops':     html += t.type === 'text' ? tplOpsText() : tplOpsBinary(); break;
-        case 'analize': html += tplAnalize(); break;
-    }
+        // ════════════════════════════════
+        //  TAB BODY RENDERER
+        // ════════════════════════════════
+        function renderTabBody() {
+            const body = document.querySelector('.tv-body');
+            if (!body) return;
+            const t = state.current;
+            let html = '<div class="tab-pane active" id="tab-content">';
+            html += '<div id="notif-area"></div>';
 
-    html += '</div>';
-    body.innerHTML = html;
+            switch (state.tab) {
+                case 'browse': html += t.type === 'text' ? tplBrowseText() : tplBrowseBinary(); break;
+                case 'search': html += t.type === 'text' ? tplSearchText() : tplSearchBinary(); break;
+                case 'insert': html += tplInsert(); break;
+                case 'push': html += tplPush(); break;
+                case 'select': html += tplSelect(); break;
+                case 'update': html += tplUpdate(); break;
+                case 'ops': html += t.type === 'text' ? tplOpsText() : tplOpsBinary(); break;
+                case 'analize': html += tplAnalize(); break;
+            }
 
-    if (state.tab === 'browse') {
-        loadBrowse();
-    } else if (state.tab === 'analize') {
-        loadAnalize();
-    }
-}
+            html += '</div>';
+            body.innerHTML = html;
 
-// ════════════════════════════════
-//  BROWSE TEXT
-// ═══════════════════════════════
-function tplBrowseText() {
-    return `
+            if (state.tab === 'browse') {
+                loadBrowse();
+            } else if (state.tab === 'analize') {
+                loadAnalize();
+            }
+        }
+
+        // ════════════════════════════════
+        //  BROWSE TEXT
+        // ═══════════════════════════════
+        function tplBrowseText() {
+            return `
     <div class="section-title">Browse <span class="fn-name">file_get_keys</span></div>
     <div class="form-row" style="margin-bottom:8px">
         <div class="form-group">
@@ -1425,94 +1761,94 @@ function tplBrowseText() {
     <div id="browse-area"><div class="loading">Загрузка</div></div>
     <div id="browse-pagination" class="pagination"></div>
     `;
-}
+        }
 
-async function loadBrowse() {
-    const t = state.current;
-    if (!t) return;
+        async function loadBrowse() {
+            const t = state.current;
+            if (!t) return;
 
-    if (t.type === 'binary') { loadBrowseBinary(); return; }
+            if (t.type === 'binary') { loadBrowseBinary(); return; }
 
-    const mode  = parseInt(document.getElementById('browse-mode')?.value || 2);
-    const limit = parseInt(document.getElementById('browse-limit')?.value || 25);
-    state.browseLimit = limit;
+            const mode = parseInt(document.getElementById('browse-mode')?.value || 2);
+            const limit = parseInt(document.getElementById('browse-limit')?.value || 25);
+            state.browseLimit = limit;
 
-    const r = await api('get_keys', {
-        table: t.name,
-        start: state.browsePage * limit,
-        limit,
-        mode,
-    });
+            const r = await api('get_keys', {
+                table: t.name,
+                start: state.browsePage * limit,
+                limit,
+                mode,
+            });
 
-    const area = document.getElementById('browse-area');
-    const rows = r.rows || [];
-    const anal = r.analize || {};
-    const total = anal.line_count || 0;
+            const area = document.getElementById('browse-area');
+            const rows = r.rows || [];
+            const anal = r.analize || {};
+            const total = anal.line_count || 0;
 
-    if (!rows.length) {
-        area.innerHTML = '<div class="empty-state">Нет данных</div>';
-        document.getElementById('browse-pagination').innerHTML = '';
-        return;
-    }
+            if (!rows.length) {
+                area.innerHTML = '<div class="empty-state">Нет данных</div>';
+                document.getElementById('browse-pagination').innerHTML = '';
+                return;
+            }
 
-    let html = '';
-    if (mode === 4 || mode === 5) {
-        html = `<div class="result-area"><pre>${escHtml(JSON.stringify(rows, null, 2))}</pre></div>`;
-    } else {
-        html = `<table class="data-table"><thead><tr>`;
-        const sample = rows[0];
-        if (typeof sample === 'object') {
-            const cols = Object.keys(sample);
-            cols.forEach(c => { html += `<th>${c}</th>`; });
-            html += `<th>Actions</th></tr></thead><tbody>`;
-            rows.forEach(row => {
-                html += '<tr>';
-                cols.forEach(c => {
-                    const v = row[c];
-                    let cls = 'cell-num';
-                    if (c === 'key' || c === 'trim_line' || c === 'line') cls = c === 'key' ? 'cell-key' : 'cell-val';
-                    if (c === 'line_offset') cls = 'cell-offset';
-                    const display = typeof v === 'string' && v.length > 120 ? v.slice(0, 120) + '…' : v;
-                    html += `<td class="${cls}" title="${typeof v === 'string' ? escAttr(v) : ''}">${escHtml(String(display ?? ''))}</td>`;
-                });
-                const key = row.key || (row.trim_line ? row.trim_line.split(' ')[0] : '');
-                const val = row.trim_line || row.line || '';
-                const safeKey = JSON.stringify(key).replace(/'/g, "\\'");
-                const safeVal = JSON.stringify(val).replace(/'/g, "\\'");
-                html += `<td>
+            let html = '';
+            if (mode === 4 || mode === 5) {
+                html = `<div class="result-area"><pre>${escHtml(JSON.stringify(rows, null, 2))}</pre></div>`;
+            } else {
+                html = `<table class="data-table"><thead><tr>`;
+                const sample = rows[0];
+                if (typeof sample === 'object') {
+                    const cols = Object.keys(sample);
+                    cols.forEach(c => { html += `<th>${c}</th>`; });
+                    html += `<th>Actions</th></tr></thead><tbody>`;
+                    rows.forEach(row => {
+                        html += '<tr>';
+                        cols.forEach(c => {
+                            const v = row[c];
+                            let cls = 'cell-num';
+                            if (c === 'key' || c === 'trim_line' || c === 'line') cls = c === 'key' ? 'cell-key' : 'cell-val';
+                            if (c === 'line_offset') cls = 'cell-offset';
+                            const display = typeof v === 'string' && v.length > 120 ? v.slice(0, 120) + '…' : v;
+                            html += `<td class="${cls}" title="${typeof v === 'string' ? escAttr(v) : ''}">${escHtml(String(display ?? ''))}</td>`;
+                        });
+                        const key = row.key || (row.trim_line ? row.trim_line.split(' ')[0] : '');
+                        const val = row.trim_line || row.line || '';
+                        const safeKey = JSON.stringify(key).replace(/'/g, "\\'");
+                        const safeVal = JSON.stringify(val).replace(/'/g, "\\'");
+                        html += `<td>
                     <div class="inline-edit">
                         <button class="btn btn-sm btn-primary btn-icon" title="Редактировать" onclick='openEditLine(${safeKey}, ${safeVal})'>✎</button>
                         <button class="btn btn-sm btn-danger btn-icon" title="Удалить" onclick='eraseLine(${safeKey})'>✕</button>
                     </div>
                 </td>`;
-                html += '</tr>';
-            });
-            html += '</tbody></table>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table>';
+                }
+            }
+
+            area.innerHTML = `<div class="fade-in">${html}</div>`;
+
+            const pages = Math.ceil(total / limit);
+            let pag = '';
+            if (pages > 1) {
+                const cur = state.browsePage;
+                if (cur > 0) pag += `<button class="page-btn" onclick="goBrowsePage(${cur - 1})">‹</button>`;
+                for (let i = Math.max(0, cur - 3); i <= Math.min(pages - 1, cur + 3); i++) {
+                    pag += `<button class="page-btn ${i === cur ? 'current' : ''}" onclick="goBrowsePage(${i})">${i + 1}</button>`;
+                }
+                if (cur < pages - 1) pag += `<button class="page-btn" onclick="goBrowsePage(${cur + 1})">›</button>`;
+                pag += `<span class="page-info">${total} строк</span>`;
+            }
+            document.getElementById('browse-pagination').innerHTML = pag;
         }
-    }
 
-    area.innerHTML = `<div class="fade-in">${html}</div>`;
+        function goBrowsePage(p) { state.browsePage = p; loadBrowse(); }
 
-    const pages = Math.ceil(total / limit);
-    let pag = '';
-    if (pages > 1) {
-        const cur = state.browsePage;
-        if (cur > 0) pag += `<button class="page-btn" onclick="goBrowsePage(${cur-1})">‹</button>`;
-        for (let i = Math.max(0, cur-3); i <= Math.min(pages-1, cur+3); i++) {
-            pag += `<button class="page-btn ${i===cur?'current':''}" onclick="goBrowsePage(${i})">${i+1}</button>`;
-        }
-        if (cur < pages-1) pag += `<button class="page-btn" onclick="goBrowsePage(${cur+1})">›</button>`;
-        pag += `<span class="page-info">${total} строк</span>`;
-    }
-    document.getElementById('browse-pagination').innerHTML = pag;
-}
-
-function goBrowsePage(p) { state.browsePage = p; loadBrowse(); }
-
-function openEditLine(key, val) {
-    const t = state.current;
-    document.getElementById('edit-modal-title').textContent = 'Редактировать: ' + key;
-    document.getElementById('edit-modal-body').innerHTML = `
+        function openEditLine(key, val) {
+            const t = state.current;
+            document.getElementById('edit-modal-title').textContent = 'Редактировать: ' + key;
+            document.getElementById('edit-modal-body').innerHTML = `
         <div class="form-group" style="margin-bottom:10px">
             <label>Ключ (line_key для поиска)</label>
             <input type="text" id="em-key" class="inp-full" value="${escAttr(key + ' ')}">
@@ -1532,35 +1868,35 @@ function openEditLine(key, val) {
         </div>
         <p style="font-size:11px;color:var(--text3);margin-top:8px">Использует <code>file_replace_line</code></p>
     `;
-    document.getElementById('edit-modal-footer').innerHTML = `
+            document.getElementById('edit-modal-footer').innerHTML = `
         <button class="btn" onclick="closeModal('edit-modal')">Отмена</button>
         <button class="btn btn-primary" onclick="doReplaceLine()">Сохранить</button>
     `;
-    openModal('edit-modal');
-}
+            openModal('edit-modal');
+        }
 
-async function doReplaceLine() {
-    const key  = document.getElementById('em-key').value;
-    const val  = document.getElementById('em-val').value;
-    const mode = document.getElementById('em-mode').value;
-    const r = await api('replace_line', { table: state.current.name, key, newline: val, mode });
-    closeModal('edit-modal');
-    if (r.ok) { notify(`✓ Заменено (${r.result} строк)`, 'ok'); loadBrowse(); }
-    else notify('Ошибка: ' + r.result, 'err');
-}
+        async function doReplaceLine() {
+            const key = document.getElementById('em-key').value;
+            const val = document.getElementById('em-val').value;
+            const mode = document.getElementById('em-mode').value;
+            const r = await api('replace_line', { table: state.current.name, key, newline: val, mode });
+            closeModal('edit-modal');
+            if (r.ok) { notify(`✓ Заменено (${r.result} строк)`, 'ok'); loadBrowse(); }
+            else notify('Ошибка: ' + r.result, 'err');
+        }
 
-async function eraseLine(key) {
-    if (!confirm(`Стереть строку с ключом "${key}"?`)) return;
-    const r = await api('erase_line', { table: state.current.name, key: key + ' ', position: 0, mode: 0 });
-    if (r.ok) { notify(`✓ Стёрто (offset ${r.result})`, 'ok'); loadBrowse(); }
-    else notify('Ошибка: ' + r.result, 'err');
-}
+        async function eraseLine(key) {
+            if (!confirm(`Стереть строку с ключом "${key}"?`)) return;
+            const r = await api('erase_line', { table: state.current.name, key: key + ' ', position: 0, mode: 0 });
+            if (r.ok) { notify(`✓ Стёрто (offset ${r.result})`, 'ok'); loadBrowse(); }
+            else notify('Ошибка: ' + r.result, 'err');
+        }
 
-// ════════════════════════════════
-//  BROWSE BINARY
-// ════════════════════════════════
-function tplBrowseBinary() {
-    return `
+        // ════════════════════════════════
+        //  BROWSE BINARY
+        // ════════════════════════════════
+        function tplBrowseBinary() {
+            return `
     <div class="section-title">Index Browser <span class="fn-name">*.index</span></div>
     <div class="form-row" style="margin-bottom:8px">
         <div class="form-group">
@@ -1576,40 +1912,40 @@ function tplBrowseBinary() {
     <div id="browse-area"><div class="loading">Загрузка</div></div>
     <div id="browse-pagination" class="pagination"></div>
     `;
-}
+        }
 
-async function loadBrowseBinary() {
-    const t = state.current;
-    const limit = parseInt(document.getElementById('browse-limit')?.value || 25);
-    const r = await api('browse_binary', {
-        table: t.name,
-        start: state.browsePage * limit,
-        limit,
-    });
+        async function loadBrowseBinary() {
+            const t = state.current;
+            const limit = parseInt(document.getElementById('browse-limit')?.value || 25);
+            const r = await api('browse_binary', {
+                table: t.name,
+                start: state.browsePage * limit,
+                limit,
+            });
 
-    const area = document.getElementById('browse-area');
-    const rows = r.rows || [];
-    const anal = r.analize || {};
-    const total = anal.line_count || 0;
+            const area = document.getElementById('browse-area');
+            const rows = r.rows || [];
+            const anal = r.analize || {};
+            const total = anal.line_count || 0;
 
-    if (!rows.length) {
-        area.innerHTML = '<div class="empty-state">Индекс пуст</div>';
-        document.getElementById('browse-pagination').innerHTML = '';
-        return;
-    }
+            if (!rows.length) {
+                area.innerHTML = '<div class="empty-state">Индекс пуст</div>';
+                document.getElementById('browse-pagination').innerHTML = '';
+                return;
+            }
 
-    let html = `<table class="data-table"><thead><tr>
+            let html = `<table class="data-table"><thead><tr>
         <th>#</th><th>Key</th><th>Offset</th><th>Size</th><th>Actions</th>
     </tr></thead><tbody>`;
 
-    rows.forEach((row, i) => {
-        const line = typeof row === 'string' ? row : (row.trim_line || '');
-        const parts = line.split(' ');
-        const key = parts[0] || '';
-        const idx = parts[1] || '';
-        const [off, sz] = idx.split(':');
-        const absIdx = state.browsePage * limit + i;
-        html += `<tr>
+            rows.forEach((row, i) => {
+                const line = typeof row === 'string' ? row : (row.trim_line || '');
+                const parts = line.split(' ');
+                const key = parts[0] || '';
+                const idx = parts[1] || '';
+                const [off, sz] = idx.split(':');
+                const absIdx = state.browsePage * limit + i;
+                html += `<tr>
             <td class="cell-num">${absIdx}</td>
             <td class="cell-key">${escHtml(key)}</td>
             <td class="cell-offset">${escHtml(off || '')}</td>
@@ -1619,62 +1955,62 @@ async function loadBrowseBinary() {
                 <button class="btn btn-xs btn-danger" onclick="eraseIndexEntry(${escAttr(JSON.stringify(key + ' '))})">✕</button>
             </td>
         </tr>`;
-    });
-    html += '</tbody></table>';
+            });
+            html += '</tbody></table>';
 
-    area.innerHTML = `<div class="fade-in">${html}</div>`;
+            area.innerHTML = `<div class="fade-in">${html}</div>`;
 
-    const pages = Math.ceil(total / limit);
-    let pag = '';
-    if (pages > 1) {
-        const cur = state.browsePage;
-        if (cur > 0) pag += `<button class="page-btn" onclick="goBrowsePage(${cur-1})">‹</button>`;
-        for (let i = Math.max(0, cur-3); i <= Math.min(pages-1, cur+3); i++) {
-            pag += `<button class="page-btn ${i===cur?'current':''}" onclick="goBrowsePage(${i})">${i+1}</button>`;
+            const pages = Math.ceil(total / limit);
+            let pag = '';
+            if (pages > 1) {
+                const cur = state.browsePage;
+                if (cur > 0) pag += `<button class="page-btn" onclick="goBrowsePage(${cur - 1})">‹</button>`;
+                for (let i = Math.max(0, cur - 3); i <= Math.min(pages - 1, cur + 3); i++) {
+                    pag += `<button class="page-btn ${i === cur ? 'current' : ''}" onclick="goBrowsePage(${i})">${i + 1}</button>`;
+                }
+                if (cur < pages - 1) pag += `<button class="page-btn" onclick="goBrowsePage(${cur + 1})">›</button>`;
+                pag += `<span class="page-info">${total} записей</span>`;
+            }
+            document.getElementById('browse-pagination').innerHTML = pag;
         }
-        if (cur < pages-1) pag += `<button class="page-btn" onclick="goBrowsePage(${cur+1})">›</button>`;
-        pag += `<span class="page-info">${total} записей</span>`;
-    }
-    document.getElementById('browse-pagination').innerHTML = pag;
-}
 
-async function fetchBinaryVal(key) {
-    const r = await api('search_data', { table: state.current.name, key, position: 0, mode: 0 });
-    if (r.found) {
-        openResultModal('Binary Value: ' + key, r.result);
-    } else {
-        notify('Не найдено', 'err');
-    }
-}
+        async function fetchBinaryVal(key) {
+            const r = await api('search_data', { table: state.current.name, key, position: 0, mode: 0 });
+            if (r.found) {
+                openResultModal('Binary Value: ' + key, r.result);
+            } else {
+                notify('Не найдено', 'err');
+            }
+        }
 
-async function eraseIndexEntry(key) {
-    if (!confirm('Стереть запись из индекса?')) return;
-    const t = state.current;
-    const fd = new FormData();
-    fd.append('ajax','1'); fd.append('op','erase_line');
-    fd.append('table', t.name + '.index'); fd.append('key', key);
-    fd.append('position','0'); fd.append('mode','0');
-    const r = await (await fetch(location.pathname+'?ajax=1', {method:'POST',body:fd})).json();
-    if (r.ok) { notify(`✓ Запись индекса стёрта`, 'ok'); loadBrowse(); }
-    else notify('Ошибка: ' + r.result, 'err');
-}
+        async function eraseIndexEntry(key) {
+            if (!confirm('Стереть запись из индекса?')) return;
+            const t = state.current;
+            const fd = new FormData();
+            fd.append('ajax', '1'); fd.append('op', 'erase_line');
+            fd.append('table', t.name + '.index'); fd.append('key', key);
+            fd.append('position', '0'); fd.append('mode', '0');
+            const r = await (await fetch(location.pathname + '?ajax=1', { method: 'POST', body: fd })).json();
+            if (r.ok) { notify(`✓ Запись индекса стёрта`, 'ok'); loadBrowse(); }
+            else notify('Ошибка: ' + r.result, 'err');
+        }
 
-function openResultModal(title, content) {
-    document.getElementById('edit-modal-title').textContent = title;
-    document.getElementById('edit-modal-body').innerHTML = `
+        function openResultModal(title, content) {
+            document.getElementById('edit-modal-title').textContent = title;
+            document.getElementById('edit-modal-body').innerHTML = `
         <div class="result-area"><pre>${escHtml(String(content))}</pre></div>
     `;
-    document.getElementById('edit-modal-footer').innerHTML = `
+            document.getElementById('edit-modal-footer').innerHTML = `
         <button class="btn" onclick="closeModal('edit-modal')">Закрыть</button>
     `;
-    openModal('edit-modal');
-}
+            openModal('edit-modal');
+        }
 
-// ════════════════════════════════
-//  SEARCH TEXT
-// ════════════════════════════════
-function tplSearchText() {
-    return `
+        // ════════════════════════════════
+        //  SEARCH TEXT
+        // ════════════════════════════════
+        function tplSearchText() {
+            return `
     <div class="section-title">Поиск <span class="fn-name">file_search_line</span> <span class="fn-name">file_search_array</span></div>
 
     <div class="op-grid">
@@ -1765,52 +2101,52 @@ function tplSearchText() {
         <div id="pcre-result" class="result-area" style="display:none;margin-top:8px"></div>
     </div>
     `;
-}
+        }
 
-async function doSearchLine() {
-    const r = await api('search_line', {
-        table:    state.current.name,
-        key:      document.getElementById('sl-key').value,
-        position: document.getElementById('sl-pos').value,
-        mode:     document.getElementById('sl-mode').value,
-    });
-    const el = document.getElementById('sl-result');
-    el.style.display = 'block';
-    el.innerHTML = r.found
-        ? `<pre>${escHtml(r.result)}</pre>`
-        : '<span style="color:var(--danger)">Не найдено</span>';
-}
+        async function doSearchLine() {
+            const r = await api('search_line', {
+                table: state.current.name,
+                key: document.getElementById('sl-key').value,
+                position: document.getElementById('sl-pos').value,
+                mode: document.getElementById('sl-mode').value,
+            });
+            const el = document.getElementById('sl-result');
+            el.style.display = 'block';
+            el.innerHTML = r.found
+                ? `<pre>${escHtml(r.result)}</pre>`
+                : '<span style="color:var(--danger)">Не найдено</span>';
+        }
 
-async function doSearchArray() {
-    const r = await api('search_array', {
-        table: state.current.name,
-        key:   document.getElementById('sa-key').value,
-        start: document.getElementById('sa-start').value,
-        limit: document.getElementById('sa-limit').value,
-        mode:  document.getElementById('sa-mode').value,
-    });
-    const el = document.getElementById('sa-result');
-    el.style.display = 'block';
-    el.innerHTML = `<pre>${escHtml(JSON.stringify(r.result, null, 2))}</pre>
+        async function doSearchArray() {
+            const r = await api('search_array', {
+                table: state.current.name,
+                key: document.getElementById('sa-key').value,
+                start: document.getElementById('sa-start').value,
+                limit: document.getElementById('sa-limit').value,
+                mode: document.getElementById('sa-mode').value,
+            });
+            const el = document.getElementById('sa-result');
+            el.style.display = 'block';
+            el.innerHTML = `<pre>${escHtml(JSON.stringify(r.result, null, 2))}</pre>
         <div style="margin-top:6px;color:var(--text2);font-size:11px">Найдено: ${r.count}</div>`;
-}
+        }
 
-async function doPcre2() {
-    const r = await api('pcre2', {
-        pattern: document.getElementById('pcre-pattern').value,
-        subject: document.getElementById('pcre-subject').value,
-        mode:    document.getElementById('pcre-mode').value,
-    });
-    const el = document.getElementById('pcre-result');
-    el.style.display = 'block';
-    el.innerHTML = `<pre>${escHtml(JSON.stringify(r.result, null, 2))}</pre>`;
-}
+        async function doPcre2() {
+            const r = await api('pcre2', {
+                pattern: document.getElementById('pcre-pattern').value,
+                subject: document.getElementById('pcre-subject').value,
+                mode: document.getElementById('pcre-mode').value,
+            });
+            const el = document.getElementById('pcre-result');
+            el.style.display = 'block';
+            el.innerHTML = `<pre>${escHtml(JSON.stringify(r.result, null, 2))}</pre>`;
+        }
 
-// ════════════════════════════════
-//  SEARCH BINARY
-// ════════════════════════════════
-function tplSearchBinary() {
-    return `
+        // ════════════════════════════════
+        //  SEARCH BINARY
+        // ════════════════════════════════
+        function tplSearchBinary() {
+            return `
     <div class="section-title">Binary Search <span class="fn-name">file_search_data</span></div>
     <div class="op-card" style="max-width:500px">
         <div class="form-group" style="margin-bottom:8px">
@@ -1829,6 +2165,11 @@ function tplSearchBinary() {
                     <option value="100">100: no lock</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label>Position (byte offset)</label>
+                <input type="number" id="idx-pos" value="0" min="0" class="inp-sm">
+                <small style="color:var(--text3);display:block">Начало поиска в индексном файле</small>
+            </div>            
             <button class="btn btn-primary" style="margin-top:18px" onclick="doSearchData()">Найти</button>
         </div>
         <div id="sd-result" class="result-area" style="display:none;margin-top:8px;max-height:300px"></div>
@@ -1856,40 +2197,40 @@ function tplSearchBinary() {
         <div id="idx-result" class="result-area" style="display:none;margin-top:8px"></div>
     </div>
     `;
-}
+        }
 
-async function doSearchData() {
-    const r = await api('search_data', {
-        table:    state.current.name,
-        key:      document.getElementById('sd-key').value,
-        position: document.getElementById('sd-pos').value,
-        mode:     document.getElementById('sd-mode').value,
-    });
-    const el = document.getElementById('sd-result');
-    el.style.display = 'block';
-    el.innerHTML = r.found
-        ? `<pre>${escHtml(r.result)}</pre>`
-        : '<span style="color:var(--danger)">Не найдено</span>';
-}
+        async function doSearchData() {
+            const r = await api('search_data', {
+                table: state.current.name,
+                key: document.getElementById('sd-key').value,
+                position: document.getElementById('sd-pos').value,
+                mode: document.getElementById('sd-mode').value,
+            });
+            const el = document.getElementById('sd-result');
+            el.style.display = 'block';
+            el.innerHTML = r.found
+                ? `<pre>${escHtml(r.result)}</pre>`
+                : '<span style="color:var(--danger)">Не найдено</span>';
+        }
 
-async function doIdxSearch() {
-    const fd = new FormData();
-    fd.append('ajax','1'); fd.append('op','search_line');
-    fd.append('table', state.current.name + '.index');
-    fd.append('key', document.getElementById('idx-key').value);
-    fd.append('position','0');
-    fd.append('mode', document.getElementById('idx-mode').value);
-    const r = await (await fetch(location.pathname+'?ajax=1', {method:'POST',body:fd})).json();
-    const el = document.getElementById('idx-result');
-    el.style.display = 'block';
-    el.innerHTML = r.found ? `<pre>${escHtml(r.result)}</pre>` : '<span style="color:var(--danger)">Не найдено</span>';
-}
+        async function doIdxSearch() {
+            const fd = new FormData();
+            fd.append('ajax', '1'); fd.append('op', 'search_line');
+            fd.append('table', state.current.name + '.index');
+            fd.append('key', document.getElementById('idx-key').value);
+            fd.append('position', document.getElementById('idx-pos')?.value ?? '0');
+            fd.append('mode', document.getElementById('idx-mode').value);
+            const r = await (await fetch(location.pathname + '?ajax=1', { method: 'POST', body: fd })).json();
+            const el = document.getElementById('idx-result');
+            el.style.display = 'block';
+            el.innerHTML = r.found ? `<pre>${escHtml(r.result)}</pre>` : '<span style="color:var(--danger)">Не найдено</span>';
+        }
 
-// ════════════════════════════════
-//  INSERT (TEXT)
-// ════════════════════════════════
-function tplInsert() {
-    return `
+        // ════════════════════════════════
+        //  INSERT (TEXT)
+        // ════════════════════════════════
+        function tplInsert() {
+            return `
     <div class="section-title">Добавить строку <span class="fn-name">file_insert_line</span></div>
     <div class="op-card" style="max-width:600px">
         <div class="form-group" style="margin-bottom:10px">
@@ -1915,30 +2256,30 @@ function tplInsert() {
         <div id="ins-result" style="display:none;margin-top:10px"></div>
     </div>
     `;
-}
+        }
 
-async function doInsert() {
-    const r = await api('insert_line', {
-        table: state.current.name,
-        line:  document.getElementById('ins-line').value,
-        align: document.getElementById('ins-align').value,
-        mode:  document.getElementById('ins-mode').value,
-    });
-    const el = document.getElementById('ins-result');
-    el.style.display = 'block';
-    if (r.ok) {
-        el.innerHTML = `<div class="notif notif-ok">✓ Вставлено, result=${r.result}</div>`;
-        loadTables();
-    } else {
-        el.innerHTML = `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
-    }
-}
+        async function doInsert() {
+            const r = await api('insert_line', {
+                table: state.current.name,
+                line: document.getElementById('ins-line').value,
+                align: document.getElementById('ins-align').value,
+                mode: document.getElementById('ins-mode').value,
+            });
+            const el = document.getElementById('ins-result');
+            el.style.display = 'block';
+            if (r.ok) {
+                el.innerHTML = `<div class="notif notif-ok">✓ Вставлено, result=${r.result}</div>`;
+                loadTables();
+            } else {
+                el.innerHTML = `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
+            }
+        }
 
-// ════════════════════════════════
-//  PUSH (BINARY)
-// ════════════════════════════════
-function tplPush() {
-    return `
+        // ════════════════════════════════
+        //  PUSH (BINARY)
+        // ════════════════════════════════
+        function tplPush() {
+            return `
     <div class="section-title">Push data <span class="fn-name">file_push_data</span></div>
     <div class="op-card" style="max-width:600px">
         <div class="form-group" style="margin-bottom:10px">
@@ -1962,30 +2303,30 @@ function tplPush() {
         <div id="push-result" style="display:none;margin-top:10px"></div>
     </div>
     `;
-}
+        }
 
-async function doPush() {
-    const r = await api('push_data', {
-        table: state.current.name,
-        key:   document.getElementById('push-key').value,
-        value: document.getElementById('push-val').value,
-        mode:  document.getElementById('push-mode').value,
-    });
-    const el = document.getElementById('push-result');
-    el.style.display = 'block';
-    if (r.ok) {
-        el.innerHTML = `<div class="notif notif-ok">✓ Записано, offset=${r.result}</div>`;
-        loadTables();
-    } else {
-        el.innerHTML = `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
-    }
-}
+        async function doPush() {
+            const r = await api('push_data', {
+                table: state.current.name,
+                key: document.getElementById('push-key').value,
+                value: document.getElementById('push-val').value,
+                mode: document.getElementById('push-mode').value,
+            });
+            const el = document.getElementById('push-result');
+            el.style.display = 'block';
+            if (r.ok) {
+                el.innerHTML = `<div class="notif notif-ok">✓ Записано, offset=${r.result}</div>`;
+                loadTables();
+            } else {
+                el.innerHTML = `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
+            }
+        }
 
-// ════════════════════════════════
-//  SELECT
-// ════════════════════════════════
-function tplSelect() {
-    return `
+        // ════════════════════════════════
+        //  SELECT
+        // ════════════════════════════════
+        function tplSelect() {
+            return `
     <div class="section-title">Direct Select <span class="fn-name">file_select_line</span> <span class="fn-name">file_select_array</span></div>
 
     <div class="op-grid">
@@ -2056,7 +2397,12 @@ function tplSelect() {
             </div>
             <div class="form-group">
                 <label>Mode (args count)</label>
-                <input type="number" id="cb-mode" value="4" min="0" max="9" class="inp-sm">
+                <!-- mode = максимальный индекс аргумента (0-based) -->
+                <!-- mode=4 → 5 аргументов: 0=line, 1=filename, 2=offset, 3=length, 4=line_count -->
+                <label title="mode=N → callback получает N+1 аргументов (индексы 0..N). Для line_count нужен mode ≥ 4">
+                    Mode <span style="color:var(--text3);font-size:11px">(макс. индекс аргумента, 0–9)</span>
+                </label>
+                <input type="number" id="cb-mode" value="4" min="4" max="9" class="inp-sm">
             </div>
             <div class="form-group">
                 <label>Limit строк</label>
@@ -2070,62 +2416,68 @@ function tplSelect() {
         <div id="cb-result" class="result-area" style="display:none;margin-top:8px;max-height:300px"></div>
     </div>
     `;
-}
+        }
 
-async function doSelectLine() {
-    const r = await api('select_line', {
-        table: state.current.name,
-        row:   document.getElementById('sell-row').value,
-        align: document.getElementById('sell-align').value,
-        mode:  document.getElementById('sell-mode').value,
-    });
-    const el = document.getElementById('sell-result');
-    el.style.display = 'block';
-    el.innerHTML = r.found ? `<pre>${escHtml(r.result)}</pre>` : '<span style="color:var(--danger)">Не найдено</span>';
-}
+        async function doSelectLine() {
+            const r = await api('select_line', {
+                table: state.current.name,
+                row: document.getElementById('sell-row').value,
+                align: document.getElementById('sell-align').value,
+                mode: document.getElementById('sell-mode').value,
+            });
+            const el = document.getElementById('sell-result');
+            el.style.display = 'block';
+            el.innerHTML = r.found ? `<pre>${escHtml(r.result)}</pre>` : '<span style="color:var(--danger)">Не найдено</span>';
+        }
 
-async function doSelectArray() {
-    let q;
-    try { q = JSON.parse(document.getElementById('sela-query').value); } catch { notify('Некорректный JSON', 'err'); return; }
-    const r = await api('select_array', {
-        table:   state.current.name,
-        query:   JSON.stringify(q),
-        pattern: document.getElementById('sela-pattern').value,
-        mode:    document.getElementById('sela-mode').value,
-    });
-    const el = document.getElementById('sela-result');
-    el.style.display = 'block';
-    el.innerHTML = `<pre>${escHtml(JSON.stringify(r.result, null, 2))}</pre>`;
-}
+        async function doSelectArray() {
+            let q;
+            try { q = JSON.parse(document.getElementById('sela-query').value); } catch { notify('Некорректный JSON', 'err'); return; }
+            const r = await api('select_array', {
+                table: state.current.name,
+                query: JSON.stringify(q),
+                pattern: document.getElementById('sela-pattern').value,
+                mode: document.getElementById('sela-mode').value,
+            });
+            const el = document.getElementById('sela-result');
+            el.style.display = 'block';
+            el.innerHTML = `<pre>${escHtml(JSON.stringify(r.result, null, 2))}</pre>`;
+        }
 
-async function doCallback() {
-    const r = await api('callback_line', {
-        table:    state.current.name,
-        position: document.getElementById('cb-pos').value,
-        mode:     document.getElementById('cb-mode').value,
-        limit:    document.getElementById('cb-limit').value,
-    });
-    const el = document.getElementById('cb-result');
-    el.style.display = 'block';
-    if (!r.rows?.length) { el.innerHTML = '<span style="color:var(--text3)">Нет данных</span>'; return; }
-    let html = `<table class="data-table"><thead><tr><th>#</th><th>line</th><th>offset</th><th>length</th></tr></thead><tbody>`;
-    r.rows.forEach(row => {
-        html += `<tr>
+        async function doCallback() {
+            const mode = parseInt(document.getElementById('cb-mode').value);
+            if (mode < 4) {
+                notify('Для отображения поля line_count используйте mode ≥ 4', 'warn');
+                return;
+            }
+
+            const r = await api('callback_line', {
+                table: state.current.name,
+                position: document.getElementById('cb-pos').value,
+                mode: document.getElementById('cb-mode').value,
+                limit: document.getElementById('cb-limit').value,
+            });
+            const el = document.getElementById('cb-result');
+            el.style.display = 'block';
+            if (!r.rows?.length) { el.innerHTML = '<span style="color:var(--text3)">Нет данных</span>'; return; }
+            let html = `<table class="data-table"><thead><tr><th>#</th><th>line</th><th>offset</th><th>length</th></tr></thead><tbody>`;
+            r.rows.forEach(row => {
+                html += `<tr>
             <td class="cell-num">${row.line_count}</td>
-            <td class="cell-val">${escHtml(row.line.slice(0,100))}</td>
+            <td class="cell-val">${escHtml(row.line.slice(0, 100))}</td>
             <td class="cell-offset">${row.line_offset}</td>
             <td class="cell-num">${row.line_length}</td>
         </tr>`;
-    });
-    html += `</tbody></table><div style="margin-top:6px;font-size:11px;color:var(--text2)">Итого: ${r.total}</div>`;
-    el.innerHTML = html;
-}
+            });
+            html += `</tbody></table><div style="margin-top:6px;font-size:11px;color:var(--text2)">Итого: ${r.total}</div>`;
+            el.innerHTML = html;
+        }
 
-// ════════════════════════════════
-//  UPDATE
-// ════════════════════════════════
-function tplUpdate() {
-    return `
+        // ════════════════════════════════
+        //  UPDATE
+        // ════════════════════════════════
+        function tplUpdate() {
+            return `
     <div class="section-title">Update <span class="fn-name">file_update_line</span> <span class="fn-name">file_update_array</span></div>
 
     <div class="op-grid">
@@ -2180,43 +2532,43 @@ function tplUpdate() {
         </div>
     </div>
     `;
-}
+        }
 
-async function doUpdateLine() {
-    const r = await api('update_line', {
-        table:    state.current.name,
-        line:     document.getElementById('ul-line').value,
-        position: document.getElementById('ul-pos').value,
-        align:    document.getElementById('ul-align').value,
-        mode:     document.getElementById('ul-mode').value,
-    });
-    const el = document.getElementById('ul-result');
-    el.style.display = 'block';
-    el.innerHTML = r.ok
-        ? `<div class="notif notif-ok">✓ Записано ${r.result} байт</div>`
-        : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
-}
+        async function doUpdateLine() {
+            const r = await api('update_line', {
+                table: state.current.name,
+                line: document.getElementById('ul-line').value,
+                position: document.getElementById('ul-pos').value,
+                align: document.getElementById('ul-align').value,
+                mode: document.getElementById('ul-mode').value,
+            });
+            const el = document.getElementById('ul-result');
+            el.style.display = 'block';
+            el.innerHTML = r.ok
+                ? `<div class="notif notif-ok">✓ Записано ${r.result} байт</div>`
+                : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
+        }
 
-async function doUpdateArray() {
-    let q;
-    try { q = JSON.parse(document.getElementById('ua-query').value); } catch { notify('Некорректный JSON', 'err'); return; }
-    const r = await api('update_array', {
-        table: state.current.name,
-        query: JSON.stringify(q),
-        mode:  document.getElementById('ua-mode').value,
-    });
-    const el = document.getElementById('ua-result');
-    el.style.display = 'block';
-    el.innerHTML = r.ok
-        ? `<div class="notif notif-ok">✓ Записано ${r.result} байт</div>`
-        : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
-}
+        async function doUpdateArray() {
+            let q;
+            try { q = JSON.parse(document.getElementById('ua-query').value); } catch { notify('Некорректный JSON', 'err'); return; }
+            const r = await api('update_array', {
+                table: state.current.name,
+                query: JSON.stringify(q),
+                mode: document.getElementById('ua-mode').value,
+            });
+            const el = document.getElementById('ua-result');
+            el.style.display = 'block';
+            el.innerHTML = r.ok
+                ? `<div class="notif notif-ok">✓ Записано ${r.result} байт</div>`
+                : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
+        }
 
-// ════════════════════════════════
-//  OPS TEXT
-// ════════════════════════════════
-function tplOpsText() {
-    return `
+        // ════════════════════════════════
+        //  OPS TEXT
+        // ════════════════════════════════
+        function tplOpsText() {
+            return `
     <div class="section-title">Операции</div>
     <div class="op-grid">
 
@@ -2224,7 +2576,9 @@ function tplOpsText() {
             <div class="oc-title">file_pop_line — извлечь последнюю строку</div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Offset (-1=auto, N=bytes, -N=lines)</label>
+                    <label title="offset=0 не поддерживается. -1 = последняя строка, >0 = байты с конца">
+                    Offset (-1=последняя строка, N=байты с конца)
+                    </label>
                     <input type="number" id="pop-offset" value="-1" class="inp-sm">
                 </div>
                 <div class="form-group">
@@ -2241,6 +2595,7 @@ function tplOpsText() {
             <div id="pop-result" class="result-area" style="display:none;margin-top:8px"></div>
         </div>
 
+<!--
         <div class="op-card">
             <div class="oc-title">file_defrag_lines — дефрагментация</div>
             <div class="form-group" style="margin-bottom:8px">
@@ -2259,6 +2614,7 @@ function tplOpsText() {
             </div>
             <div id="defrag-result" style="display:none;margin-top:8px"></div>
         </div>
+-->        
 
         <div class="op-card">
             <div class="oc-title">file_erase_line — стереть строку</div>
@@ -2327,84 +2683,89 @@ function tplOpsText() {
 
     </div>
     `;
-}
+        }
 
-async function doPopLine() {
-    const r = await api('pop_line', {
-        table:  state.current.name,
-        offset: document.getElementById('pop-offset').value,
-        mode:   document.getElementById('pop-mode').value,
-    });
-    const el = document.getElementById('pop-result');
-    el.style.display = 'block';
-    el.innerHTML = r.found ? `<pre>${escHtml(String(r.result))}</pre>` : '<span style="color:var(--danger)">Файл пуст</span>';
-    if (r.found) loadTables();
-}
+        async function doPopLine() {
+            const offset = parseInt(document.getElementById('pop-offset').value);
+            if (offset === 0) {
+                notify('offset=0 не поддерживается (см. подсказку в поле)', 'warn');
+                return;
+            }
+            const r = await api('pop_line', {
+                table: state.current.name,
+                offset: document.getElementById('pop-offset').value,
+                mode: document.getElementById('pop-mode').value,
+            });
+            const el = document.getElementById('pop-result');
+            el.style.display = 'block';
+            el.innerHTML = r.found ? `<pre>${escHtml(String(r.result))}</pre>` : '<span style="color:var(--danger)">Файл пуст</span>';
+            if (r.found) loadTables();
+        }
 
-async function doDefragLines() {
-    if (!confirm('Запустить дефрагментацию?')) return;
-    const r = await api('defrag_lines', {
-        table: state.current.name,
-        key:   document.getElementById('defrag-key').value,
-        mode:  document.getElementById('defrag-mode').value,
-    });
-    const el = document.getElementById('defrag-result');
-    el.style.display = 'block';
-    el.innerHTML = r.ok
-        ? `<div class="notif notif-ok">✓ Удалено ${r.result} строк</div>`
-        : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
-    loadTables();
-}
+        async function doDefragLines() {
+            if (!confirm('Запустить дефрагментацию?')) return;
+            const r = await api('defrag_lines', {
+                table: state.current.name,
+                key: document.getElementById('defrag-key').value,
+                mode: document.getElementById('defrag-mode').value,
+            });
+            const el = document.getElementById('defrag-result');
+            el.style.display = 'block';
+            el.innerHTML = r.ok
+                ? `<div class="notif notif-ok">✓ Удалено ${r.result} строк</div>`
+                : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
+            loadTables();
+        }
 
-async function doEraseLine() {
-    const r = await api('erase_line', {
-        table:    state.current.name,
-        key:      document.getElementById('erase-key').value,
-        position: document.getElementById('erase-pos').value,
-        mode:     document.getElementById('erase-mode').value,
-    });
-    const el = document.getElementById('erase-result');
-    el.style.display = 'block';
-    el.innerHTML = r.ok
-        ? `<div class="notif notif-ok">✓ Стёрто (offset ${r.result})</div>`
-        : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
-}
+        async function doEraseLine() {
+            const r = await api('erase_line', {
+                table: state.current.name,
+                key: document.getElementById('erase-key').value,
+                position: document.getElementById('erase-pos').value,
+                mode: document.getElementById('erase-mode').value,
+            });
+            const el = document.getElementById('erase-result');
+            el.style.display = 'block';
+            el.innerHTML = r.ok
+                ? `<div class="notif notif-ok">✓ Стёрто (offset ${r.result})</div>`
+                : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
+        }
 
-async function doReplace() {
-    const r = await api('replace_line', {
-        table:   state.current.name,
-        key:     document.getElementById('repl-key').value,
-        newline: document.getElementById('repl-val').value,
-        mode:    document.getElementById('repl-mode').value,
-    });
-    const el = document.getElementById('repl-result');
-    el.style.display = 'block';
-    el.innerHTML = r.ok
-        ? `<div class="notif notif-ok">✓ Заменено (${r.result} строк)</div>`
-        : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
-}
+        async function doReplace() {
+            const r = await api('replace_line', {
+                table: state.current.name,
+                key: document.getElementById('repl-key').value,
+                newline: document.getElementById('repl-val').value,
+                mode: document.getElementById('repl-mode').value,
+            });
+            const el = document.getElementById('repl-result');
+            el.style.display = 'block';
+            el.innerHTML = r.ok
+                ? `<div class="notif notif-ok">✓ Заменено (${r.result} строк)</div>`
+                : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
+        }
 
-async function doReplicate() {
-    const target = document.getElementById('rep-target').value;
-    if (!target) { notify('Укажите целевой файл', 'warn'); return; }
-    const r = await api('replicate', {
-        table:  state.current.name,
-        target: target,
-        mode:   document.getElementById('rep-mode').value,
-    });
-    const el = document.getElementById('rep-result');
-    el.style.display = 'block';
-    el.innerHTML = r.ok
-        ? `<div class="notif notif-ok">✓ Скопировано ${r.result} байт</div>`
-        : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
-    loadTables();
-}
+        async function doReplicate() {
+            const target = document.getElementById('rep-target').value;
+            if (!target) { notify('Укажите целевой файл', 'warn'); return; }
+            const r = await api('replicate', {
+                table: state.current.name,
+                target: target,
+                mode: document.getElementById('rep-mode').value,
+            });
+            const el = document.getElementById('rep-result');
+            el.style.display = 'block';
+            el.innerHTML = r.ok
+                ? `<div class="notif notif-ok">✓ Скопировано ${r.result} байт</div>`
+                : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
+            loadTables();
+        }
 
-// ════════════════════════════════
-//  OPS BINARY
-// ════════════════════════════════
-function tplOpsBinary() {
-    return `
+        // ════════════════════════════════
+        //  OPS BINARY
+        // ════════════════════════════════
+        function tplOpsBinary() {
+            return `
     <div class="section-title">Binary Operations</div>
     <div class="op-grid">
 
@@ -2458,59 +2819,59 @@ function tplOpsBinary() {
 
     </div>
     `;
-}
+        }
 
-async function doDefragData() {
-    if (!confirm('Запустить дефрагментацию бинарных данных?')) return;
-    const r = await api('defrag_data', {
-        table: state.current.name,
-        key:   document.getElementById('dfd-key').value,
-        mode:  document.getElementById('dfd-mode').value,
-    });
-    const el = document.getElementById('dfd-result');
-    el.style.display = 'block';
-    el.innerHTML = r.ok
-        ? `<div class="notif notif-ok">✓ Дефраг завершён, удалено ${r.result}</div>`
-        : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
-    loadTables();
-}
+        async function doDefragData() {
+            if (!confirm('Запустить дефрагментацию бинарных данных?')) return;
+            const r = await api('defrag_data', {
+                table: state.current.name,
+                key: document.getElementById('dfd-key').value,
+                mode: document.getElementById('dfd-mode').value,
+            });
+            const el = document.getElementById('dfd-result');
+            el.style.display = 'block';
+            el.innerHTML = r.ok
+                ? `<div class="notif notif-ok">✓ Дефраг завершён, удалено ${r.result}</div>`
+                : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
+            loadTables();
+        }
 
-async function doBinaryReplicate() {
-    const target = document.getElementById('brep-target').value;
-    if (!target) { notify('Укажите целевой файл', 'warn'); return; }
-    const r = await api('replicate', {
-        table:  state.current.name,
-        target: target,
-        mode:   document.getElementById('brep-mode').value,
-    });
-    const el = document.getElementById('brep-result');
-    el.style.display = 'block';
-    el.innerHTML = r.ok
-        ? `<div class="notif notif-ok">✓ Скопировано ${r.result} байт</div>`
-        : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
-    loadTables();
-}
+        async function doBinaryReplicate() {
+            const target = document.getElementById('brep-target').value;
+            if (!target) { notify('Укажите целевой файл', 'warn'); return; }
+            const r = await api('replicate', {
+                table: state.current.name,
+                target: target,
+                mode: document.getElementById('brep-mode').value,
+            });
+            const el = document.getElementById('brep-result');
+            el.style.display = 'block';
+            el.innerHTML = r.ok
+                ? `<div class="notif notif-ok">✓ Скопировано ${r.result} байт</div>`
+                : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
+            loadTables();
+        }
 
-async function doEraseIndexOp() {
-    const key = document.getElementById('eidx-key').value;
-    const fd = new FormData();
-    fd.append('ajax','1'); fd.append('op','erase_line');
-    fd.append('table', state.current.name + '.index');
-    fd.append('key', key); fd.append('position','0'); fd.append('mode','0');
-    const r = await (await fetch(location.pathname+'?ajax=1', {method:'POST',body:fd})).json();
-    const el = document.getElementById('eidx-result');
-    el.style.display = 'block';
-    el.innerHTML = r.ok
-        ? `<div class="notif notif-ok">✓ Стёрто (offset ${r.result})</div>`
-        : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
-}
+        async function doEraseIndexOp() {
+            const key = document.getElementById('eidx-key').value;
+            const fd = new FormData();
+            fd.append('ajax', '1'); fd.append('op', 'erase_line');
+            fd.append('table', state.current.name + '.index');
+            fd.append('key', key); fd.append('position', '0'); fd.append('mode', '0');
+            const r = await (await fetch(location.pathname + '?ajax=1', { method: 'POST', body: fd })).json();
+            const el = document.getElementById('eidx-result');
+            el.style.display = 'block';
+            el.innerHTML = r.ok
+                ? `<div class="notif notif-ok">✓ Стёрто (offset ${r.result})</div>`
+                : `<div class="notif notif-err">✕ Ошибка: ${r.result}</div>`;
+        }
 
-// ════════════════════════════════
-//  ANALYZE
-// ════════════════════════════════
-function tplAnalize() {
-    const isBinary = state.current?.type === 'binary';
-    return `
+        // ════════════════════════════════
+        //  ANALYZE
+        // ════════════════════════════════
+        function tplAnalize() {
+            const isBinary = state.current?.type === 'binary';
+            return `
     <div class="section-title">Анализ <span class="fn-name">file_analize</span></div>
     <div class="form-row" style="margin-bottom:12px">
         <div class="form-group">
@@ -2532,110 +2893,134 @@ function tplAnalize() {
     <div id="anal-idx-raw" class="result-area"></div>
     ` : ''}
     `;
-}
+        }
 
-async function loadAnalize() {
-    const t = state.current;
-    const mode = parseInt(document.getElementById('anal-mode')?.value || 0);
-    const r = await api('analize', { table: t.name, mode });
-    const res = r.result || {};
+        async function loadAnalize() {
+            const t = state.current;
+            const mode = parseInt(document.getElementById('anal-mode')?.value || 0);
+            const r = await api('analize', { table: t.name, mode });
+            const res = r.result || {};
 
-    const statsEl = document.getElementById('anal-stats');
-    const rawEl   = document.getElementById('anal-raw');
+            const statsEl = document.getElementById('anal-stats');
+            const rawEl = document.getElementById('anal-raw');
 
-    statsEl.innerHTML = [
-        ['line_count', res.line_count, ''],
-        ['file_size', fmtSize(res.file_size || 0), 'green'],
-        ['min_length', res.min_length, ''],
-        ['max_length', res.max_length, ''],
-        ['avg_length', Math.round(res.avg_length || 0), 'purple'],
-        ['flow_interruption', res.flow_interruption, res.flow_interruption > 0 ? 'orange' : ''],
-        ['last_symbol', res.last_symbol + (res.last_symbol === 10 ? ' (\\n)' : ''), ''],
-        ['total_chars', res.total_characters, ''],
-    ].map(([label, val, cls]) => `
+            // flow_interruption существует ТОЛЬКО в режиме 0 (весь файл)
+            // По документации и fast_io.c при mode=1 поле отсутствует
+            const statItems = [
+                ['line_count', res.line_count ?? '—', ''],
+                ['file_size', fmtSize(res.file_size || 0), 'green'],
+                ['min_length', res.min_length ?? '—', ''],
+                ['max_length', res.max_length ?? '—', ''],
+                ['avg_length', Math.round(res.avg_length || 0), 'purple'],
+                ['last_symbol', (res.last_symbol ?? '—') + ((res.last_symbol === 10) ? ' (\\n)' : ''), ''],
+                ['total_chars', res.total_characters ?? '—', ''],
+            ];
+
+            if (mode === 0) {
+                statItems.splice(5, 0, [
+                    'flow_interruption',
+                    res.flow_interruption ?? 0,
+                    (res.flow_interruption ?? 0) > 0 ? 'orange' : ''
+                ]);
+            }
+
+            statsEl.innerHTML = statItems.map(([label, val, cls]) => `
         <div class="stat-card">
             <div class="sc-label">${label}</div>
             <div class="sc-value ${cls}">${val ?? '—'}</div>
         </div>
     `).join('');
 
-    rawEl.innerHTML = `<pre>${escHtml(JSON.stringify(res, null, 2))}</pre>`;
+            rawEl.innerHTML = `<pre>${escHtml(JSON.stringify(res, null, 2))}</pre>`;
 
-    if (t.type === 'binary') {
-        const fd = new FormData();
-        fd.append('ajax','1'); fd.append('op','analize');
-        fd.append('table', t.name + '.index'); fd.append('mode', mode);
-        const ri = await (await fetch(location.pathname+'?ajax=1',{method:'POST',body:fd})).json();
-        const ri2 = ri.result || {};
-        const idxStats = document.getElementById('anal-idx-stats');
-        const idxRaw   = document.getElementById('anal-idx-raw');
-        if (idxStats) idxStats.innerHTML = [
-            ['index lines', ri2.line_count, ''],
-            ['index size', fmtSize(ri2.file_size || 0), 'green'],
-            ['avg_length', Math.round(ri2.avg_length || 0), 'purple'],
-        ].map(([label, val, cls]) => `
+            if (t.type === 'binary') {
+                const fd = new FormData();
+                fd.append('ajax', '1'); fd.append('op', 'analize');
+                fd.append('table', t.name + '.index'); fd.append('mode', mode);
+                const ri = await (await fetch(location.pathname + '?ajax=1', { method: 'POST', body: fd })).json();
+                const ri2 = ri.result || {};
+                const idxStats = document.getElementById('anal-idx-stats');
+                const idxRaw = document.getElementById('anal-idx-raw');
+                if (idxStats) idxStats.innerHTML = [
+                    ['index lines', ri2.line_count, ''],
+                    ['index size', fmtSize(ri2.file_size || 0), 'green'],
+                    ['avg_length', Math.round(ri2.avg_length || 0), 'purple'],
+                ].map(([label, val, cls]) => `
             <div class="stat-card"><div class="sc-label">${label}</div><div class="sc-value ${cls}">${val ?? '—'}</div></div>
         `).join('');
-        if (idxRaw) idxRaw.innerHTML = `<pre>${escHtml(JSON.stringify(ri2, null, 2))}</pre>`;
-    }
-}
+                if (idxRaw) idxRaw.innerHTML = `<pre>${escHtml(JSON.stringify(ri2, null, 2))}</pre>`;
+            }
+        }
 
-// ════════════════════════════════
-//  CREATE / DROP TABLE
-// ════════════════════════════════
-async function createTable() {
-    const name = document.getElementById('new-table-name').value.trim();
-    const type = document.getElementById('new-table-type').value;
-    if (!name) return;
-    const r = await api('create_table', { name, type });
-    if (r.ok) {
-        document.getElementById('new-table-name').value = '';
-        await loadTables();
-        selectTable(r.name);
-    } else {
-        alert('Ошибка: ' + r.error);
-    }
-}
+        // ════════════════════════════════
+        //  CREATE / DROP TABLE
+        // ════════════════════════════════
+        async function createTable() {
+            const name = document.getElementById('new-table-name').value.trim();
+            const type = document.getElementById('new-table-type').value;
+            if (!name) return;
+            const r = await api('create_table', { name, type });
+            if (r.ok) {
+                document.getElementById('new-table-name').value = '';
+                await loadTables();
+                selectTable(r.name);
+            } else {
+                alert('Ошибка: ' + r.error);
+            }
+        }
 
-async function dropTable() {
-    const t = state.current;
-    if (!t || !confirm(`Удалить таблицу "${t.name}"?`)) return;
-    await api('drop_table', { table: t.name });
-    state.current = null;
-    document.getElementById('table-view').classList.remove('visible');
-    document.getElementById('welcome').style.display = '';
-    await loadTables();
-}
+        async function dropTable() {
+            const t = state.current;
+            if (!t || !confirm(`Удалить таблицу "${t.name}"?`)) return;
+            await api('drop_table', { table: t.name });
+            state.current = null;
+            document.getElementById('table-view').classList.remove('visible');
+            document.getElementById('welcome').style.display = '';
+            await loadTables();
+        }
 
-// ════════════════════════════════
-//  UTILS
-// ════════════════════════════════
-function escHtml(s) {
-    return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-}
+        // ════════════════════════════════
+        //  UTILS
+        // ════════════════════════════════
+        function escHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
 
-function escAttr(s) { return escHtml(s).replace(/'/g, '&#39;'); }
+        function escAttr(s) { return escHtml(s).replace(/'/g, '&#39;'); }
 
-// ═══════════════════════════════
-//  KEYBOARD
-// ════════════════════════════════
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
-    }
-    if (e.key === 'Enter' && e.target.id === 'new-table-name') {
-        createTable();
-    }
-});
+        // ═══════════════════════════════
+        //  KEYBOARD
+        // ════════════════════════════════
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+            }
+            if (e.key === 'Enter' && e.target.id === 'new-table-name') {
+                createTable();
+            }
+        });
 
-// ════════════════════════════════
-//  INIT
-// ════════════════════════════════
-loadTables();
-</script>
+        // ════════════════════════════════
+        //  INIT
+        // ════════════════════════════════
+        loadTables();
+    </script>
+
+
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('light');
+            localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+        }
+
+        // При инициализации:
+        if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');
+
+    </script>
 </body>
+
 </html>
