@@ -1166,7 +1166,10 @@ PHP_FUNCTION(file_defrag_lines) {
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "s|sl", &filename, &filename_len, &line_key, &line_key_len, &mode) == FAILURE) {
         RETURN_FALSE;
     }
-
+    
+    /* empty string key means "delete only SPECIAL_CHAR lines" */
+    if (line_key != NULL && line_key_len == 0) line_key = NULL;
+    
     char temp_filename[filename_len + 5];
     snprintf(temp_filename, sizeof(temp_filename), "%s.tmp", filename);
 
