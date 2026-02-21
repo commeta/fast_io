@@ -96,7 +96,7 @@ FastAdmin — это **одностраничное SPA-приложение** (
 
 Панель автоматически определяет тип по наличию `.index`-файла и переключает доступные вкладки.
 
-### Вкладки таблицы
+### Вкладки таблицы (TEXT)
 
 #### 1. Browse (Просмотр)
 - Пагинация `start` / `limit` (по умолчанию 25 строк).
@@ -166,6 +166,33 @@ FastAdmin — это **одностраничное SPA-приложение** (
 
 ![Callback Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/callback.png "FastAdmin Callback")
 
+---
+
+### Вкладки таблицы (BINARY)
+
+#### 1. Index 
+
+![Index Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/bin-index.png "FastAdmin Index")
+
+#### 2. Search 
+
+![Search Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/bin-search.png "FastAdmin Search")
+
+#### 3. Push 
+
+![Push Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/bin-push.png "FastAdmin Push")
+
+#### 4. Operations 
+
+![Operations Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/bin-ops.png "FastAdmin Operations")
+
+
+#### 5. Analyze 
+
+![Analyze Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/bin-analyze.png "FastAdmin Analyze")
+
+
+---
 
 ### Дополнительные возможности UI
 
@@ -180,6 +207,98 @@ FastAdmin — это **одностраничное SPA-приложение** (
 
 - Batch-операции (`select_array`, `update_array`) позволяют работать с тысячами записей за один AJAX-запрос.
 
+
+Ниже привожу **дополненный фрагмент `README.md`** со всеми вариантами блокировки доступа к админ-панели **FastAdmin** на продакшене — средствами `.htaccess`, по IP-адресам и с паролем (Basic Auth). Эти советы интегрированы в текст Markdown так, чтобы их было легко скопировать и адаптировать.
+
+---
+
+### 🎯 Защита доступа к FastAdmin в продакшене
+
+Панель **FastAdmin** по умолчанию не содержит встроенной аутентификации — она предназначена как локальная административная утилита. На продакшене крайне рекомендуется ограничить доступ различными способами:
+
+---
+
+#### 🔐 1) Блокировка по паролю — HTTP Basic Auth
+
+Создайте файл `.htpasswd` (обычно за пределами веб-документа), например:
+
+```sh
+# создать пользователя admin
+htpasswd -c /path/to/.htpasswd admin
+```
+
+А в `.htaccess`, расположенном рядом с `fastadmin.php`:
+
+```apache
+<Files "fastadmin.php">
+    AuthType Basic
+    AuthName "Restricted Access"
+    AuthUserFile "/path/to/.htpasswd"
+    Require valid-user
+</Files>
+```
+
+Это потребует ввода логина/пароля при заходе на `fastadmin.php`.
+
+---
+
+#### 📍 2) Разрешить доступ только с конкретных IP
+
+Если вы заходите только с фиксированных IP, можно ограничить по ним:
+
+```apache
+<Files "fastadmin.php">
+    Require ip 192.0.2.10
+    Require ip 203.0.113.0/24
+</Files>
+```
+
+Замените адреса на свои. Остальные запросы получат ошибку 403.
+
+---
+
+#### 🛡 3) Комбинированная защита: IP + пароль
+
+Можно использовать сочетание — доступ разрешён по паролю **и/или** по IP:
+
+```apache
+<Files "fastadmin.php">
+    AuthType Basic
+    AuthName "Restricted"
+    AuthUserFile "/path/to/.htpasswd"
+
+    <RequireAny>
+        Require ip 192.0.2.10
+        Require valid-user
+    </RequireAny>
+</Files>
+```
+
+В этом случае пользователи с доверенных IP проходят без пароля, остальным требуется Basic Auth.
+
+---
+
+#### 🚫 4) Блокировать доступ полностью
+
+Если нужно временно закрыть панель:
+
+```apache
+<Files "fastadmin.php">
+    Require all denied
+</Files>
+```
+
+---
+
+#### ⛔ 5) Блокировать по User-Agent (только доп. уровень)
+
+Иногда полезно блокировать доступ автоматизированным ботам:
+
+```apache
+RewriteEngine On
+RewriteCond %{HTTP_USER_AGENT} (curl|wget|python) [NC]
+RewriteRule ^fastadmin.php$ - [F]
+```
 
 ---
 
