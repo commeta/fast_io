@@ -2085,7 +2085,7 @@ for($ii = 0; $ii < 100; $ii++){
         break;
     }
 
-    $expected_erased = ceil(($c + 1) / 2);
+    $expected_erased = intdiv($c + 2, 2);
     if($deleted_count !== $expected_erased){
         $file_defrag_lines_passed = false;
         error_log_detailed(
