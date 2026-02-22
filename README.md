@@ -81,6 +81,8 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - Protection against dangerous actions (empty key automatically blocked)
 - JSON editors for batch operations (`file_select_array`, `file_update_array`)
 
+---
+
 ### FAST_IO - Implementation Highlights 
 
 - All functions utilize UNIX portable file locking on write operations to ensure data integrity during concurrent access [an algorithm for implementing a transaction using file locking](test/transaction/README.EN.md).
