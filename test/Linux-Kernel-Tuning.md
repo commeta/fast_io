@@ -498,3 +498,35 @@ Don't forget to run 'make test'.
 | **Linux Kernel**   | 2.6.20             | 6.1+                 | 6.8.0                      | Идеально |
 | **Build tools**    | autotools 2015+    | 2022+                | Современные                | Хорошо (с предупреждением) |
 
+---
+
+## Архитектурный анализ библиотеки fast_io 
+
+с фокусом на взаимодействие с **Zend Engine**
+
+### Взаимодействие с Zend Engine
+
+`fast_io.c` построен **классически** по Zend Extension API (PHP 8.3, Zend API 20230831):
+
+#### Регистрация и жизненный цикл
+- `PHP_MINIT_FUNCTION` → `REGISTER_INI_ENTRIES()` (только `fast_io.buffer_size`).
+- `zend_module_entry` с `fast_io_functions[]`.
+- Все функции объявлены через современные макросы:
+  ```c
+  ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(...)
+  ```
+  Это **PHP 7.0+ стиль** (type hints в arginfo), который полностью поддерживается Zend Engine 8.x.
+
+#### Основные Zend API, используемые в коде
+- `emalloc / erealloc / efree` — Zend Memory Manager (не malloc!).
+- `zval`, `array_init`, `add_assoc_string`, `add_assoc_long`, `add_next_index_zval` — построение возвращаемых массивов.
+- `zend_parse_parameters` — безопасный парсинг аргументов.
+- `call_user_function(EG(function_table), ...)` — в `file_callback_line` (вызов PHP callback из C).
+- `zend_is_callable`, `ZVAL_STRING`, `ZVAL_LONG`, `ZVAL_UNDEF`, `zval_dtor`, `zval_ptr_dtor`.
+- `RETURN_FALSE`, `RETURN_LONG`, `RETURN_STR`, `RETURN_ARRAY` — стандартные макросы.
+
+**Важно:** все операции с памятью и zval идут через **Zend Memory Manager**, что позволяет:
+- Работать с OPcache/JIT без утечек.
+- Участвовать в GC (garbage collection).
+- Быть thread-safe в ZTS-сборках (хотя fast_io использует flock, а не pthread).
+
