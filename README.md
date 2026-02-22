@@ -41,6 +41,45 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - [file_analize](/docs/file_analize.md): - Returns statistics for data analysis and file diagnostics.
 - [replicate_file](/docs/replicate_file.md): - Data file replication
 
+---
+
+### Web Panel 
+
+🚀 FastAdmin — Web Admin Panel for Fast_IO
+
+- **Zero dependencies** — only pure PHP 8.1+, Vanilla JS and modern CSS  
+- **Full support for all functions** Fast_IO (text + binary)  
+- **Modern cyber-tech design** with dark/light theme and scanline effect  
+- **Instant performance** even with tables tens of gigabytes in size  
+
+![FastAdmin Screenshot](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastAdmin/img/fastadmin-screenshot.png "FastAdmin")
+
+- Automatic scanning of the `fast_io_data/` folder
+- Visual separation of **Text** and **Binary** tables (by presence of `.index`)
+- Fast creation of a new table (Text/Binary type selection)
+- Table deletion in one click (with confirmation)
+
+- **Browse** — paginated viewing via `file_get_keys` (all 6 modes)
+- **Search** — search by key and by any PCRE2 regular expression (`file_search_line` + `file_search_array`)
+- **Insert** — insertion with alignment (`file_insert_line`)
+- **Update** — single and batch update (`file_update_line` + `file_update_array`)
+- **Erase / Replace** — deletion and replacement by key
+- **Pop** — LIFO stack operations (`file_pop_line`) with offset support
+- **Callback** — powerful line-by-line processor `file_callback_line` (up to 10 parameters in callback!)
+- **Defrag** — defragmentation with removal of marked lines
+- **Replicate** — table copying
+- **Analize** — full file diagnostics (`file_analize`)
+
+- Index viewing
+- `file_push_data` — append binary data
+- `file_search_data` — search and retrieve data block
+- `file_defrag_data` — defragmentation of data + index pair
+- Special index operations (erase by key in `.index`)
+- Built-in **PCRE2 tester** (`find_matches_pcre2`) with visualization of all matches
+- Support for **all `mode` modes** (0…100+) with hints in the interface
+- **+100 modes (Log mode)** — without file locking (ideal for logs)
+- Protection against dangerous actions (empty key automatically blocked)
+- JSON editors for batch operations (`file_select_array`, `file_update_array`)
 
 ### Implementation Highlights
 
@@ -50,6 +89,7 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 - The extension is developed without reliance on external frameworks or libraries, ensuring high performance and compatibility with PHP 8.
 - The cost of calling low-consumption functions in case of hitting the cache is comparable to the speed of cache memory access.
 
+---
 
 #### Structure of the file
 The line is divided into substrings: line_key, line_value.
@@ -61,6 +101,8 @@ The line_key can be any printable character, reserved symbols:
 - ASCII Code 0 null character (null) - substring separator.
 
 Functions: file_defrag_data, file_defrag_lines, file_erase_line, file_get_keys, file_push_data, file_replace_line, file_search_data - when indexing lines, they analyze the first substring, considering any printable character as the line key. The key must always end with a space.
+
+---
 
 #### Support for ACID transactions
 
@@ -86,7 +128,7 @@ It is important to note that the flock lock itself is not transactional, i.e., i
 
 Details: [Locks in Linux](#locks-in-linux).
 
-
+---
 
 #### Ensuring data integrity
 - file_push_data, file_insert_line - always cancel the last record and exit with an error.
@@ -98,6 +140,7 @@ An error when writing to the file_update_line or file_update_array function can 
 
 An error when writing to the file_erase_line function can only indicate hardware failure.
 
+---
 
 #### PCRE2 Regular Expressions
 
@@ -108,13 +151,15 @@ In the Fast_IO Engine, the function find_matches_pcre2 is implemented, and in al
 - [A brief overview of the best and fastest regular expression types in PHP8](/docs/find_matches_pcre2.md)
 - [Perl-compatible Regular Expressions (revised API: PCRE2)](https://pcre2project.github.io/pcre2/doc/html/index.html)
 
-
+---
 
 ### Getting Started
 
 Each function within the Fast_IO extension is documented in detail on separate pages with PHP examples. These resources will help developers quickly get started with the extension and efficiently utilize its capabilities in their projects.
 
 For more information on how to install, configure, and use Fast_IO in your PHP 8 environment, please refer to the detailed documentation provided with the extension.
+
+---
 
 ### Parameters
 
@@ -128,6 +173,8 @@ fast_io.buffer_size = 4096 // From 16 bytes
 
 The value is specified in bytes. By default, the buffer size is set to 4096 bytes (4 KB).
 
+---
+
 ##### Using in PHP code
 
 You can get the current buffer_size value or set a new value at the beginning of your PHP script:
@@ -139,10 +186,14 @@ $currentBufferSize = ini_get('fast_io.buffer_size');
 ini_set('fast_io.buffer_size', 8192); // 8 KB
 ```
 
+---
+
 ##### Initialization
 
 Initialization of parameters in PHP occurs during server startup or script execution. In the provided code example, initialization of the "fast_io.buffer_size" parameter is done during the initialization of the fast_io module in PHP.
 
+
+---
 
 #### Notes
 
@@ -157,6 +208,8 @@ Initialization of parameters in PHP occurs during server startup or script execu
 
 dynamic_buffer is used to store parts of a file that are read into memory to search for a specific key or perform a mapping with a regular expression. dynamic_buffer is based on the following principles:
 
+---
+
 #### How dynamic_buffer Works
 
 1. **Initialization and Size**: The buffer is initialized with the initial size defined by the value fast_io.buffer_size.
@@ -164,6 +217,8 @@ dynamic_buffer is used to store parts of a file that are read into memory to sea
 2. **Reading from a File**: Data is read from the file in blocks of size fast_io.buffer_size and added to dynamic_buffer. In string search mode, if the string does not fit into the current buffer size, dynamic_buffer increases by the size of fast_io.buffer_size at each iteration of reading from the file.
 
 3. **Size Increase**: dynamic_buffer size increases by ini_buffer_size. The increase occurs using the erealloc function, which tries to change the size of the already allocated memory, while preserving existing data.
+
+---
 
 #### Using the system buffer
 
@@ -179,15 +234,21 @@ Similarly, when you request writing of 1 byte, the data is first placed in the i
 
 The size of a block (blocksize) depends on the system and can be different. In many systems, the block size is 4096 bytes (4 KB) or 8192 bytes (8 KB), but this is not a fixed value and may differ depending on the file system and the specific operating system.
 
+---
+
 #### Advantages of using the System Buffer
 
 1. Efficiency: Reading data in large blocks and their temporary storage in the system buffer reduces the load on the disk system and enhances the overall performance of input/output operations.
 
 2. Reduced Latency: Minimizing disk accesses decreases delays associated with the mechanical characteristics of hard drives and the features of solid-state drives (SSD).
 
+---
+
 #### Utilizing the Linux Kernel System Cache
 
 When a function requests data from a file, the Linux kernel system cache plays a crucial role in optimizing performance when accessing disk data.
+
+---
 
 #### How the Linux Kernel System Cache Works:
 
@@ -196,6 +257,8 @@ When a function requests data from a file, the Linux kernel system cache plays a
 2. Caching Data: If the requested data are not in the cache, the kernel loads these data from the disk into the system cache before providing them to the process. In this process, data are loaded in blocks, which enhances the efficiency of subsequent accesses to the same data.
 
 3. Writing Data: When writing data to a file, the data are first placed in the system cache, and only then, depending on the caching policy and system activity, they may be written to the physical medium. This reduces the number of write operations to the disk, positively affecting the disk's lifespan and system performance.
+
+---
 
 #### Advantages of Using the System Cache:
 
@@ -206,15 +269,21 @@ When a function requests data from a file, the Linux kernel system cache plays a
 Utilizing the Linux kernel system cache helps speed up the process of searching for values in a file, especially if the file is frequently used or its size exceeds the size of RAM. This makes data reading more efficient and reduces the overall execution time of the function.
 
 
+---
+
 #### Read-Ahead
 
 Read-ahead is a method used by operating systems and file systems to increase the performance of reading data from a disk. The OS reads more data from the disk in advance than was requested by the application, anticipating that this data will soon be needed. This reduces the number of disk accesses and increases the speed of data reading.
 
 When reading data, read-ahead can be implicitly used through the mechanisms of the OS and file system when you make a request to read blocks of data from a file. The OS can preload data into the system buffer, accelerating access to subsequent blocks of data.
 
+---
+
 #### Disk Write Optimization
 
 Write-Back Caching: When writing data, it is first placed in a buffer (cache) in memory, rather than being immediately written to disk. Writing to the physical medium occurs later, at a more convenient time. This reduces the number of write operations to the disk, positively affecting both performance and the lifespan of the disk.
+
+---
 
 
 ### Conclusion
@@ -238,9 +307,13 @@ make
 
 These commands will create the basic structure for your Fast_IO extension.
 
+---
+
 #### Step 2: Compilation and Testing
 
 Next, compile and test your extension using phpize, ./configure, make, and make test. After successful compilation and testing, remember to add the line extension=fast_io.so to your php.ini file to activate the extension. Now, you can use the new functions provided by Fast_IO just like any other PHP function.
+
+---
 
 ### Performance Test Results
 
@@ -396,6 +469,8 @@ For a deeper analysis and performance optimization, additional profiling and tes
 For more information, see: [Auto database test](/test/auto_test.md)
 
 
+---
+
 
 ### Call Costs
 
@@ -419,6 +494,8 @@ The table of function call costs in ascending order:
 - file_defrag_data Very high consumption, full reading/writing of index and data files.
 
 
+---
+
 ### Function Overview
 
 Each function within the Fast_IO extension has been meticulously documented on separate pages, complete with PHP examples to guide you through their usage. This ensures that you have all the necessary information to effectively utilize these functions in your projects. Here are some of the key features provided by Fast_IO:
@@ -430,6 +507,8 @@ Each function within the Fast_IO extension has been meticulously documented on s
 
 For detailed information about each function and how to use them, please refer to their respective documentation pages.
 
+
+---
 
 ##### Examples
 
@@ -449,6 +528,8 @@ We hope this guide has been helpful in setting up the Fast_IO extension for PHP 
 Happy coding!
 
 
+---
+
 ### Principles of LIFO Stack
 
 A LIFO (Last In, First Out) stack is a data structure where the last added element is the first one to be removed. The main operations on a stack include:
@@ -465,6 +546,9 @@ $lastLine = file_pop_line('stack.data');
 echo "Retrieved line: " . $lastLine;
 ```
 
+---
+
+
 ### Applications of LIFO Stack
 The LIFO stack is widely used in various fields:
 - Algorithms: recursive algorithms, Reverse Polish Notation (RPN).
@@ -472,12 +556,16 @@ The LIFO stack is widely used in various fields:
 - Memory management systems: managing the function call stack.
 - Browser history: navigating back/forward.
 
+---
+
 #### Inter-Process Communication (IPC)
 
 For inter-process communication (IPC), a file can be used as a shared resource accessible by multiple processes. Each process can add lines to the file (push) or retrieve lines from the file (pop).
 
 Inter-process communication (IPC) in the context of PHP and the file system represents a method of data exchange between processes running on one or multiple machines. In PHP, despite the lack of built-in IPC mechanisms, various approaches can be used to implement interaction between processes. One such approach is using the file system as an intermediary for data transfer.
 
+
+---
 
 #### Key Concepts of IPC in PHP
 
@@ -487,6 +575,8 @@ Inter-process communication (IPC) in the context of PHP and the file system repr
 
 3. **Buffering and Caching**: It is important to consider the levels of caching and buffering provided by the operating system to ensure correct and efficient interaction between processes.
 
+---
+
 #### Linux Kernel Caching Levels
 
 1. **I/O Buffering**: Linux uses buffering to reduce the number of direct I/O operations. Data is first written to memory buffers and then asynchronously written to disk.
@@ -495,9 +585,13 @@ Inter-process communication (IPC) in the context of PHP and the file system repr
 
 3. **Filesystem Journaling**: Some file systems, like ext4, use journaling to ensure data integrity. Journaling helps restore the filesystem state after failures.
 
+---
+
 #### Implementing a LIFO Stack and the file_pop_line Function
 
 To implement a LIFO stack using the file system, a file can be used as a container for stack data. The file_pop_line function allows extracting the last line from the file and deleting it, corresponding to the pop operation in a LIFO stack.
+
+---
 
 ##### Technological Aspects:
 
@@ -521,6 +615,8 @@ To implement a LIFO stack using the file system, a file can be used as a contain
    - When writing data to a file, the operating system uses buffers for temporarily storing data before writing it to disk.
    - Reading data first occurs from the page cache, speeding up access.
 
+---
+
 #### Advantages and Disadvantages of the Approach
 
 Advantages:
@@ -530,6 +626,8 @@ Advantages:
 Disadvantages:
 - Performance: Disk I/O operations can be slow compared to other IPC methods (e.g., sockets or shared memory).
 - Synchronization Complexity: Careful handling of locks is required to prevent data races.
+
+---
 
 ### Optimization at All Levels of Caching
 
@@ -546,12 +644,16 @@ Using dynamic memory allocation allows efficient memory management and avoids ex
 
 The file_pop_line function is optimized to work with files of any size. The use of buffering and efficient memory management ensures high-speed execution of operations.
 
+---
+
 ### System Advantages
 - Low Memory Consumption: Thanks to dynamic memory allocation.
 - High Performance: Due to kernel-level caching and buffering.
 - Flexibility: Ability to work with files of any size.
 - Reliability: Error handling and protection against memory leaks.
 
+
+---
 
 ### Application Scope of LIFO Stack for Implementing Data Chunk Multiplexing/Demultiplexing Algorithms Using file_pop_line
 
@@ -579,6 +681,8 @@ The LIFO (Last-In-First-Out) stack can be useful in various scenarios where data
    - **Multiplexing**: Different monitoring agents write metrics and events to a common file.
    - **Demultiplexing**: Alert processing systems extract the latest metrics and events for analysis and generating notifications.
 
+---
+
 #### Important Aspects:
 
 1. **Synchronization of Access**:
@@ -594,6 +698,8 @@ The LIFO (Last-In-First-Out) stack can be useful in various scenarios where data
    - Proper error handling should be implemented for possible issues when working with the file (e.g., read/write errors, locking problems).
 
 Using a LIFO stack in such scenarios allows for efficient management of data flow, ensuring the relevance of processed information and load distribution among multiple processes.
+
+---
 
 
 ### Example Implementation of a Worker Logic for Loading URLs
@@ -628,6 +734,8 @@ The example is inspired by the queue_address_manager function in the project [ph
    - Thus, the work is distributed across multiple CPU cores (for CPU-BOUND tasks) or queued with long wait cycles for data download (IO-BOUND).
 
 
+
+---
 
 ### Locks in Linux
 
@@ -670,6 +778,8 @@ Array
 )
 ```
 
+---
+
 #### Records в /proc/locks
 
 1. 31: Number of lock. This is a unique identifier for each lock.
@@ -694,6 +804,8 @@ Array
 
 For a deeper understanding of file lock implementation in the Linux kernel, consider the source code from the locks.c file on GitHub at the link [fs/locks.c](https://github.com/torvalds/linux/blob/master/fs/locks.c).
 
+
+---
 
 
 ### System Configuration Parameters (sysctl)
@@ -726,6 +838,8 @@ Some parameters can be configured using the sysctl utility, which allows you to 
    sysctl -w vm.dirty_expire_centisecs=3000
    
 
+---
+
 #### Filesystem Settings
 
 Some filesystem mount options can also affect the behavior of locks and I/O operations.
@@ -749,6 +863,8 @@ Some filesystem mount options can also affect the behavior of locks and I/O oper
 
    
    mount -o data=ordered /dev/sda1 /mnt
+
+---
 
 **Details**:
 - [Linux Kernel Tuning](test/Linux-Kernel-Tuning.md) - 🚀 Linux Kernel Tuning for fast_io — User Manual
