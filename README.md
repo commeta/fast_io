@@ -435,7 +435,10 @@ For detailed information about each function and how to use them, please refer t
 
 - [Tests](test/readme.md)
 - [Example of an SQL adapter](test/mysql-adapter/readme.md)
-
+- [Echeck engine](test/check-engine/check-engine.md) - ПОКРЫТИЕ ТЕСТАМИ FAST_IO.C (check-engine.php)
+- [Echeck engine Multi Threading](test/check-engine/check-engine-mt.md) - 🚀 Много-процессный стресс-тест (check-engine-mt.php)
+- [Echeck engine Fiber Async](test/check-engine/check-engine-fiber.md) - FIBER ASYNC СТРЕСС-ТЕСТ (check-engine-fiber.php)
+- [Echeck engine Memory Leak](test/check-engine/check-memleaks.md) - Проверка утечек памяти (Memory Leak Testing)
 
 ### Getting Started
 
@@ -746,4 +749,7 @@ Some filesystem mount options can also affect the behavior of locks and I/O oper
 
    
    mount -o data=ordered /dev/sda1 /mnt
+
+**Details**:
+- [Linux Kernel Tuning](test/Linux-Kernel-Tuning.md) - 🚀 Linux Kernel Tuning for fast_io — User Manual
 
