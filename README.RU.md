@@ -415,13 +415,12 @@ cancelled_write_bytes: 154738688 (85.51 millions per sec)
 
 #### Примеры
 
-- [Тесты](test/readme.md)
-- [Пример SQL адаптера](test/mysql-adapter/readme.md)
-- [Echeck engine](test/check-engine/check-engine.md) - Cover Tests FAST_IO.C (check-engine.php)
-- [Echeck engine Multi Threading](test/check-engine/check-engine-mt.md) - 🚀 Multi Threading stress test (check-engine-mt.php)
-- [Echeck engine Fiber Async](test/check-engine/check-engine-fiber.md) - FIBER ASYNC stress test (check-engine-fiber.php)
-- [Echeck engine Memory Leak](test/check-engine/check-memleaks.md) - Memory Leak Testing
-
+- [Tests](test/readme.md)
+- [Example of an SQL adapter](test/mysql-adapter/readme.md)
+- [Echeck engine](test/check-engine/check-engine.md) - ПОКРЫТИЕ ТЕСТАМИ FAST_IO.C (check-engine.php)
+- [Echeck engine Multi Threading](test/check-engine/check-engine-mt.md) - 🚀 Много-процессный стресс-тест (check-engine-mt.php)
+- [Echeck engine Fiber Async](test/check-engine/check-engine-fiber.md) - FIBER ASYNC СТРЕСС-ТЕСТ (check-engine-fiber.php)
+- [Echeck engine Memory Leak](test/check-engine/check-memleaks.md) - Проверка утечек памяти (Memory Leak Testing)
 
 ### Принципы стека LIFO
 
