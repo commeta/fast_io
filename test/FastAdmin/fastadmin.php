@@ -81,9 +81,7 @@ if ($is_ajax) {
     $table = basename($_POST['table'] ?? $_GET['table'] ?? '');
     $tpath = $data_dir . '/' . $table;
 
-
     // ====================== ЗАЩИТА ОТ ПУСТОГО КЛЮЧА ======================
-    // Критично для деструктивных и поисковых операций
     if (in_array($op, ['erase_line', 'replace_line', 'search_line'])) {
         $key = trim($_POST['key'] ?? '');
         if ($key === '') {
@@ -97,11 +95,9 @@ if ($is_ajax) {
 
     switch ($op) {
 
-        // --- Список таблиц ---
         case 'list_tables':
             json_resp(['tables' => get_tables()]);
 
-        // --- Создать таблицу ---
         case 'create_table': {
             $name = basename($_POST['name'] ?? '');
             $type = $_POST['type'] ?? 'text';
@@ -118,7 +114,6 @@ if ($is_ajax) {
             json_resp(['ok' => true, 'name' => $name, 'type' => $type]);
         }
 
-        // --- Удалить таблицу ---
         case 'drop_table': {
             if (!file_exists($tpath))
                 json_resp(['error' => 'Не найдена']);
@@ -128,14 +123,12 @@ if ($is_ajax) {
             json_resp(['ok' => true]);
         }
 
-        // --- file_analize ---
         case 'analize': {
             $mode = (int) ($_POST['mode'] ?? 0);
             $res = @file_analize($tpath, $mode);
             json_resp(['result' => $res]);
         }
 
-        // --- file_get_keys (browse text) ---
         case 'get_keys': {
             $start = (int) ($_POST['start'] ?? 0);
             $limit = (int) ($_POST['limit'] ?? 25);
@@ -146,7 +139,6 @@ if ($is_ajax) {
             json_resp(['rows' => $rows, 'analize' => $anal]);
         }
 
-        // --- file_insert_line ---
         case 'insert_line': {
             $line = $_POST['line'] ?? '';
             $align = (int) ($_POST['align'] ?? DEFAULT_ALIGN);
@@ -155,7 +147,6 @@ if ($is_ajax) {
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
-        // --- file_replace_line ---
         case 'replace_line': {
             $key = trim($_POST['key'] ?? '');
             $newline = $_POST['newline'] ?? '';
@@ -164,7 +155,6 @@ if ($is_ajax) {
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
-        // --- file_erase_line ---
         case 'erase_line': {
             $key = trim($_POST['key'] ?? '');
             $pos = (int) ($_POST['position'] ?? 0);
@@ -173,7 +163,6 @@ if ($is_ajax) {
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
-        // --- file_search_line ---
         case 'search_line': {
             $key = trim($_POST['key'] ?? '');
             $pos = (int) ($_POST['position'] ?? 0);
@@ -182,7 +171,6 @@ if ($is_ajax) {
             json_resp(['result' => $res, 'found' => $res !== false]);
         }
 
-        // --- file_search_array ---
         case 'search_array': {
             $key = $_POST['key'] ?? '';
             $start = (int) ($_POST['start'] ?? 0);
@@ -190,17 +178,12 @@ if ($is_ajax) {
             $pos = (int) ($_POST['position'] ?? 0);
             $mode = (int) ($_POST['mode'] ?? 0);
             $res = @file_search_array($tpath, $key, $start, $limit, $pos, $mode) ?: [];
-
-            // Режимы 3 и 13 возвращают ассоциативный массив ['line_count' => N, 'found_count' => M]
-            // (см. fast_io.c + docs.md). Остальные режимы — обычный индексированный массив.
             $count = (is_array($res) && isset($res['found_count']))
                 ? $res['found_count']
                 : count((array) $res);
-
             json_resp(['result' => $res, 'count' => $count]);
         }
 
-        // --- file_select_line ---
         case 'select_line': {
             $row = (int) ($_POST['row'] ?? 0);
             $align = (int) ($_POST['align'] ?? DEFAULT_ALIGN);
@@ -209,7 +192,6 @@ if ($is_ajax) {
             json_resp(['result' => $res, 'found' => $res !== false]);
         }
 
-        // --- file_select_array ---
         case 'select_array': {
             $raw = $_POST['query'] ?? '[]';
             $query = json_decode($raw, true) ?: [];
@@ -219,7 +201,6 @@ if ($is_ajax) {
             json_resp(['result' => $res]);
         }
 
-        // --- file_update_line ---
         case 'update_line': {
             $line = $_POST['line'] ?? '';
             $pos = (int) ($_POST['position'] ?? 0);
@@ -229,7 +210,6 @@ if ($is_ajax) {
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
-        // --- file_update_array ---
         case 'update_array': {
             $raw = $_POST['query'] ?? '[]';
             $query = json_decode($raw, true) ?: [];
@@ -238,12 +218,8 @@ if ($is_ajax) {
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
-        // --- file_pop_line ---
         case 'pop_line': {
             $offset = (int) ($_POST['offset'] ?? -1);
-
-            // offset=0 не поддерживается библиотекой fast_io
-            // (offset < 0 = строки с конца, offset > 0 = байты с конца)
             if ($offset === 0) {
                 json_resp([
                     'error' => 'offset=0 не поддерживается. ' .
@@ -251,13 +227,11 @@ if ($is_ajax) {
                         'или положительное число (байты с конца файла)'
                 ]);
             }
-
             $mode = (int) ($_POST['mode'] ?? 0);
             $res = file_pop_line($tpath, $offset, $mode);
             json_resp(['result' => $res, 'found' => $res !== false]);
         }
 
-        // --- file_defrag_lines (text) ---
         case 'defrag_lines': {
             $key = $_POST['key'] ?? '';
             $mode = (int) ($_POST['mode'] ?? 0);
@@ -265,7 +239,6 @@ if ($is_ajax) {
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
-        // --- file_callback_line ---
         case 'callback_line': {
             $pos = (int) ($_POST['position'] ?? 0);
             $mode = (int) ($_POST['mode'] ?? 4);
@@ -275,7 +248,6 @@ if ($is_ajax) {
             $ret = file_callback_line($tpath, function () use (&$collected, &$count, $limit) {
                 $count++;
                 $line = func_get_arg(0);
-                $fname = func_num_args() > 1 ? func_get_arg(1) : '';
                 $off = func_num_args() > 2 ? func_get_arg(2) : 0;
                 $len = func_num_args() > 3 ? func_get_arg(3) : 0;
                 $lcount = func_num_args() > 4 ? func_get_arg(4) : 0;
@@ -292,7 +264,6 @@ if ($is_ajax) {
             json_resp(['rows' => $collected, 'total' => $count]);
         }
 
-        // --- file_push_data (binary) ---
         case 'push_data': {
             $key = $_POST['key'] ?? '';
             $value = $_POST['value'] ?? '';
@@ -301,7 +272,6 @@ if ($is_ajax) {
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
-        // --- file_search_data (binary) ---
         case 'search_data': {
             $key = $_POST['key'] ?? '';
             $pos = (int) ($_POST['position'] ?? 0);
@@ -310,7 +280,6 @@ if ($is_ajax) {
             json_resp(['result' => $res, 'found' => $res !== false]);
         }
 
-        // --- file_defrag_data (binary) ---
         case 'defrag_data': {
             $key = $_POST['key'] ?? '';
             $mode = (int) ($_POST['mode'] ?? 0);
@@ -318,7 +287,6 @@ if ($is_ajax) {
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
-        // --- replicate_file ---
         case 'replicate': {
             $target = $data_dir . '/' . basename($_POST['target'] ?? '');
             $mode = (int) ($_POST['mode'] ?? 0);
@@ -326,7 +294,6 @@ if ($is_ajax) {
             json_resp(['result' => $res, 'ok' => $res >= 0]);
         }
 
-        // --- find_matches_pcre2 ---
         case 'pcre2': {
             $pattern = $_POST['pattern'] ?? '';
             $subject = $_POST['subject'] ?? '';
@@ -335,7 +302,6 @@ if ($is_ajax) {
             json_resp(['result' => $res]);
         }
 
-        // --- Прочитать index файл (binary browse) ---
         case 'browse_binary': {
             $start = (int) ($_POST['start'] ?? 0);
             $limit = (int) ($_POST['limit'] ?? 25);
@@ -357,1212 +323,1902 @@ if ($is_ajax) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>FastAdmin — fast_io</title>
+    <style>
+        /* ─── CSS VARIABLES ─── */
+        :root {
+            --bg: #070a0d;
+            --bg2: #0d1117;
+            --bg3: #131b24;
+            --border: #1e2d3d;
+            --border2: #253547;
+            --accent: #00e5ff;
+            --accent2: #00ff87;
+            --accent3: #ff6b35;
+            --accent4: #c084fc;
+            --text: #c9d8e8;
+            --text2: #6b8097;
+            --text3: #3d5166;
+            --danger: #ff4444;
+            --warning: #ffb700;
+            --success: #00ff87;
+
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+                "Liberation Mono", "Courier New", monospace;
+            --font-display: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                Roboto, "Helvetica Neue", Arial, sans-serif;
+            --radius: 2px;
+
+            /* Panel widths — updated by JS, saved in localStorage */
+            --sb-w: 260px;
+            --rp-w: 320px;
+
+            /* Resizer */
+            --resizer-w: 5px;
+            --resizer-color: #1e2d3d;
+            --resizer-hover: #00e5ff33;
+        }
+
+        /* ─── LIGHT THEME ─── */
+        body.light {
+            --bg: #f8fafc;
+            --bg2: #ffffff;
+            --bg3: #f1f5f9;
+            --border: #e2e8f0;
+            --border2: #cbd5e1;
+            --accent: #00b8d4;
+            --accent2: #00b96b;
+            --accent3: #f97316;
+            --accent4: #a855f7;
+            --text: #0f172a;
+            --text2: #475569;
+            --text3: #64748b;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --resizer-color: #e2e8f0;
+            --resizer-hover: #00b8d422;
+        }
+
+        /* ─── RESET & BASE ─── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            overflow: hidden;
+            transition: background-color .4s ease, color .4s ease;
+        }
+
+        /* ─── SCANLINE EFFECT ─── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg,
+                    transparent, transparent 2px,
+                    rgba(0, 229, 255, .015) 2px, rgba(0, 229, 255, .015) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        body.light::before {
+            background: repeating-linear-gradient(0deg,
+                    transparent, transparent 2px,
+                    rgba(0, 184, 212, .035) 2px, rgba(0, 184, 212, .035) 4px);
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(0, 229, 255, .04) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        body.light::after {
+            background: radial-gradient(ellipse at 50% 0%, rgba(0, 184, 212, .07) 0%, transparent 70%);
+        }
+
+        /* ════════════════════════════════
+   APP LAYOUT
+   ════════════════════════════════ */
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Content row: sidebar | resizer | main | resizer | right-panel */
+        #content-row {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ─── TOPBAR ─── */
+        #topbar {
+            height: 48px;
+            flex-shrink: 0;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 12px;
+            position: relative;
+            z-index: 200;
+            transition: background .4s ease;
+        }
+
+        #topbar::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: .4;
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: -.5px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .logo-dot {
+            color: var(--accent2);
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 4px;
+        }
+
+        .topbar-info {
+            margin-left: auto;
+            color: var(--text2);
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .topbar-info span {
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 6px var(--success);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .4;
+            }
+        }
+
+        /* Icon buttons (hamburger, panel toggles, theme) */
+        .icon-btn {
+            background: none;
+            border: 1px solid transparent;
+            color: var(--text2);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: var(--radius);
+            line-height: 1;
+            transition: all .15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .icon-btn:hover {
+            color: var(--text);
+            border-color: var(--border2);
+            background: var(--bg3);
+        }
+
+        .icon-btn.active {
+            color: var(--accent);
+            border-color: rgba(0, 229, 255, .3);
+            background: rgba(0, 229, 255, .06);
+        }
+
+        /* ════════════════════════════════
+   SIDEBAR
+   ════════════════════════════════ */
+        #sidebar {
+            width: var(--sb-w);
+            min-width: 0;
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-shrink: 0;
+            transition: width .25s ease, border-color .25s ease;
+            position: relative;
+            z-index: 100;
+        }
+
+        #sidebar.collapsed {
+            width: 0 !important;
+            border-right-color: transparent;
+            overflow: hidden;
+        }
+
+        .sidebar-inner {
+            width: var(--sb-w);
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .sidebar-head {
+            padding: 14px 16px 10px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .sidebar-head h3 {
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text2);
+            margin-bottom: 10px;
+        }
+
+        .new-table-form {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .new-table-form input,
+        .new-table-form select {
+            width: 100%;
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            padding: 6px 8px;
+            border-radius: var(--radius);
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+        }
+
+        .new-table-form input:focus,
+        .new-table-form select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(0, 229, 255, .08);
+        }
+
+        .new-table-form select option {
+            background: var(--bg3);
+        }
+
+        #tables-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        #tables-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #tables-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #tables-list::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 2px;
+        }
+
+        .table-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            cursor: pointer;
+            gap: 8px;
+            border-left: 2px solid transparent;
+            transition: all .12s;
+            user-select: none;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .table-item:hover {
+            background: var(--bg3);
+        }
+
+        .table-item.active {
+            background: rgba(0, 229, 255, .06);
+            border-left-color: var(--accent);
+        }
+
+        body.light .table-item.active {
+            background: rgba(0, 184, 212, .12);
+        }
+
+        .table-item .ti-icon {
+            font-size: 10px;
+            opacity: .6;
+            flex-shrink: 0;
+        }
+
+        .table-item .ti-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            color: var(--text);
+        }
+
+        .table-item .ti-badge {
+            font-size: 9px;
+            padding: 2px 5px;
+            border-radius: 2px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            flex-shrink: 0;
+        }
+
+        .badge-text {
+            background: rgba(0, 229, 255, .12);
+            color: var(--accent);
+        }
+
+        .badge-binary {
+            background: rgba(192, 132, 252, .12);
+            color: var(--accent4);
+        }
+
+        .ti-size {
+            font-size: 10px;
+            color: var(--text3);
+            flex-shrink: 0;
+        }
+
+        /* ════════════════════════════════
+   RESIZE HANDLE
+   ════════════════════════════════ */
+        .resizer {
+            width: var(--resizer-w);
+            background: var(--resizer-color);
+            cursor: col-resize;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 50;
+            transition: background .15s;
+            user-select: none;
+        }
+
+        .resizer::after {
+            content: '';
+            position: absolute;
+            inset: 0 -3px;
+            z-index: 1;
+        }
+
+        .resizer:hover,
+        .resizer.dragging {
+            background: var(--resizer-hover);
+        }
+
+        .resizer.dragging {
+            background: rgba(0, 229, 255, .25);
+        }
+
+        body.light .resizer.dragging {
+            background: rgba(0, 184, 212, .2);
+        }
+
+        /* When sidebar or right panel is collapsed, hide its adjacent resizer */
+        #sidebar.collapsed+.resizer-sb {
+            display: none;
+        }
+
+        #right-panel.collapsed~.resizer-rp,
+        .resizer-rp+#right-panel.collapsed {
+            display: none;
+        }
+
+        /* ════════════════════════════════
+   MAIN
+   ════════════════════════════════ */
+        #main {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            transition: background .4s ease;
+        }
+
+        /* ─── WELCOME ─── */
+        #welcome {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text3);
+            font-family: var(--font-display);
+        }
+
+        .welcome-art {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            line-height: 1.4;
+            color: var(--text3);
+            text-align: center;
+            margin-bottom: 24px;
+            opacity: .6;
+        }
+
+        .welcome-art span {
+            color: var(--accent);
+            opacity: 1;
+        }
+
+        #welcome h2 {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text2);
+            margin-bottom: 8px;
+        }
+
+        #welcome p {
+            font-size: 12px;
+            font-family: var(--font-mono);
+        }
+
+        /* ─── TABLE VIEW ─── */
+        #table-view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #table-view.visible {
+            display: flex;
+        }
+
+        .tv-header {
+            padding: 12px 20px 0;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg2);
+            flex-shrink: 0;
+        }
+
+        .tv-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tv-title h2 {
+            font-family: var(--font-display);
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 40vw;
+        }
+
+        .tv-title .tv-type {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 3px 7px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .tv-title .del-btn {
+            margin-left: auto;
+            background: none;
+            border: 1px solid rgba(255, 68, 68, .3);
+            color: var(--danger);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            padding: 4px 10px;
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: all .15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .tv-title .del-btn:hover {
+            background: rgba(255, 68, 68, .08);
+            border-color: var(--danger);
+        }
+
+        /* ─── TABS ─── */
+        .tabs {
+            display: flex;
+            gap: 0;
+            overflow-x: auto;
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text2);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            padding: 8px 14px;
+            cursor: pointer;
+            letter-spacing: .5px;
+            transition: all .12s;
+            white-space: nowrap;
+            text-transform: uppercase;
+        }
+
+        .tab-btn:hover {
+            color: var(--text);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* ─── TAB CONTENT ─── */
+        .tv-body {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-pane {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+        }
+
+        .tab-pane::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .tab-pane::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .tab-pane::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 2px;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* ════════════════════════════════
+   RIGHT PANEL
+   ════════════════════════════════ */
+        #right-panel {
+            width: var(--rp-w);
+            min-width: 0;
+            background: var(--bg2);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-shrink: 0;
+            transition: width .25s ease, border-color .25s ease;
+            position: relative;
+            z-index: 100;
+        }
+
+        #right-panel.collapsed {
+            width: 0 !important;
+            border-left-color: transparent;
+            overflow: hidden;
+        }
+
+        .rp-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-width: 280px;
+            overflow: hidden;
+        }
+
+        /* RP Header with tabs */
+        .rp-header {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg2);
+            flex-shrink: 0;
+            padding: 0 4px 0 12px;
+            height: 44px;
+            gap: 4px;
+        }
+
+        .rp-tab-nav {
+            display: flex;
+            flex: 1;
+            overflow-x: auto;
+        }
+
+        .rp-tab-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .rp-tab-btn {
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text2);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            padding: 14px 12px 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all .12s;
+        }
+
+        .rp-tab-btn:hover {
+            color: var(--text);
+        }
+
+        .rp-tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .rp-close {
+            background: none;
+            border: none;
+            color: var(--text3);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: var(--radius);
+            line-height: 1;
+            transition: color .12s;
+            flex-shrink: 0;
+        }
+
+        .rp-close:hover {
+            color: var(--danger);
+        }
+
+        /* RP Body */
+        .rp-body {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .rp-pane {
+            display: none;
+            height: 100%;
+            overflow-y: auto;
+            padding: 14px;
+        }
+
+        .rp-pane::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .rp-pane::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 2px;
+        }
+
+        .rp-pane.active {
+            display: block;
+        }
+
+        /* RP Empty state */
+        .rp-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--text3);
+            font-size: 11px;
+            text-align: center;
+            gap: 12px;
+        }
+
+        .rp-empty-icon {
+            font-size: 28px;
+            opacity: .3;
+        }
+
+        /* RP content sections */
+        .rp-section {
+            margin-bottom: 16px;
+        }
+
+        .rp-section-title {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text3);
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* RP quick-ref cards */
+        .rp-tip-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .rp-tip-card {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 8px 10px;
+            font-size: 11px;
+        }
+
+        .rp-tip-card strong {
+            color: var(--accent);
+            display: block;
+            margin-bottom: 2px;
+            font-size: 10px;
+        }
+
+        .rp-tip-card span {
+            color: var(--text2);
+            line-height: 1.5;
+        }
+
+        /* ════════════════════════════════
+   FORM ELEMENTS
+   ════════════════════════════════ */
+        .form-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text2);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            padding: 7px 10px;
+            border-radius: var(--radius);
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(0, 229, 255, .06);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            width: 100%;
+            font-size: 11px;
+        }
+
+        select option {
+            background: var(--bg3);
+        }
+
+        .inp-sm {
+            width: 110px;
+        }
+
+        .inp-md {
+            width: 200px;
+        }
+
+        .inp-lg {
+            width: 340px;
+        }
+
+        .inp-full {
+            width: 100%;
+        }
+
+        /* ─── BUTTONS ─── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--border2);
+            background: var(--bg3);
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            padding: 7px 14px;
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: all .12s;
+            white-space: nowrap;
+            letter-spacing: .3px;
+        }
+
+        .btn:hover {
+            background: var(--bg2);
+            border-color: var(--text2);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: rgba(0, 229, 255, .1);
+            border-color: rgba(0, 229, 255, .4);
+            color: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background: rgba(0, 229, 255, .16);
+            border-color: var(--accent);
+        }
+
+        .btn-success {
+            background: rgba(0, 255, 135, .08);
+            border-color: rgba(0, 255, 135, .3);
+            color: var(--success);
+        }
+
+        .btn-success:hover {
+            background: rgba(0, 255, 135, .14);
+            border-color: var(--success);
+        }
+
+        .btn-danger {
+            background: rgba(255, 68, 68, .08);
+            border-color: rgba(255, 68, 68, .3);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 68, 68, .14);
+            border-color: var(--danger);
+        }
+
+        .btn-warning {
+            background: rgba(255, 183, 0, .08);
+            border-color: rgba(255, 183, 0, .3);
+            color: var(--warning);
+        }
+
+        .btn-warning:hover {
+            background: rgba(255, 183, 0, .14);
+            border-color: var(--warning);
+        }
+
+        .btn-purple {
+            background: rgba(192, 132, 252, .08);
+            border-color: rgba(192, 132, 252, .3);
+            color: var(--accent4);
+        }
+
+        .btn-purple:hover {
+            background: rgba(192, 132, 252, .14);
+            border-color: var(--accent4);
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 10px;
+        }
+
+        .btn-xs {
+            padding: 2px 7px;
+            font-size: 10px;
+        }
+
+        .btn-icon {
+            padding: 6px 8px;
+        }
+
+        /* ─── NOTIFICATIONS ─── */
+        .notif {
+            padding: 8px 14px;
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            font-size: 12px;
+            border-left: 3px solid;
+            animation: slide-in .2s ease;
+        }
+
+        @keyframes slide-in {
+            from {
+                transform: translateX(-8px);
+                opacity: 0;
+            }
+
+            to {
+                transform: none;
+                opacity: 1;
+            }
+        }
+
+        .notif-ok {
+            background: rgba(0, 255, 135, .07);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .notif-err {
+            background: rgba(255, 68, 68, .07);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .notif-info {
+            background: rgba(0, 229, 255, .07);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .notif-warn {
+            background: rgba(255, 183, 0, .07);
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        /* ─── DATA TABLE ─── */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 6px 10px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text2);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid rgba(30, 45, 61, .5);
+            vertical-align: middle;
+            color: var(--text);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(0, 229, 255, .025);
+        }
+
+        body.light .data-table tr:hover td {
+            background: rgba(0, 184, 212, .04);
+        }
+
+        .cell-key {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .cell-val {
+            max-width: 340px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text2);
+            font-size: 11px;
+        }
+
+        .cell-num {
+            color: var(--text3);
+            font-size: 11px;
+            text-align: right;
+        }
+
+        .cell-offset {
+            color: var(--accent3);
+            font-size: 11px;
+        }
+
+        /* ─── PAGINATION ─── */
+        .pagination {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            color: var(--text2);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            padding: 4px 10px;
+            cursor: pointer;
+            border-radius: var(--radius);
+            transition: all .12s;
+        }
+
+        .page-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .page-btn.current {
+            background: rgba(0, 229, 255, .1);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .page-info {
+            color: var(--text3);
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        /* ─── RESULT AREA ─── */
+        .result-area {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            margin-top: 12px;
+            font-size: 12px;
+            overflow: auto;
+            max-height: 400px;
+        }
+
+        .result-area::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .result-area::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 2px;
+        }
+
+        .result-area pre {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* ─── STAT GRID ─── */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 12px;
+        }
+
+        .stat-card .sc-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text2);
+            margin-bottom: 4px;
+        }
+
+        .stat-card .sc-value {
+            font-size: 17px;
+            font-weight: 700;
+            font-family: var(--font-display);
+            color: var(--accent);
+        }
+
+        .stat-card .sc-value.green {
+            color: var(--success);
+        }
+
+        .stat-card .sc-value.orange {
+            color: var(--accent3);
+        }
+
+        .stat-card .sc-value.purple {
+            color: var(--accent4);
+        }
+
+        /* ─── SECTION TITLES ─── */
+        .section-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text2);
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .fn-name {
+            font-family: var(--font-mono);
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 400;
+            background: rgba(0, 229, 255, .08);
+            padding: 1px 6px;
+            border-radius: 2px;
+        }
+
+        body.light .fn-name {
+            background: rgba(0, 184, 212, .12);
+        }
+
+        /* ─── OP CARDS ─── */
+        .op-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .op-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+        }
+
+        .op-card .oc-title {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 10px;
+            letter-spacing: .5px;
+        }
+
+        /* ─── MISC ─── */
+        .inline-edit {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .cb-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--accent);
+            width: 13px;
+            height: 13px;
+            cursor: pointer;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            padding: 1px 5px;
+            border-radius: 2px;
+            font-size: 11px;
+            color: var(--accent2);
+        }
+
+        .sep {
+            height: 1px;
+            background: var(--border);
+            margin: 16px 0;
+        }
+
+        .query-editor {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            padding: 8px;
+            width: 100%;
+            min-height: 100px;
+            resize: vertical;
+            border-radius: var(--radius);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px;
+            color: var(--text3);
+            font-size: 12px;
+        }
+
+        /* ─── LOADING ─── */
+        .loading {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            color: var(--text2);
+            font-size: 11px;
+        }
+
+        .loading::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border: 1px solid var(--text3);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ─── ANIMATIONS ─── */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn .2s ease;
+        }
+
+        /* ════════════════════════════════
+   MODAL (kept for confirm-style dialogs)
+   ════════════════════════════════ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(7, 10, 13, .85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        body.light .modal-overlay {
+            background: rgba(15, 23, 42, .7);
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg2);
+            border: 1px solid var(--border2);
+            border-radius: var(--radius);
+            min-width: 360px;
+            max-width: 560px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, .6), 0 0 0 1px rgba(0, 229, 255, .06);
+            animation: modal-in .18s ease;
+        }
+
+        body.light .modal-box {
+            box-shadow: 0 24px 80px rgba(0, 0, 0, .25), 0 0 0 1px rgba(0, 184, 212, .12);
+        }
+
+        @keyframes modal-in {
+            from {
+                transform: scale(.96) translateY(-8px);
+                opacity: 0;
+            }
+
+            to {
+                transform: none;
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h3 {
+            font-family: var(--font-display);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text2);
+            font-size: 18px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 2px 6px;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+        }
+
+        .modal-body {
+            padding: 16px 18px;
+        }
+
+        .modal-footer {
+            padding: 12px 18px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        /* ════════════════════════════════
+   MOBILE OVERLAY PANELS
+   ════════════════════════════════ */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(7, 10, 13, .7);
+            z-index: 300;
+            backdrop-filter: blur(2px);
+        }
+
+        .mobile-overlay.open {
+            display: block;
+        }
+
+        body.light .mobile-overlay {
+            background: rgba(15, 23, 42, .6);
+        }
+
+        /* Panel slide-in on mobile */
+        .panel-mobile-header {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+            height: 44px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .panel-mobile-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text2);
+        }
+
+        .panel-mobile-close {
+            background: none;
+            border: none;
+            color: var(--text2);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 6px;
+            line-height: 1;
+            transition: color .12s;
+        }
+
+        .panel-mobile-close:hover {
+            color: var(--text);
+        }
+
+        /* ════════════════════════════════
+   RESPONSIVE — MOBILE ≤ 767px
+   ════════════════════════════════ */
+        @media (max-width: 767px) {
+
+            html,
+            body {
+                overflow: auto;
+            }
+
+            #app {
+                height: 100dvh;
+                overflow: hidden;
+            }
+
+            #topbar {
+                padding: 0 10px;
+                gap: 8px;
+            }
+
+            .logo {
+                font-size: 15px;
+            }
+
+            .topbar-info>span:not(.status-span) {
+                display: none;
+            }
+
+            .topbar-info {
+                gap: 6px;
+            }
+
+            /* Sidebar: fixed full-height panel, slides from left */
+            #sidebar {
+                position: fixed;
+                top: 48px;
+                left: 0;
+                bottom: 0;
+                width: 280px !important;
+                z-index: 400;
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+                border-right: 1px solid var(--border);
+            }
+
+            #sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            /* Don't apply collapsed class behavior on mobile */
+            #sidebar.collapsed {
+                width: 280px !important;
+                border-right: 1px solid var(--border);
+            }
+
+            /* Right panel: fixed full-height panel, slides from right.
+       Target both base and .collapsed to override ALL desktop cascade rules
+       (desktop .collapsed sets width:0 !important and overflow:hidden which
+       would otherwise bleed through at the same specificity level). */
+            #right-panel,
+            #right-panel.collapsed {
+                position: fixed !important;
+                top: 48px !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                left: auto !important;
+                width: 100vw !important;
+                max-width: 380px !important;
+                height: auto !important;
+                z-index: 400 !important;
+                overflow: hidden !important;
+                transform: translateX(100%) !important;
+                transition: transform .25s ease !important;
+                border-left: 1px solid var(--border) !important;
+                border-left-color: var(--border) !important;
+            }
+
+            /* Handle both alone and combined with .collapsed */
+            #right-panel.mobile-open,
+            #right-panel.collapsed.mobile-open {
+                transform: translateX(0) !important;
+            }
+
+            /* Hide resizers on mobile */
+            .resizer {
+                display: none;
+            }
+
+            /* Right panel: the desktop ✕ inside rp-header is redundant on mobile —
+       panel-mobile-header already provides its own close button */
+            .rp-close {
+                display: none;
+            }
+
+            /* Main fills full width */
+            #main {
+                width: 100%;
+            }
+
+            /* Mobile panel headers */
+            .panel-mobile-header {
+                display: flex;
+            }
+
+            /* Hide desktop-only sidebar head on mobile */
+            .sidebar-head h3 {
+                display: none;
+            }
+
+            /* Table view adjustments */
+            .tv-header {
+                padding: 8px 12px 0;
+            }
+
+            .tv-title h2 {
+                font-size: 13px;
+                max-width: 50vw;
+            }
+
+            .tab-pane {
+                padding: 12px;
+            }
+
+            /* Op grid single column on mobile */
+            .op-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            /* Input full width on mobile */
+            .inp-sm,
+            .inp-md,
+            .inp-lg {
+                width: 100%;
+            }
+
+            .form-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .form-row .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Data table: horizontal scroll */
+            .data-table-wrap {
+                overflow-x: auto;
+            }
+        }
+
+        /* ════════════════════════════════
+   TABLET 768px–1024px
+   ════════════════════════════════ */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            :root {
+                --sb-w: 220px;
+                --rp-w: 260px;
+            }
+
+            .stat-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            }
+
+            .tv-title h2 {
+                max-width: 30vw;
+            }
+        }
+
+        /* ════════════════════════════════
+   LARGE SCREENS
+   ════════════════════════════════ */
+        @media (min-width: 1400px) {
+            :root {
+                --sb-w: 280px;
+                --rp-w: 360px;
+            }
+        }
+
+        /* ─── Right panel PCRE2 specific ─── */
+        #rp-pcre2 .pcre-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #rp-pcre2 .pcre-result {
+            margin-top: 8px;
+        }
+
+        /* ─── Scrollable data table wrapper ─── */
+        .data-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .data-table-wrap::-webkit-scrollbar {
+            height: 5px;
+        }
+
+        .data-table-wrap::-webkit-scrollbar-thumb {
+            background: var(--border2);
+            border-radius: 2px;
+        }
+
+        /* ─── Panel resize cursor active globally ─── */
+        body.col-resizing {
+            cursor: col-resize !important;
+            user-select: none !important;
+        }
+
+        body.col-resizing * {
+            pointer-events: none;
+        }
+
+        body.col-resizing .resizer {
+            pointer-events: all;
+        }
+    </style>
+
 </head>
-<style>
-    :root {
-        --bg: #070a0d;
-        --bg2: #0d1117;
-        --bg3: #131b24;
-        --border: #1e2d3d;
-        --border2: #253547;
-        --accent: #00e5ff;
-        --accent2: #00ff87;
-        --accent3: #ff6b35;
-        --accent4: #c084fc;
-        --text: #c9d8e8;
-        --text2: #6b8097;
-        --text3: #3d5166;
-        --danger: #ff4444;
-        --warning: #ffb700;
-        --success: #00ff87;
-
-        /* СИСТЕМНЫЕ ШРИФТЫ (без Google Fonts) */
-        --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        --font-display: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-
-        --radius: 2px;
-        --scan-speed: 8s;
-    }
-
-    /* СВЕТЛАЯ ТЕМА — активируется классом .light на <body> */
-    body.light {
-        --bg: #f8fafc;
-        --bg2: #ffffff;
-        --bg3: #f1f5f9;
-        --border: #e2e8f0;
-        --border2: #cbd5e1;
-        --accent: #00b8d4;
-        --accent2: #00b96b;
-        --accent3: #f97316;
-        --accent4: #a855f7;
-        --text: #0f172a;
-        --text2: #475569;
-        --text3: #64748b;
-        --danger: #ef4444;
-        --warning: #f59e0b;
-        --success: #10b981;
-    }
-
-    *,
-    *::before,
-    *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
-
-    html,
-    body {
-        height: 100%;
-        background: var(--bg);
-        color: var(--text);
-        font-family: var(--font-mono);
-        font-size: 13px;
-        overflow: hidden;
-        transition: background-color .4s ease, color .4s ease;
-    }
-
-    /* ─── SCANLINE EFFECT (адаптирован под обе темы) ─── */
-    body::before {
-        content: '';
-        position: fixed;
-        inset: 0;
-        background: repeating-linear-gradient(0deg,
-                transparent,
-                transparent 2px,
-                rgba(0, 229, 255, 0.015) 2px,
-                rgba(0, 229, 255, 0.015) 4px);
-        pointer-events: none;
-        z-index: 9999;
-    }
-
-    body.light::before {
-        background: repeating-linear-gradient(0deg,
-                transparent,
-                transparent 2px,
-                rgba(0, 184, 212, 0.035) 2px,
-                rgba(0, 184, 212, 0.035) 4px);
-    }
-
-    body::after {
-        content: '';
-        position: fixed;
-        inset: 0;
-        background: radial-gradient(ellipse at 50% 0%, rgba(0, 229, 255, 0.04) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: 9998;
-    }
-
-    body.light::after {
-        background: radial-gradient(ellipse at 50% 0%, rgba(0, 184, 212, 0.07) 0%, transparent 70%);
-    }
-
-    /* ─── LAYOUT ─── */
-    #app {
-        display: grid;
-        grid-template-columns: 260px 1fr;
-        grid-template-rows: 48px 1fr;
-        height: 100vh;
-        overflow: hidden;
-    }
-
-    /* ─── TOPBAR ─── */
-    #topbar {
-        grid-column: 1 / -1;
-        background: var(--bg2);
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        padding: 0 20px;
-        gap: 16px;
-        position: relative;
-        transition: background .4s ease;
-    }
-
-    #topbar::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, var(--accent), transparent);
-        opacity: 0.4;
-    }
-
-    .logo {
-        font-family: var(--font-display);
-        font-size: 18px;
-        font-weight: 800;
-        letter-spacing: -0.5px;
-        color: var(--accent);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        text-transform: uppercase;
-    }
-
-    .logo-dot {
-        color: var(--accent2);
-    }
-
-    .topbar-info {
-        margin-left: auto;
-        color: var(--text2);
-        font-size: 11px;
-        display: flex;
-        gap: 16px;
-    }
-
-    .status-dot {
-        display: inline-block;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--success);
-        box-shadow: 0 0 6px var(--success);
-        animation: pulse-dot 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse-dot {
-
-        0%,
-        100% {
-            opacity: 1;
-        }
-
-        50% {
-            opacity: 0.4;
-        }
-    }
-
-    /* ─── SIDEBAR ─── */
-    #sidebar {
-        background: var(--bg2);
-        border-right: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        transition: background .4s ease;
-    }
-
-    .sidebar-head {
-        padding: 14px 16px 10px;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .sidebar-head h3 {
-        font-family: var(--font-display);
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        color: var(--text2);
-        margin-bottom: 10px;
-    }
-
-    .new-table-form {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .new-table-form input,
-    .new-table-form select {
-        width: 100%;
-        background: var(--bg3);
-        border: 1px solid var(--border2);
-        color: var(--text);
-        font-family: var(--font-mono);
-        font-size: 12px;
-        padding: 6px 8px;
-        border-radius: var(--radius);
-        outline: none;
-        transition: border-color .15s, box-shadow .15s;
-    }
-
-    .new-table-form input:focus,
-    .new-table-form select:focus {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.08);
-    }
-
-    .new-table-form select option {
-        background: var(--bg3);
-    }
-
-    #tables-list {
-        flex: 1;
-        overflow-y: auto;
-        padding: 8px 0;
-    }
-
-    #tables-list::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    #tables-list::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    #tables-list::-webkit-scrollbar-thumb {
-        background: var(--border2);
-        border-radius: 2px;
-    }
-
-    .table-item {
-        display: flex;
-        align-items: center;
-        padding: 8px 16px;
-        cursor: pointer;
-        gap: 8px;
-        border-left: 2px solid transparent;
-        transition: all 0.12s;
-        user-select: none;
-    }
-
-    .table-item:hover {
-        background: var(--bg3);
-    }
-
-    .table-item.active {
-        background: rgba(0, 229, 255, 0.06);
-        border-left-color: var(--accent);
-    }
-
-    body.light .table-item.active {
-        background: rgba(0, 184, 212, 0.12);
-    }
-
-    .table-item .ti-icon {
-        font-size: 10px;
-        opacity: 0.6;
-        flex-shrink: 0;
-    }
-
-    .table-item .ti-name {
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 12px;
-        color: var(--text);
-    }
-
-    .table-item .ti-badge {
-        font-size: 9px;
-        padding: 2px 5px;
-        border-radius: 2px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        flex-shrink: 0;
-    }
-
-    .badge-text {
-        background: rgba(0, 229, 255, 0.12);
-        color: var(--accent);
-    }
-
-    .badge-binary {
-        background: rgba(192, 132, 252, 0.12);
-        color: var(--accent4);
-    }
-
-    .ti-size {
-        font-size: 10px;
-        color: var(--text3);
-        flex-shrink: 0;
-    }
-
-    /* ─── MAIN ─── */
-    #main {
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        background: var(--bg);
-        transition: background .4s ease;
-    }
-
-    /* ─── WELCOME ─── */
-    #welcome {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: var(--text3);
-        font-family: var(--font-display);
-    }
-
-    .welcome-art {
-        font-size: 11px;
-        font-family: var(--font-mono);
-        line-height: 1.4;
-        color: var(--text3);
-        text-align: center;
-        margin-bottom: 24px;
-        opacity: 0.6;
-    }
-
-    .welcome-art span {
-        color: var(--accent);
-        opacity: 1;
-    }
-
-    #welcome h2 {
-        font-size: 28px;
-        font-weight: 800;
-        color: var(--text2);
-        margin-bottom: 8px;
-    }
-
-    #welcome p {
-        font-size: 12px;
-        font-family: var(--font-mono);
-    }
-
-    /* ─── TABLE VIEW ─── */
-    #table-view {
-        display: none;
-        flex: 1;
-        flex-direction: column;
-        overflow: hidden;
-    }
-
-    #table-view.visible {
-        display: flex;
-    }
-
-    /* ─── TABLE HEADER ─── */
-    .tv-header {
-        padding: 14px 20px 0;
-        border-bottom: 1px solid var(--border);
-        background: var(--bg2);
-    }
-
-    .tv-title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 12px;
-    }
-
-    .tv-title h2 {
-        font-family: var(--font-display);
-        font-size: 16px;
-        font-weight: 800;
-        color: var(--text);
-    }
-
-    .tv-title .tv-type {
-        font-size: 9px;
-        font-weight: 700;
-        letter-spacing: 1px;
-        padding: 3px 7px;
-        border-radius: 2px;
-    }
-
-    .tv-title .del-btn {
-        margin-left: auto;
-        background: none;
-        border: 1px solid rgba(255, 68, 68, 0.3);
-        color: var(--danger);
-        font-family: var(--font-mono);
-        font-size: 11px;
-        padding: 4px 10px;
-        cursor: pointer;
-        border-radius: var(--radius);
-        transition: all 0.15s;
-    }
-
-    .tv-title .del-btn:hover {
-        background: rgba(255, 68, 68, 0.08);
-        border-color: var(--danger);
-    }
-
-    /* ─── TABS ─── */
-    .tabs {
-        display: flex;
-        gap: 0;
-    }
-
-    .tab-btn {
-        background: none;
-        border: none;
-        border-bottom: 2px solid transparent;
-        color: var(--text2);
-        font-family: var(--font-mono);
-        font-size: 11px;
-        font-weight: 500;
-        padding: 8px 16px;
-        cursor: pointer;
-        letter-spacing: 0.5px;
-        transition: all 0.12s;
-        white-space: nowrap;
-        text-transform: uppercase;
-    }
-
-    .tab-btn:hover {
-        color: var(--text);
-    }
-
-    .tab-btn.active {
-        color: var(--accent);
-        border-bottom-color: var(--accent);
-    }
-
-    /* ─── TAB CONTENT ─── */
-    .tv-body {
-        flex: 1;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .tab-pane {
-        display: none;
-        flex: 1;
-        overflow-y: auto;
-        padding: 16px 20px;
-    }
-
-    .tab-pane::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .tab-pane::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .tab-pane::-webkit-scrollbar-thumb {
-        background: var(--border2);
-        border-radius: 2px;
-    }
-
-    .tab-pane.active {
-        display: block;
-    }
-
-    /* ─── FORM ELEMENTS ─── */
-    .form-row {
-        display: flex;
-        gap: 8px;
-        align-items: flex-end;
-        flex-wrap: wrap;
-        margin-bottom: 12px;
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .form-group label {
-        font-size: 10px;
-        font-weight: 500;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        color: var(--text2);
-    }
-
-    input[type="text"],
-    input[type="number"],
-    textarea,
-    select {
-        background: var(--bg3);
-        border: 1px solid var(--border2);
-        color: var(--text);
-        font-family: var(--font-mono);
-        font-size: 12px;
-        padding: 7px 10px;
-        border-radius: var(--radius);
-        outline: none;
-        transition: border-color 0.15s, box-shadow 0.15s;
-    }
-
-    input[type="text"]:focus,
-    input[type="number"]:focus,
-    textarea:focus,
-    select:focus {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.06);
-    }
-
-    textarea {
-        resize: vertical;
-        min-height: 80px;
-        width: 100%;
-        font-size: 11px;
-    }
-
-    select option {
-        background: var(--bg3);
-    }
-
-    .inp-sm {
-        width: 120px;
-    }
-
-    .inp-md {
-        width: 220px;
-    }
-
-    .inp-lg {
-        width: 360px;
-    }
-
-    .inp-full {
-        width: 100%;
-    }
-
-    /* ─── BUTTONS ─── */
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border: 1px solid var(--border2);
-        background: var(--bg3);
-        color: var(--text);
-        font-family: var(--font-mono);
-        font-size: 11px;
-        font-weight: 500;
-        padding: 7px 14px;
-        cursor: pointer;
-        border-radius: var(--radius);
-        transition: all 0.12s;
-        white-space: nowrap;
-        letter-spacing: 0.3px;
-    }
-
-    .btn:hover {
-        background: var(--bg2);
-        border-color: var(--text2);
-    }
-
-    .btn:active {
-        transform: translateY(1px);
-    }
-
-    .btn-primary {
-        background: rgba(0, 229, 255, 0.1);
-        border-color: rgba(0, 229, 255, 0.4);
-        color: var(--accent);
-    }
-
-    .btn-primary:hover {
-        background: rgba(0, 229, 255, 0.16);
-        border-color: var(--accent);
-    }
-
-    .btn-success {
-        background: rgba(0, 255, 135, 0.08);
-        border-color: rgba(0, 255, 135, 0.3);
-        color: var(--success);
-    }
-
-    .btn-success:hover {
-        background: rgba(0, 255, 135, 0.14);
-        border-color: var(--success);
-    }
-
-    .btn-danger {
-        background: rgba(255, 68, 68, 0.08);
-        border-color: rgba(255, 68, 68, 0.3);
-        color: var(--danger);
-    }
-
-    .btn-danger:hover {
-        background: rgba(255, 68, 68, 0.14);
-        border-color: var(--danger);
-    }
-
-    .btn-warning {
-        background: rgba(255, 183, 0, 0.08);
-        border-color: rgba(255, 183, 0, 0.3);
-        color: var(--warning);
-    }
-
-    .btn-warning:hover {
-        background: rgba(255, 183, 0, 0.14);
-        border-color: var(--warning);
-    }
-
-    .btn-purple {
-        background: rgba(192, 132, 252, 0.08);
-        border-color: rgba(192, 132, 252, 0.3);
-        color: var(--accent4);
-    }
-
-    .btn-purple:hover {
-        background: rgba(192, 132, 252, 0.14);
-        border-color: var(--accent4);
-    }
-
-    .btn-sm {
-        padding: 4px 10px;
-        font-size: 10px;
-    }
-
-    .btn-xs {
-        padding: 2px 7px;
-        font-size: 10px;
-    }
-
-    .btn-icon {
-        padding: 6px 8px;
-    }
-
-    /* ─── NOTIFICATIONS ─── */
-    .notif {
-        padding: 8px 14px;
-        border-radius: var(--radius);
-        margin-bottom: 12px;
-        font-size: 12px;
-        border-left: 3px solid;
-        animation: slide-in 0.2s ease;
-    }
-
-    @keyframes slide-in {
-        from {
-            transform: translateX(-8px);
-            opacity: 0;
-        }
-
-        to {
-            transform: none;
-            opacity: 1;
-        }
-    }
-
-    .notif-ok {
-        background: rgba(0, 255, 135, 0.07);
-        border-color: var(--success);
-        color: var(--success);
-    }
-
-    .notif-err {
-        background: rgba(255, 68, 68, 0.07);
-        border-color: var(--danger);
-        color: var(--danger);
-    }
-
-    .notif-info {
-        background: rgba(0, 229, 255, 0.07);
-        border-color: var(--accent);
-        color: var(--accent);
-    }
-
-    .notif-warn {
-        background: rgba(255, 183, 0, 0.07);
-        border-color: var(--warning);
-        color: var(--warning);
-    }
-
-    /* ─── DATA TABLE ─── */
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12px;
-    }
-
-    .data-table th {
-        text-align: left;
-        padding: 6px 10px;
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        color: var(--text2);
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;
-    }
-
-    .data-table td {
-        padding: 6px 10px;
-        border-bottom: 1px solid rgba(30, 45, 61, 0.5);
-        vertical-align: middle;
-        color: var(--text);
-    }
-
-    .data-table tr:hover td {
-        background: rgba(0, 229, 255, 0.025);
-    }
-
-    body.light .data-table tr:hover td {
-        background: rgba(0, 184, 212, 0.04);
-    }
-
-    .cell-key {
-        color: var(--accent);
-        font-weight: 500;
-    }
-
-    .cell-val {
-        max-width: 400px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        color: var(--text2);
-        font-size: 11px;
-    }
-
-    .cell-num {
-        color: var(--text3);
-        font-size: 11px;
-        text-align: right;
-    }
-
-    .cell-offset {
-        color: var(--accent3);
-        font-size: 11px;
-    }
-
-    /* ─── PAGINATION ─── */
-    .pagination {
-        display: flex;
-        gap: 4px;
-        align-items: center;
-        margin-top: 12px;
-        flex-wrap: wrap;
-    }
-
-    .page-btn {
-        background: var(--bg3);
-        border: 1px solid var(--border2);
-        color: var(--text2);
-        font-family: var(--font-mono);
-        font-size: 11px;
-        padding: 4px 10px;
-        cursor: pointer;
-        border-radius: var(--radius);
-        transition: all 0.12s;
-    }
-
-    .page-btn:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-    }
-
-    .page-btn.current {
-        background: rgba(0, 229, 255, 0.1);
-        border-color: var(--accent);
-        color: var(--accent);
-    }
-
-    .page-info {
-        color: var(--text3);
-        font-size: 11px;
-        margin-left: 8px;
-    }
-
-    /* ─── RESULT AREA ─── */
-    .result-area {
-        background: var(--bg2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 12px 14px;
-        margin-top: 12px;
-        font-size: 12px;
-        overflow: auto;
-        max-height: 400px;
-    }
-
-    .result-area::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-
-    .result-area::-webkit-scrollbar-thumb {
-        background: var(--border2);
-        border-radius: 2px;
-    }
-
-    .result-area pre {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--text);
-        white-space: pre-wrap;
-        word-break: break-all;
-    }
-
-    /* ─── STAT GRID ─── */
-    .stat-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 8px;
-        margin-bottom: 16px;
-    }
-
-    .stat-card {
-        background: var(--bg2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 10px 12px;
-    }
-
-    .stat-card .sc-label {
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        color: var(--text2);
-        margin-bottom: 4px;
-    }
-
-    .stat-card .sc-value {
-        font-size: 18px;
-        font-weight: 700;
-        font-family: var(--font-display);
-        color: var(--accent);
-    }
-
-    .stat-card .sc-value.green {
-        color: var(--success);
-    }
-
-    .stat-card .sc-value.orange {
-        color: var(--accent3);
-    }
-
-    .stat-card .sc-value.purple {
-        color: var(--accent4);
-    }
-
-    /* ─── SECTION TITLES ─── */
-    .section-title {
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        color: var(--text2);
-        margin-bottom: 10px;
-        padding-bottom: 6px;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .section-title .fn-name {
-        font-family: var(--font-mono);
-        color: var(--accent);
-        font-size: 11px;
-        font-weight: 400;
-        background: rgba(0, 229, 255, 0.08);
-        padding: 1px 6px;
-        border-radius: 2px;
-    }
-
-    body.light .section-title .fn-name {
-        background: rgba(0, 184, 212, 0.12);
-    }
-
-    /* ─── INLINE EDIT / OP CARDS / CHECKBOX / MODAL / LOADING / CODE / etc. ─── */
-    /* (все остальные оригинальные правила полностью сохранены и работают с новыми переменными) */
-
-    .inline-edit {
-        display: inline-flex;
-        gap: 6px;
-        align-items: center;
-    }
-
-    .op-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 12px;
-        margin-bottom: 12px;
-    }
-
-    .op-card {
-        background: var(--bg2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 14px;
-    }
-
-    .op-card .oc-title {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--accent);
-        margin-bottom: 10px;
-        letter-spacing: 0.5px;
-    }
-
-    .cb-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    input[type="checkbox"] {
-        accent-color: var(--accent);
-        width: 13px;
-        height: 13px;
-        cursor: pointer;
-    }
-
-    /* MODAL */
-    .modal-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(7, 10, 13, 0.85);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(4px);
-    }
-
-    body.light .modal-overlay {
-        background: rgba(15, 23, 42, 0.7);
-    }
-
-    .modal-overlay.open {
-        display: flex;
-    }
-
-    .modal-box {
-        background: var(--bg2);
-        border: 1px solid var(--border2);
-        border-radius: var(--radius);
-        min-width: 480px;
-        max-width: 680px;
-        width: 90%;
-        max-height: 80vh;
-        overflow-y: auto;
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 229, 255, 0.06);
-        animation: modal-in 0.18s ease;
-    }
-
-    body.light .modal-box {
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 184, 212, 0.12);
-    }
-
-    @keyframes modal-in {
-        from {
-            transform: scale(0.96) translateY(-8px);
-            opacity: 0;
-        }
-
-        to {
-            transform: none;
-            opacity: 1;
-        }
-    }
-
-    .modal-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 14px 18px;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .modal-header h3 {
-        font-family: var(--font-display);
-        font-size: 14px;
-        font-weight: 800;
-    }
-
-    .modal-close {
-        background: none;
-        border: none;
-        color: var(--text2);
-        font-size: 18px;
-        cursor: pointer;
-        line-height: 1;
-        padding: 2px 6px;
-    }
-
-    .modal-close:hover {
-        color: var(--text);
-    }
-
-    .modal-body {
-        padding: 16px 18px;
-    }
-
-    .modal-footer {
-        padding: 12px 18px;
-        border-top: 1px solid var(--border);
-        display: flex;
-        gap: 8px;
-        justify-content: flex-end;
-    }
-
-    /* LOADING */
-    .loading {
-        display: inline-flex;
-        gap: 4px;
-        align-items: center;
-        color: var(--text2);
-        font-size: 11px;
-    }
-
-    .loading::before {
-        content: '';
-        width: 10px;
-        height: 10px;
-        border: 1px solid var(--text3);
-        border-top-color: var(--accent);
-        border-radius: 50%;
-        animation: spin 0.6s linear infinite;
-    }
-
-    @keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    /* CODE */
-    code {
-        font-family: var(--font-mono);
-        background: var(--bg3);
-        border: 1px solid var(--border);
-        padding: 1px 5px;
-        border-radius: 2px;
-        font-size: 11px;
-        color: var(--accent2);
-    }
-
-    .sep {
-        height: 1px;
-        background: var(--border);
-        margin: 16px 0;
-    }
-
-    /* QUERY EDITOR */
-    .query-editor {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        background: var(--bg3);
-        border: 1px solid var(--border2);
-        color: var(--text);
-        padding: 8px;
-        width: 100%;
-        min-height: 100px;
-        resize: vertical;
-        border-radius: var(--radius);
-    }
-
-    /* EMPTY STATE */
-    .empty-state {
-        text-align: center;
-        padding: 32px;
-        color: var(--text3);
-        font-size: 12px;
-    }
-
-    /* SCROLLABLE TABS */
-    .tabs {
-        overflow-x: auto;
-    }
-
-    .tabs::-webkit-scrollbar {
-        display: none;
-    }
-
-    /* ANIMATIONS */
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(4px);
-        }
-
-        to {
-            opacity: 1;
-            transform: none;
-        }
-    }
-
-    .fade-in {
-        animation: fadeIn 0.2s ease;
-    }
-</style>
 
 <body class="light">
     <div id="app">
 
-        <!-- TOPBAR -->
+        <!-- ═══════════ TOPBAR ═══════════ -->
         <div id="topbar">
+            <!-- Sidebar toggle -->
+            <div class="topbar-actions">
+                <button class="icon-btn active" id="btn-toggle-sb" onclick="toggleSidebar()" title="Сайдбар">☰</button>
+            </div>
+
             <div class="logo">
                 <span>Fast</span><span class="logo-dot">▸</span><span>Admin</span>
             </div>
+
             <div class="topbar-info">
-                <span><span class="status-dot"></span> fast_io <?= phpversion('fast_io') ?: 'loaded' ?></span>
+                <span class="status-span"><span class="status-dot"></span> fast_io
+                    <?= phpversion('fast_io') ?: 'loaded' ?></span>
                 <span>PHP <?= PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION ?></span>
                 <span style="color:var(--text3)">buf:
                     <?= number_format((int) ini_get('fast_io.buffer_size') / 1024, 0) ?>KB</span>
-                <button onclick="toggleTheme()"
-                    style="background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;margin-left:8px">☀︎</button>
+                <button class="icon-btn" onclick="toggleTheme()" title="Переключить тему">☀︎</button>
             </div>
 
+            <!-- Right panel toggle -->
+            <button class="icon-btn" id="btn-toggle-rp" onclick="toggleRightPanel()" title="Правая панель"
+                style="margin-left:6px">⊡</button>
         </div>
 
-        <!-- SIDEBAR -->
-        <div id="sidebar">
-            <div class="sidebar-head">
-                <h3>Таблицы</h3>
-                <div class="new-table-form">
-                    <input type="text" id="new-table-name" placeholder="имя_таблицы.dat">
-                    <select id="new-table-type">
-                        <option value="text">TEXT (file_insert_line)</option>
-                        <option value="binary">BINARY (file_push_data)</option>
-                    </select>
-                    <button class="btn btn-success btn-sm" onclick="createTable()">+ Создать</button>
+        <!-- ═══════════ CONTENT ROW ═══════════ -->
+        <div id="content-row">
+
+            <!-- SIDEBAR -->
+            <div id="sidebar">
+                <!-- Mobile-only header -->
+                <div class="panel-mobile-header">
+                    <span class="panel-mobile-title">Таблицы</span>
+                    <button class="panel-mobile-close" onclick="closeMobilePanel('sidebar')">✕</button>
                 </div>
-            </div>
-            <div id="tables-list">
-                <div class="empty-state">Загрузка...</div>
-            </div>
-        </div>
 
-        <!-- MAIN -->
-        <div id="main">
-
-            <!-- WELCOME -->
-            <div id="welcome">
-                <div class="welcome-art">fast_io Engine Admin Panel</div>
-                <h2>Выберите таблицу</h2>
-                <p style="margin-top:8px">или создайте новую в сайдбаре</p>
-            </div>
-
-            <!-- TABLE VIEW -->
-            <div id="table-view">
-
-                <div class="tv-header">
-                    <div class="tv-title">
-                        <h2 id="tv-name">—</h2>
-                        <span id="tv-type-badge" class="tv-type">TEXT</span>
-                        <button class="del-btn btn-xs" onclick="dropTable()">✕ Удалить</button>
+                <div class="sidebar-inner">
+                    <div class="sidebar-head">
+                        <h3>Таблицы</h3>
+                        <div class="new-table-form">
+                            <input type="text" id="new-table-name" placeholder="имя_таблицы.dat">
+                            <select id="new-table-type">
+                                <option value="text">TEXT (file_insert_line)</option>
+                                <option value="binary">BINARY (file_push_data)</option>
+                            </select>
+                            <button class="btn btn-success btn-sm" onclick="createTable()">+ Создать</button>
+                        </div>
                     </div>
-                    <div class="tabs" id="tabs-nav">
-                        <!-- injected by JS -->
+                    <div id="tables-list">
+                        <div class="empty-state">Загрузка...</div>
                     </div>
                 </div>
+            </div>
 
-                <div class="tv-body">
-                    <!-- injected by JS -->
+            <!-- Sidebar Resizer -->
+            <div class="resizer resizer-sb" id="resizer-sb"></div>
+
+            <!-- MAIN -->
+            <div id="main">
+                <!-- WELCOME -->
+                <div id="welcome">
+                    <div class="welcome-art">fast_io Engine Admin Panel</div>
+                    <h2>Выберите таблицу</h2>
+                    <p style="margin-top:8px">или создайте новую в сайдбаре</p>
                 </div>
 
-            </div><!-- #table-view -->
-        </div><!-- #main -->
+                <!-- TABLE VIEW -->
+                <div id="table-view">
+                    <div class="tv-header">
+                        <div class="tv-title">
+                            <h2 id="tv-name">—</h2>
+                            <span id="tv-type-badge" class="tv-type">TEXT</span>
+                            <button class="del-btn btn-xs" onclick="dropTable()">✕ Удалить</button>
+                        </div>
+                        <div class="tabs" id="tabs-nav"></div>
+                    </div>
+                    <div class="tv-body"></div>
+                </div>
+            </div>
+
+            <!-- Right Panel Resizer -->
+            <div class="resizer resizer-rp" id="resizer-rp"></div>
+
+            <!-- RIGHT PANEL -->
+            <div id="right-panel" class="collapsed">
+                <!-- Mobile-only header -->
+                <div class="panel-mobile-header">
+                    <span class="panel-mobile-title">Панель</span>
+                    <button class="panel-mobile-close" onclick="closeMobilePanel('right-panel')">✕</button>
+                </div>
+
+                <div class="rp-inner">
+                    <div class="rp-header">
+                        <div class="rp-tab-nav">
+                            <button class="rp-tab-btn active" data-tab="detail"
+                                onclick="rpSwitchTab('detail')">Detail</button>
+                            <button class="rp-tab-btn" data-tab="pcre2" onclick="rpSwitchTab('pcre2')">PCRE2</button>
+                            <button class="rp-tab-btn" data-tab="log" onclick="rpSwitchTab('log')">Log</button>
+                        </div>
+                        <button class="rp-close" onclick="toggleRightPanel()" title="Закрыть">✕</button>
+                    </div>
+
+                    <div class="rp-body">
+                        <!-- Detail / Edit tab -->
+                        <div class="rp-pane active" id="rp-detail">
+                            <div class="rp-empty">
+                                <div class="rp-empty-icon">⊡</div>
+                                <div>Выберите запись для просмотра<br>или редактирования</div>
+                            </div>
+                        </div>
+
+                        <!-- PCRE2 Tester tab -->
+                        <div class="rp-pane" id="rp-pcre2">
+                            <div class="rp-section">
+                                <div class="rp-section-title">PCRE2 Tester — find_matches_pcre2</div>
+                                <div class="pcre-form">
+                                    <div class="form-group">
+                                        <label>Pattern (PCRE2)</label>
+                                        <input type="text" id="rp-pcre-pattern" class="inp-full" placeholder="\w+_\d+"
+                                            value="\w+_\d+">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Subject</label>
+                                        <textarea id="rp-pcre-subject"
+                                            style="min-height:70px">index_42 file_insert_line_42 data_100</textarea>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Mode</label>
+                                            <select id="rp-pcre-mode">
+                                                <option value="0">0: matches array</option>
+                                                <option value="1">1: detail (offset, length)</option>
+                                            </select>
+                                        </div>
+                                        <button class="btn btn-purple" style="margin-top:18px"
+                                            onclick="doRpPcre2()">Match</button>
+                                    </div>
+                                    <div id="rp-pcre-result" class="result-area pcre-result"
+                                        style="display:none;margin-top:6px;max-height:300px"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Operation Log tab -->
+                        <div class="rp-pane" id="rp-log">
+                            <div class="rp-section">
+                                <div class="rp-section-title" style="justify-content:space-between">
+                                    <span>История операций</span>
+                                    <button class="btn btn-xs" onclick="clearLog()">Очистить</button>
+                                </div>
+                                <div id="rp-log-list">
+                                    <div class="rp-empty" style="height:120px">
+                                        <div class="rp-empty-icon">📋</div>
+                                        <div>Журнал операций пуст</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- #content-row -->
     </div><!-- #app -->
 
-    <!-- EDIT MODAL -->
-    <div class="modal-overlay" id="edit-modal">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3 id="edit-modal-title">Редактировать строку</h3>
-                <button class="modal-close" onclick="closeModal('edit-modal')">✕</button>
-            </div>
-            <div class="modal-body" id="edit-modal-body"></div>
-            <div class="modal-footer" id="edit-modal-footer"></div>
-        </div>
-    </div>
+    <!-- Mobile overlay (backdrop) -->
+    <div class="mobile-overlay" id="mobile-overlay" onclick="closeMobilePanel(null)"></div>
 
     <script>
         'use strict';
@@ -1579,19 +2235,55 @@ if ($is_ajax) {
         };
 
         // ════════════════════════════════
+        //  LOG
+        // ════════════════════════════════
+        const opLog = [];
+        function addLog(op, table, result) {
+            const entry = {
+                time: new Date().toLocaleTimeString(),
+                op, table,
+                result: typeof result === 'object' ? JSON.stringify(result).slice(0, 80) : String(result).slice(0, 80),
+                ok: !(result && result.error),
+            };
+            opLog.unshift(entry);
+            if (opLog.length > 100) opLog.pop();
+            renderLog();
+        }
+        function renderLog() {
+            const el = document.getElementById('rp-log-list');
+            if (!el) return;
+            if (!opLog.length) {
+                el.innerHTML = '<div class="rp-empty" style="height:120px"><div class="rp-empty-icon">📋</div><div>Журнал пуст</div></div>';
+                return;
+            }
+            el.innerHTML = opLog.map(e => `
+        <div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:11px">
+            <span style="color:var(--text3)">${e.time}</span>
+            <span style="color:${e.ok ? 'var(--success)' : 'var(--danger)'}"> ${e.ok ? '✓' : '✕'}</span>
+            <span style="color:var(--accent)"> ${e.op}</span>
+            <span style="color:var(--text2)"> ${e.table || ''}</span>
+            <div style="color:var(--text3);margin-top:2px;word-break:break-all">${e.result}</div>
+        </div>
+    `).join('');
+        }
+        function clearLog() { opLog.length = 0; renderLog(); }
+
+        // ════════════════════════════════
         //  API
         // ════════════════════════════════
-        async function api(op, data = {}, method = 'POST') {
+        async function api(op, data = {}) {
             const fd = new FormData();
             fd.append('ajax', '1');
             fd.append('op', op);
             for (const [k, v] of Object.entries(data)) fd.append(k, v);
-            const r = await fetch(location.pathname + '?ajax=1', { method, body: fd });
-            return r.json();
+            const r = await fetch(location.pathname + '?ajax=1', { method: 'POST', body: fd });
+            const res = await r.json();
+            addLog(op, data.table || '', res);
+            return res;
         }
 
         // ════════════════════════════════
-        //  NOTIFICATION
+        //  NOTIFICATIONS
         // ════════════════════════════════
         function notify(msg, type = 'ok', container = '#notif-area') {
             const el = document.querySelector(container);
@@ -1603,11 +2295,242 @@ if ($is_ajax) {
             setTimeout(() => d.remove(), 5000);
         }
 
-        // ═══════════════════════════════
-        //  MODAL
         // ════════════════════════════════
-        function openModal(id) { document.getElementById(id).classList.add('open'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+        //  RIGHT PANEL
+        // ════════════════════════════════
+        const RightPanel = {
+            open() {
+                const rp = document.getElementById('right-panel');
+                const btn = document.getElementById('btn-toggle-rp');
+                if (window.innerWidth <= 767) {
+                    openMobilePanel('right-panel');
+                } else {
+                    rp.classList.remove('collapsed');
+                    btn.classList.add('active');
+                    updateResizerRpVisibility();
+                    saveLayout();
+                }
+            },
+            close() {
+                const rp = document.getElementById('right-panel');
+                const btn = document.getElementById('btn-toggle-rp');
+                if (window.innerWidth <= 767) {
+                    closeMobilePanel('right-panel');
+                } else {
+                    rp.classList.add('collapsed');
+                    btn.classList.remove('active');
+                    updateResizerRpVisibility();
+                    saveLayout();
+                }
+            },
+            isOpen() {
+                const rp = document.getElementById('right-panel');
+                if (window.innerWidth <= 767) return rp.classList.contains('mobile-open');
+                return !rp.classList.contains('collapsed');
+            },
+            switchTab(tabId) {
+                document.querySelectorAll('.rp-tab-btn').forEach(b =>
+                    b.classList.toggle('active', b.dataset.tab === tabId));
+                document.querySelectorAll('.rp-pane').forEach(p =>
+                    p.classList.toggle('active', p.id === 'rp-' + tabId));
+            },
+            setDetail(html, openPanel = true) {
+                document.getElementById('rp-detail').innerHTML = html;
+                this.switchTab('detail');
+                if (openPanel) this.open();
+            },
+        };
+
+        function rpSwitchTab(tabId) { RightPanel.switchTab(tabId); }
+
+        // ════════════════════════════════
+        //  PANEL TOGGLE (desktop)
+        // ════════════════════════════════
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            const btn = document.getElementById('btn-toggle-sb');
+            if (window.innerWidth <= 767) {
+                openMobilePanel('sidebar');
+                return;
+            }
+            sb.classList.toggle('collapsed');
+            btn.classList.toggle('active', !sb.classList.contains('collapsed'));
+            updateResizerSbVisibility();
+            saveLayout();
+        }
+
+        function toggleRightPanel() {
+            if (RightPanel.isOpen()) { RightPanel.close(); }
+            else { RightPanel.open(); }
+        }
+
+        function updateResizerSbVisibility() {
+            const sb = document.getElementById('sidebar');
+            const res = document.getElementById('resizer-sb');
+            res.style.display = sb.classList.contains('collapsed') ? 'none' : '';
+        }
+        function updateResizerRpVisibility() {
+            const rp = document.getElementById('right-panel');
+            const res = document.getElementById('resizer-rp');
+            res.style.display = rp.classList.contains('collapsed') ? 'none' : '';
+        }
+
+        // ════════════════════════════════
+        //  MOBILE PANELS
+        // ════════════════════════════════
+        function openMobilePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            const overlay = document.getElementById('mobile-overlay');
+            // Remove 'collapsed' before showing — otherwise desktop cascade rules
+            // (width:0 !important, overflow:hidden) may bleed through on mobile
+            if (panelId === 'right-panel') panel.classList.remove('collapsed');
+            panel.classList.add('mobile-open');
+            overlay.classList.add('open');
+            overlay.dataset.activePanel = panelId;
+        }
+
+        function closeMobilePanel(panelId) {
+            const overlay = document.getElementById('mobile-overlay');
+            if (!panelId) panelId = overlay.dataset.activePanel;
+            if (panelId) {
+                const panel = document.getElementById(panelId);
+                panel?.classList.remove('mobile-open');
+                // Restore 'collapsed' so desktop layout remains correct after resize
+                if (panelId === 'right-panel') panel?.classList.add('collapsed');
+            }
+            overlay.classList.remove('open');
+            delete overlay.dataset.activePanel;
+        }
+
+        // ════════════════════════════════
+        //  DRAG RESIZE
+        // ════════════════════════════════
+        function initResize(resizerId, targetId, dir) {
+            const resizer = document.getElementById(resizerId);
+            const target = document.getElementById(targetId);
+            if (!resizer || !target) return;
+
+            let startX, startW;
+
+            resizer.addEventListener('mousedown', (e) => {
+                if (window.innerWidth <= 767) return;
+                startX = e.clientX;
+                startW = target.getBoundingClientRect().width;
+                document.body.classList.add('col-resizing');
+                resizer.classList.add('dragging');
+                e.preventDefault();
+
+                function onMove(e) {
+                    const dx = e.clientX - startX;
+                    const newW = dir === 'right' ? startW - dx : startW + dx;
+                    const minW = 160;
+                    const maxW = window.innerWidth * 0.5;
+                    if (newW < minW || newW > maxW) return;
+                    target.style.width = newW + 'px';
+                    // Update CSS variable for sidebar-inner min-width
+                    if (targetId === 'sidebar') {
+                        document.documentElement.style.setProperty('--sb-w', newW + 'px');
+                    }
+                }
+
+                function onUp() {
+                    document.body.classList.remove('col-resizing');
+                    resizer.classList.remove('dragging');
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
+                    saveLayout();
+                }
+
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
+            });
+
+            // Touch support
+            resizer.addEventListener('touchstart', (e) => {
+                if (window.innerWidth <= 767) return;
+                startX = e.touches[0].clientX;
+                startW = target.getBoundingClientRect().width;
+                e.preventDefault();
+
+                function onMove(e) {
+                    const dx = e.touches[0].clientX - startX;
+                    const newW = dir === 'right' ? startW - dx : startW + dx;
+                    if (newW < 160 || newW > window.innerWidth * 0.5) return;
+                    target.style.width = newW + 'px';
+                }
+                function onUp() {
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend', onUp);
+                    saveLayout();
+                }
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('touchend', onUp);
+            }, { passive: false });
+        }
+
+        // ════════════════════════════════
+        //  LAYOUT PERSISTENCE
+        // ════════════════════════════════
+        function saveLayout() {
+            const sb = document.getElementById('sidebar');
+            const rp = document.getElementById('right-panel');
+            const layout = {
+                sbW: sb.getBoundingClientRect().width,
+                sbCollapsed: sb.classList.contains('collapsed'),
+                rpW: rp.getBoundingClientRect().width,
+                rpCollapsed: rp.classList.contains('collapsed'),
+            };
+            try { localStorage.setItem('fa_layout', JSON.stringify(layout)); } catch { }
+        }
+
+        function loadLayout() {
+            let layout = {};
+            try { layout = JSON.parse(localStorage.getItem('fa_layout') || '{}'); } catch { }
+
+            const sb = document.getElementById('sidebar');
+            const rp = document.getElementById('right-panel');
+            const btnSb = document.getElementById('btn-toggle-sb');
+            const btnRp = document.getElementById('btn-toggle-rp');
+
+            if (window.innerWidth <= 767) return; // mobile: always default
+
+            if (layout.sbW && layout.sbW > 160) {
+                sb.style.width = layout.sbW + 'px';
+                document.documentElement.style.setProperty('--sb-w', layout.sbW + 'px');
+            }
+            if (layout.sbCollapsed) {
+                sb.classList.add('collapsed');
+                btnSb.classList.remove('active');
+                document.getElementById('resizer-sb').style.display = 'none';
+            } else {
+                btnSb.classList.add('active');
+            }
+
+            if (layout.rpW && layout.rpW > 160) {
+                rp.style.width = layout.rpW + 'px';
+                document.documentElement.style.setProperty('--rp-w', layout.rpW + 'px');
+            }
+            if (layout.rpCollapsed) {
+                rp.classList.add('collapsed');
+                btnRp.classList.remove('active');
+                document.getElementById('resizer-rp').style.display = 'none';
+            }
+
+            // Theme
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.remove('light');
+            } else {
+                document.body.classList.add('light');
+            }
+        }
+
+        // ════════════════════════════════
+        //  THEME
+        // ════════════════════════════════
+        function toggleTheme() {
+            document.body.classList.toggle('light');
+            localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+        }
 
         // ════════════════════════════════
         //  SIDEBAR
@@ -1633,7 +2556,6 @@ if ($is_ajax) {
             <span class="ti-size">${fmtSize(t.size)}</span>
         </div>
     `).join('');
-
         }
 
         function fmtSize(b) {
@@ -1651,6 +2573,8 @@ if ($is_ajax) {
             state.browsePage = 0;
             renderSidebar();
             renderTableView();
+            // On mobile: close sidebar after selecting
+            if (window.innerWidth <= 767) closeMobilePanel('sidebar');
         }
 
         function renderTableView() {
@@ -1663,8 +2587,8 @@ if ($is_ajax) {
             const badge = document.getElementById('tv-type-badge');
             badge.textContent = t.type.toUpperCase();
             badge.style.cssText = t.type === 'binary'
-                ? 'background:rgba(192,132,252,0.12);color:#c084fc'
-                : 'background:rgba(0,229,255,0.12);color:#00e5ff';
+                ? 'background:rgba(192,132,252,.12);color:#c084fc'
+                : 'background:rgba(0,229,255,.12);color:#00e5ff';
 
             const tabs = t.type === 'text' ? [
                 ['browse', '▤ Browse'],
@@ -1691,10 +2615,8 @@ if ($is_ajax) {
 
         function switchTab(id) {
             state.tab = id;
-            document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.remove('active');
-                if (b.getAttribute('onclick') === `switchTab('${id}')`) b.classList.add('active');
-            });
+            document.querySelectorAll('.tab-btn').forEach(b =>
+                b.classList.toggle('active', b.getAttribute('onclick') === `switchTab('${id}')`));
             renderTabBody();
         }
 
@@ -1722,16 +2644,13 @@ if ($is_ajax) {
             html += '</div>';
             body.innerHTML = html;
 
-            if (state.tab === 'browse') {
-                loadBrowse();
-            } else if (state.tab === 'analize') {
-                loadAnalize();
-            }
+            if (state.tab === 'browse') loadBrowse();
+            if (state.tab === 'analize') loadAnalize();
         }
 
         // ════════════════════════════════
         //  BROWSE TEXT
-        // ═══════════════════════════════
+        // ════════════════════════════════
         function tplBrowseText() {
             return `
     <div class="section-title">Browse <span class="fn-name">file_get_keys</span></div>
@@ -1758,7 +2677,9 @@ if ($is_ajax) {
         </div>
         <button class="btn btn-primary" style="margin-top:18px" onclick="loadBrowse()">↻ Обновить</button>
     </div>
-    <div id="browse-area"><div class="loading">Загрузка</div></div>
+    <div class="data-table-wrap">
+        <div id="browse-area"><div class="loading">Загрузка</div></div>
+    </div>
     <div id="browse-pagination" class="pagination"></div>
     `;
         }
@@ -1766,7 +2687,6 @@ if ($is_ajax) {
         async function loadBrowse() {
             const t = state.current;
             if (!t) return;
-
             if (t.type === 'binary') { loadBrowseBinary(); return; }
 
             const mode = parseInt(document.getElementById('browse-mode')?.value || 2);
@@ -1776,8 +2696,7 @@ if ($is_ajax) {
             const r = await api('get_keys', {
                 table: t.name,
                 start: state.browsePage * limit,
-                limit,
-                mode,
+                limit, mode,
             });
 
             const area = document.getElementById('browse-area');
@@ -1806,9 +2725,10 @@ if ($is_ajax) {
                         cols.forEach(c => {
                             const v = row[c];
                             let cls = 'cell-num';
-                            if (c === 'key' || c === 'trim_line' || c === 'line') cls = c === 'key' ? 'cell-key' : 'cell-val';
-                            if (c === 'line_offset') cls = 'cell-offset';
-                            const display = typeof v === 'string' && v.length > 120 ? v.slice(0, 120) + '…' : v;
+                            if (c === 'key') cls = 'cell-key';
+                            else if (c === 'trim_line' || c === 'line') cls = 'cell-val';
+                            else if (c === 'line_offset') cls = 'cell-offset';
+                            const display = typeof v === 'string' && v.length > 100 ? v.slice(0, 100) + '…' : v;
                             html += `<td class="${cls}" title="${typeof v === 'string' ? escAttr(v) : ''}">${escHtml(String(display ?? ''))}</td>`;
                         });
                         const key = row.key || (row.trim_line ? row.trim_line.split(' ')[0] : '');
@@ -1845,34 +2765,34 @@ if ($is_ajax) {
 
         function goBrowsePage(p) { state.browsePage = p; loadBrowse(); }
 
+        // ─── Edit Line → Right Panel ───
         function openEditLine(key, val) {
-            const t = state.current;
-            document.getElementById('edit-modal-title').textContent = 'Редактировать: ' + key;
-            document.getElementById('edit-modal-body').innerHTML = `
-        <div class="form-group" style="margin-bottom:10px">
-            <label>Ключ (line_key для поиска)</label>
-            <input type="text" id="em-key" class="inp-full" value="${escAttr(key + ' ')}">
-        </div>
-        <div class="form-group">
-            <label>Новая строка (полностью)</label>
-            <textarea id="em-val" style="min-height:120px">${escHtml(val)}</textarea>
-        </div>
-        <div class="form-row" style="margin-top:10px">
-            <div class="form-group">
+            RightPanel.setDetail(`
+        <div class="rp-section">
+            <div class="rp-section-title">✎ Edit Line</div>
+            <div class="form-group" style="margin-bottom:10px">
+                <label>Ключ (line_key для поиска)</label>
+                <input type="text" id="em-key" class="inp-full" value="${escAttr(key + ' ')}">
+            </div>
+            <div class="form-group" style="margin-bottom:10px">
+                <label>Новая строка (полностью)</label>
+                <textarea id="em-val" style="min-height:120px">${escHtml(val)}</textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
                 <label>Режим replace</label>
                 <select id="em-mode">
                     <option value="0">0: chain mode</option>
                     <option value="1">1: rename mode</option>
                 </select>
             </div>
+            <p style="font-size:11px;color:var(--text3);margin-bottom:10px">Использует <code>file_replace_line</code></p>
+            <div class="form-row">
+                <button class="btn btn-primary" onclick="doReplaceLine()">💾 Сохранить</button>
+                <button class="btn" onclick="RightPanel.setDetail('<div class=rp-empty><div class=rp-empty-icon>⊡</div><div>Выберите запись</div></div>', false)">Отмена</button>
+            </div>
+            <div id="rp-edit-notif" style="margin-top:10px"></div>
         </div>
-        <p style="font-size:11px;color:var(--text3);margin-top:8px">Использует <code>file_replace_line</code></p>
-    `;
-            document.getElementById('edit-modal-footer').innerHTML = `
-        <button class="btn" onclick="closeModal('edit-modal')">Отмена</button>
-        <button class="btn btn-primary" onclick="doReplaceLine()">Сохранить</button>
-    `;
-            openModal('edit-modal');
+    `);
         }
 
         async function doReplaceLine() {
@@ -1880,9 +2800,13 @@ if ($is_ajax) {
             const val = document.getElementById('em-val').value;
             const mode = document.getElementById('em-mode').value;
             const r = await api('replace_line', { table: state.current.name, key, newline: val, mode });
-            closeModal('edit-modal');
-            if (r.ok) { notify(`✓ Заменено (${r.result} строк)`, 'ok'); loadBrowse(); }
-            else notify('Ошибка: ' + r.result, 'err');
+            const notif = document.getElementById('rp-edit-notif');
+            if (notif) {
+                notif.innerHTML = r.ok
+                    ? `<div class="notif notif-ok">✓ Заменено (${r.result} строк)</div>`
+                    : `<div class="notif notif-err">✕ ${r.error || r.result}</div>`;
+            }
+            if (r.ok) loadBrowse();
         }
 
         async function eraseLine(key) {
@@ -1909,7 +2833,9 @@ if ($is_ajax) {
         </div>
         <button class="btn btn-primary" style="margin-top:18px" onclick="loadBrowse()">↻ Обновить</button>
     </div>
-    <div id="browse-area"><div class="loading">Загрузка</div></div>
+    <div class="data-table-wrap">
+        <div id="browse-area"><div class="loading">Загрузка</div></div>
+    </div>
     <div id="browse-pagination" class="pagination"></div>
     `;
         }
@@ -1974,10 +2900,18 @@ if ($is_ajax) {
             document.getElementById('browse-pagination').innerHTML = pag;
         }
 
+        // ─── Binary value → Right Panel ───
         async function fetchBinaryVal(key) {
             const r = await api('search_data', { table: state.current.name, key, position: 0, mode: 0 });
             if (r.found) {
-                openResultModal('Binary Value: ' + key, r.result);
+                RightPanel.setDetail(`
+            <div class="rp-section">
+                <div class="rp-section-title">◈ Binary Value: ${escHtml(key)}</div>
+                <div class="result-area" style="max-height:400px;margin-top:0">
+                    <pre>${escHtml(String(r.result))}</pre>
+                </div>
+            </div>
+        `);
             } else {
                 notify('Не найдено', 'err');
             }
@@ -1993,17 +2927,6 @@ if ($is_ajax) {
             const r = await (await fetch(location.pathname + '?ajax=1', { method: 'POST', body: fd })).json();
             if (r.ok) { notify(`✓ Запись индекса стёрта`, 'ok'); loadBrowse(); }
             else notify('Ошибка: ' + r.result, 'err');
-        }
-
-        function openResultModal(title, content) {
-            document.getElementById('edit-modal-title').textContent = title;
-            document.getElementById('edit-modal-body').innerHTML = `
-        <div class="result-area"><pre>${escHtml(String(content))}</pre></div>
-    `;
-            document.getElementById('edit-modal-footer').innerHTML = `
-        <button class="btn" onclick="closeModal('edit-modal')">Закрыть</button>
-    `;
-            openModal('edit-modal');
         }
 
         // ════════════════════════════════
@@ -2067,8 +2990,8 @@ if ($is_ajax) {
                         <option value="13">13: regex, counts</option>
                         <option value="20">20: regex+matches, trim</option>
                         <option value="21">21: regex+matches, line</option>
-                        <option value="22">22: regex+match detail</option>
-                        <option value="23">23: regex matches only</option>
+                        <option value="22">22: regex match detail</option>
+                        <option value="23">23: matches only</option>
                     </select>
                 </div>
                 <button class="btn btn-primary" style="margin-top:18px" onclick="doSearchArray()">Найти</button>
@@ -2078,7 +3001,9 @@ if ($is_ajax) {
     </div>
 
     <div class="sep"></div>
-    <div class="section-title">PCRE2 тест <span class="fn-name">find_matches_pcre2</span></div>
+    <div class="section-title">PCRE2 тест <span class="fn-name">find_matches_pcre2</span>
+        <button class="btn btn-xs btn-purple" onclick="rpSwitchTab('pcre2');RightPanel.open()" style="margin-left:auto">⊡ В правой панели</button>
+    </div>
     <div class="op-card" style="max-width:600px">
         <div class="form-group" style="margin-bottom:8px">
             <label>Pattern (PCRE2)</label>
@@ -2112,9 +3037,20 @@ if ($is_ajax) {
             });
             const el = document.getElementById('sl-result');
             el.style.display = 'block';
-            el.innerHTML = r.found
-                ? `<pre>${escHtml(r.result)}</pre>`
-                : '<span style="color:var(--danger)">Не найдено</span>';
+            if (r.found) {
+                el.innerHTML = `<pre>${escHtml(r.result)}</pre>`;
+                // Also show in right panel
+                RightPanel.setDetail(`
+            <div class="rp-section">
+                <div class="rp-section-title">⌕ Search Result</div>
+                <div class="result-area" style="margin-top:0;max-height:350px">
+                    <pre>${escHtml(r.result)}</pre>
+                </div>
+            </div>
+        `);
+            } else {
+                el.innerHTML = '<span style="color:var(--danger)">Не найдено</span>';
+            }
         }
 
         async function doSearchArray() {
@@ -2129,6 +3065,17 @@ if ($is_ajax) {
             el.style.display = 'block';
             el.innerHTML = `<pre>${escHtml(JSON.stringify(r.result, null, 2))}</pre>
         <div style="margin-top:6px;color:var(--text2);font-size:11px">Найдено: ${r.count}</div>`;
+            // Large results → right panel
+            if (r.count > 5) {
+                RightPanel.setDetail(`
+            <div class="rp-section">
+                <div class="rp-section-title">⌕ Array Search — ${r.count} найдено</div>
+                <div class="result-area" style="margin-top:0;max-height:500px">
+                    <pre>${escHtml(JSON.stringify(r.result, null, 2))}</pre>
+                </div>
+            </div>
+        `);
+            }
         }
 
         async function doPcre2() {
@@ -2138,6 +3085,18 @@ if ($is_ajax) {
                 mode: document.getElementById('pcre-mode').value,
             });
             const el = document.getElementById('pcre-result');
+            el.style.display = 'block';
+            el.innerHTML = `<pre>${escHtml(JSON.stringify(r.result, null, 2))}</pre>`;
+        }
+
+        // Right panel PCRE2
+        async function doRpPcre2() {
+            const r = await api('pcre2', {
+                pattern: document.getElementById('rp-pcre-pattern').value,
+                subject: document.getElementById('rp-pcre-subject').value,
+                mode: document.getElementById('rp-pcre-mode').value,
+            });
+            const el = document.getElementById('rp-pcre-result');
             el.style.display = 'block';
             el.innerHTML = `<pre>${escHtml(JSON.stringify(r.result, null, 2))}</pre>`;
         }
@@ -2165,11 +3124,6 @@ if ($is_ajax) {
                     <option value="100">100: no lock</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>Position (byte offset)</label>
-                <input type="number" id="idx-pos" value="0" min="0" class="inp-sm">
-                <small style="color:var(--text3);display:block">Начало поиска в индексном файле</small>
-            </div>            
             <button class="btn btn-primary" style="margin-top:18px" onclick="doSearchData()">Найти</button>
         </div>
         <div id="sd-result" class="result-area" style="display:none;margin-top:8px;max-height:300px"></div>
@@ -2183,6 +3137,10 @@ if ($is_ajax) {
             <input type="text" id="idx-key" class="inp-full" placeholder="mykey ">
         </div>
         <div class="form-row">
+            <div class="form-group">
+                <label>Position</label>
+                <input type="number" id="idx-pos" value="0" class="inp-sm">
+            </div>
             <div class="form-group">
                 <label>Mode</label>
                 <select id="idx-mode">
@@ -2208,9 +3166,19 @@ if ($is_ajax) {
             });
             const el = document.getElementById('sd-result');
             el.style.display = 'block';
-            el.innerHTML = r.found
-                ? `<pre>${escHtml(r.result)}</pre>`
-                : '<span style="color:var(--danger)">Не найдено</span>';
+            if (r.found) {
+                el.innerHTML = `<pre>${escHtml(r.result)}</pre>`;
+                RightPanel.setDetail(`
+            <div class="rp-section">
+                <div class="rp-section-title">◈ Binary Data: ${escHtml(document.getElementById('sd-key').value)}</div>
+                <div class="result-area" style="margin-top:0;max-height:400px">
+                    <pre>${escHtml(String(r.result))}</pre>
+                </div>
+            </div>
+        `);
+            } else {
+                el.innerHTML = '<span style="color:var(--danger)">Не найдено</span>';
+            }
         }
 
         async function doIdxSearch() {
@@ -2232,7 +3200,7 @@ if ($is_ajax) {
         function tplInsert() {
             return `
     <div class="section-title">Добавить строку <span class="fn-name">file_insert_line</span></div>
-    <div class="op-card" style="max-width:600px">
+    <div class="op-card" style="max-width:620px">
         <div class="form-group" style="margin-bottom:10px">
             <label>Строка (key value ...)</label>
             <textarea id="ins-line" placeholder="mykey some value here" style="min-height:100px"></textarea>
@@ -2281,7 +3249,7 @@ if ($is_ajax) {
         function tplPush() {
             return `
     <div class="section-title">Push data <span class="fn-name">file_push_data</span></div>
-    <div class="op-card" style="max-width:600px">
+    <div class="op-card" style="max-width:620px">
         <div class="form-group" style="margin-bottom:10px">
             <label>Ключ</label>
             <input type="text" id="push-key" class="inp-full" placeholder="mykey">
@@ -2396,11 +3364,8 @@ if ($is_ajax) {
                 <input type="number" id="cb-pos" value="0" class="inp-sm">
             </div>
             <div class="form-group">
-                <label>Mode (args count)</label>
-                <!-- mode = максимальный индекс аргумента (0-based) -->
-                <!-- mode=4 → 5 аргументов: 0=line, 1=filename, 2=offset, 3=length, 4=line_count -->
-                <label title="mode=N → callback получает N+1 аргументов (индексы 0..N). Для line_count нужен mode ≥ 4">
-                    Mode <span style="color:var(--text3);font-size:11px">(макс. индекс аргумента, 0–9)</span>
+                <label title="mode=N → callback получает N+1 аргументов (0..N). Для line_count нужен mode ≥ 4">
+                    Mode <span style="color:var(--text3);font-size:11px">(макс. индекс арг. 0–9)</span>
                 </label>
                 <input type="number" id="cb-mode" value="4" min="4" max="9" class="inp-sm">
             </div>
@@ -2427,12 +3392,25 @@ if ($is_ajax) {
             });
             const el = document.getElementById('sell-result');
             el.style.display = 'block';
-            el.innerHTML = r.found ? `<pre>${escHtml(r.result)}</pre>` : '<span style="color:var(--danger)">Не найдено</span>';
+            if (r.found) {
+                el.innerHTML = `<pre>${escHtml(r.result)}</pre>`;
+                RightPanel.setDetail(`
+            <div class="rp-section">
+                <div class="rp-section-title">⊡ Select Line Result</div>
+                <div class="result-area" style="margin-top:0;max-height:400px">
+                    <pre>${escHtml(r.result)}</pre>
+                </div>
+            </div>
+        `);
+            } else {
+                el.innerHTML = '<span style="color:var(--danger)">Не найдено</span>';
+            }
         }
 
         async function doSelectArray() {
             let q;
-            try { q = JSON.parse(document.getElementById('sela-query').value); } catch { notify('Некорректный JSON', 'err'); return; }
+            try { q = JSON.parse(document.getElementById('sela-query').value); }
+            catch { notify('Некорректный JSON', 'err'); return; }
             const r = await api('select_array', {
                 table: state.current.name,
                 query: JSON.stringify(q),
@@ -2442,6 +3420,14 @@ if ($is_ajax) {
             const el = document.getElementById('sela-result');
             el.style.display = 'block';
             el.innerHTML = `<pre>${escHtml(JSON.stringify(r.result, null, 2))}</pre>`;
+            RightPanel.setDetail(`
+        <div class="rp-section">
+            <div class="rp-section-title">⊡ Select Array Result</div>
+            <div class="result-area" style="margin-top:0;max-height:500px">
+                <pre>${escHtml(JSON.stringify(r.result, null, 2))}</pre>
+            </div>
+        </div>
+    `);
         }
 
         async function doCallback() {
@@ -2450,7 +3436,6 @@ if ($is_ajax) {
                 notify('Для отображения поля line_count используйте mode ≥ 4', 'warn');
                 return;
             }
-
             const r = await api('callback_line', {
                 table: state.current.name,
                 position: document.getElementById('cb-pos').value,
@@ -2551,7 +3536,8 @@ if ($is_ajax) {
 
         async function doUpdateArray() {
             let q;
-            try { q = JSON.parse(document.getElementById('ua-query').value); } catch { notify('Некорректный JSON', 'err'); return; }
+            try { q = JSON.parse(document.getElementById('ua-query').value); }
+            catch { notify('Некорректный JSON', 'err'); return; }
             const r = await api('update_array', {
                 table: state.current.name,
                 query: JSON.stringify(q),
@@ -2577,7 +3563,7 @@ if ($is_ajax) {
             <div class="form-row">
                 <div class="form-group">
                     <label title="offset=0 не поддерживается. -1 = последняя строка, >0 = байты с конца">
-                    Offset (-1=последняя строка, N=байты с конца)
+                        Offset (-1=последняя строка, N=байты с конца)
                     </label>
                     <input type="number" id="pop-offset" value="-1" class="inp-sm">
                 </div>
@@ -2685,10 +3671,7 @@ if ($is_ajax) {
 
         async function doPopLine() {
             const offset = parseInt(document.getElementById('pop-offset').value);
-            if (offset === 0) {
-                notify('offset=0 не поддерживается (см. подсказку в поле)', 'warn');
-                return;
-            }
+            if (offset === 0) { notify('offset=0 не поддерживается (см. подсказку в поле)', 'warn'); return; }
             const r = await api('pop_line', {
                 table: state.current.name,
                 offset: document.getElementById('pop-offset').value,
@@ -2696,8 +3679,20 @@ if ($is_ajax) {
             });
             const el = document.getElementById('pop-result');
             el.style.display = 'block';
-            el.innerHTML = r.found ? `<pre>${escHtml(String(r.result))}</pre>` : '<span style="color:var(--danger)">Файл пуст</span>';
-            if (r.found) loadTables();
+            if (r.found) {
+                el.innerHTML = `<pre>${escHtml(String(r.result))}</pre>`;
+                RightPanel.setDetail(`
+            <div class="rp-section">
+                <div class="rp-section-title">↑ Pop Result</div>
+                <div class="result-area" style="margin-top:0">
+                    <pre>${escHtml(String(r.result))}</pre>
+                </div>
+            </div>
+        `);
+                loadTables();
+            } else {
+                el.innerHTML = '<span style="color:var(--danger)">Файл пуст</span>';
+            }
         }
 
         async function doDefragLines() {
@@ -2902,23 +3897,20 @@ if ($is_ajax) {
             const statsEl = document.getElementById('anal-stats');
             const rawEl = document.getElementById('anal-raw');
 
-            // flow_interruption существует ТОЛЬКО в режиме 0 (весь файл)
-            // По документации и fast_io.c при mode=1 поле отсутствует
             const statItems = [
                 ['line_count', res.line_count ?? '—', ''],
                 ['file_size', fmtSize(res.file_size || 0), 'green'],
                 ['min_length', res.min_length ?? '—', ''],
                 ['max_length', res.max_length ?? '—', ''],
                 ['avg_length', Math.round(res.avg_length || 0), 'purple'],
-                ['last_symbol', (res.last_symbol ?? '—') + ((res.last_symbol === 10) ? ' (\\n)' : ''), ''],
+                ['last_symbol', (res.last_symbol ?? '—') + (res.last_symbol === 10 ? ' (\\n)' : ''), ''],
                 ['total_chars', res.total_characters ?? '—', ''],
             ];
-
             if (mode === 0) {
                 statItems.splice(5, 0, [
                     'flow_interruption',
                     res.flow_interruption ?? 0,
-                    (res.flow_interruption ?? 0) > 0 ? 'orange' : ''
+                    (res.flow_interruption ?? 0) > 0 ? 'orange' : '',
                 ]);
             }
 
@@ -2928,7 +3920,6 @@ if ($is_ajax) {
             <div class="sc-value ${cls}">${val ?? '—'}</div>
         </div>
     `).join('');
-
             rawEl.innerHTML = `<pre>${escHtml(JSON.stringify(res, null, 2))}</pre>`;
 
             if (t.type === 'binary') {
@@ -2987,15 +3978,15 @@ if ($is_ajax) {
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;');
         }
-
         function escAttr(s) { return escHtml(s).replace(/'/g, '&#39;'); }
 
-        // ═══════════════════════════════
+        // ════════════════════════════════
         //  KEYBOARD
         // ════════════════════════════════
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+                // Close mobile panels on Esc
+                closeMobilePanel(null);
             }
             if (e.key === 'Enter' && e.target.id === 'new-table-name') {
                 createTable();
@@ -3003,21 +3994,27 @@ if ($is_ajax) {
         });
 
         // ════════════════════════════════
+        //  RESPONSIVE WATCHDOG
+        // ════════════════════════════════
+        let lastBreakpoint = window.innerWidth <= 767 ? 'mobile' : 'desktop';
+        window.addEventListener('resize', () => {
+            const now = window.innerWidth <= 767 ? 'mobile' : 'desktop';
+            if (now !== lastBreakpoint) {
+                lastBreakpoint = now;
+                if (now === 'desktop') {
+                    // Restore desktop state from storage
+                    loadLayout();
+                }
+            }
+        });
+
+        // ════════════════════════════════
         //  INIT
         // ════════════════════════════════
+        loadLayout();
+        initResize('resizer-sb', 'sidebar', 'left');
+        initResize('resizer-rp', 'right-panel', 'right');
         loadTables();
-    </script>
-
-
-    <script>
-        function toggleTheme() {
-            document.body.classList.toggle('light');
-            localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
-        }
-
-        // При инициализации:
-        if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');
-
     </script>
 </body>
 
