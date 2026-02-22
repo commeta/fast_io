@@ -2064,14 +2064,20 @@ if ($is_ajax) {
             </div>
 
             <div class="topbar-info">
-                <span class="status-span"><span class="status-dot"></span> fast_io
-                    <?= phpversion('fast_io') ?: 'loaded' ?></span>
-                <span>PHP <?= PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION ?></span>
+                <span class="status-span"><span class="status-dot"></span> FAST_IO:
+                    <?= phpversion('fast_io') ?: 'loaded' ?>
+                </span>
+                <span>PHP:
+                    <?= PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION ?>
+                </span>
+                <span style="color:var(--text3)">PCRE:
+                    <?= defined('PCRE_VERSION') ? PCRE_VERSION : (phpversion('pcre') ?: 'unknown') ?>
+                </span>
                 <span style="color:var(--text3)">buf:
-                    <?= number_format((int) ini_get('fast_io.buffer_size') / 1024, 0) ?>KB</span>
+                    <?= number_format((int) ini_get('fast_io.buffer_size') / 1024, 0) ?>KB
+                </span>
                 <button class="icon-btn" onclick="toggleTheme()" title="Переключить тему">☀︎</button>
             </div>
-
             <!-- Right panel toggle -->
             <button class="icon-btn" id="btn-toggle-rp" onclick="toggleRightPanel()" title="Правая панель"
                 style="margin-left:6px">⊡</button>
