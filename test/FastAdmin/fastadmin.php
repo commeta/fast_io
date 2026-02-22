@@ -2070,7 +2070,7 @@ if ($is_ajax) {
                 <span>PHP:
                     <?= PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION ?>
                 </span>
-                <span style="color:var(--text3)">PCRE:
+                <span style="color:var(--text3)">PCRE2:
                     <?= defined('PCRE_VERSION') ? PCRE_VERSION : (phpversion('pcre') ?: 'unknown') ?>
                 </span>
                 <span style="color:var(--text3)">buf:
