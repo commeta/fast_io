@@ -114,6 +114,9 @@ $router->add('/my-page', [
 
 Шаблон по умолчанию — `dynamic.php`.
 
+![FastSite Admin Edit](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastSite/img/Admin-Edit.png "FastSite Admin Edit")
+
+
 ### 8. TV-поля (Template Variables)
 
 В `config.php` описываются поля для каждого шаблона:
