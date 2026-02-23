@@ -294,3 +294,64 @@ Deny from all
 Должна быть **ошибка 403 Forbidden**.
 
 ---
+
+
+## Тестирование производительности сайта
+
+ab -n 10000 -c 100 http://localhost/
+
+```
+This is ApacheBench, Version 2.3 <$Revision: 1903618 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient)
+Completed 1000 requests
+Completed 2000 requests
+Completed 3000 requests
+Completed 4000 requests
+Completed 5000 requests
+Completed 6000 requests
+Completed 7000 requests
+Completed 8000 requests
+Completed 9000 requests
+Completed 10000 requests
+Finished 10000 requests
+
+
+Server Software:        Apache/2.4.58
+Server Hostname:        localhost
+Server Port:            80
+
+Document Path:          /
+Document Length:        2402 bytes
+
+Concurrency Level:      100
+Time taken for tests:   0.833 seconds
+Complete requests:      10000
+Failed requests:        0
+Total transferred:      27680000 bytes
+HTML transferred:       24020000 bytes
+Requests per second:    11998.78 [#/sec] (mean)
+Time per request:       8.334 [ms] (mean)
+Time per request:       0.083 [ms] (mean, across all concurrent requests)
+Transfer rate:          32434.20 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    0   0.2      0       3
+Processing:     2    8   0.6      8      11
+Waiting:        1    8   0.6      8      11
+Total:          4    8   0.5      8      12
+
+Percentage of the requests served within a certain time (ms)
+  50%      8
+  66%      8
+  75%      8
+  80%      8
+  90%      9
+  95%      9
+  98%     10
+  99%     10
+ 100%     12 (longest request)
+```
