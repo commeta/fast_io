@@ -6,6 +6,8 @@
 
 ### 1. Что это такое
 
+![FastSite Admin Dashboard](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastSite/img/Admin-Dashboard.png "FastSite Admin Dashboard")
+
 - **Ядро** — чистый PHP 8.1+ + расширение **fast_io** (C-расширение для сверхбыстрой работы с файлами как с БД).
 - **Хранилище страниц** — ключ `alias` → JSON-объект (все TV-поля внутри).
 - **Шаблоны** — как в MODx Revolution (main / wide + TV-поля).
@@ -106,6 +108,8 @@ $router->add('/my-page', [
 
 ### 7. Динамические страницы (из БД)
 
+![FastSite Admin Pages](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastSite/img/Admin-Pages.png "FastSite Admin Pages")
+
 Все страницы с алиасом, которых нет в статических маршрутах, автоматически ищутся в `DB::getPage($alias)`.
 
 Шаблон по умолчанию — `dynamic.php`.
@@ -137,6 +141,8 @@ $router->add('/my-page', [
 ```
 
 ### 10. Админка (/admin)
+
+![FastSite Admin Login](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastSite/img/Admin-Login.png "FastSite Admin Login")
 
 - `/admin` — дашборд
 - `/admin/pages` — список + поиск + удаление
@@ -205,6 +211,8 @@ $router->add('/secret', [
 В админке → Обслуживание → «Запустить дефрагментацию»  
 Рекомендуется запускать после большого количества удалений/изменений алиасов.
 
+![FastSite Admin Service](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastSite/img/Admin-Service.png "FastSite Admin Service")
+
 ### 15. Безопасность и производительность
 
 - Все операции с файлами блокируются `flock(LOCK_EX)`
@@ -222,6 +230,9 @@ $router->add('/secret', [
 - API?
 
 Просто добавляй новые файлы в `pages/admin/` и новые маршруты — всё остальное уже работает.
+
+![FastSite](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastSite/img/Fast-Site.png "FastSite")
+
 
 ### 17. Дополнительные меры безопасности (ОБЯЗАТЕЛЬНО после установки!)
 
