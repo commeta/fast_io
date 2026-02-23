@@ -298,7 +298,7 @@ Deny from all
 
 ## Тестирование производительности сайта
 
-ab -n 10000 -c 100 http://localhost/
+ab -n 10000 -c 100 http://localhost/home
 
 ```
 This is ApacheBench, Version 2.3 <$Revision: 1903618 $>
@@ -323,35 +323,35 @@ Server Software:        Apache/2.4.58
 Server Hostname:        localhost
 Server Port:            80
 
-Document Path:          /
-Document Length:        2402 bytes
+Document Path:          /home
+Document Length:        2476 bytes
 
 Concurrency Level:      100
-Time taken for tests:   0.833 seconds
+Time taken for tests:   0.857 seconds
 Complete requests:      10000
 Failed requests:        0
-Total transferred:      27680000 bytes
-HTML transferred:       24020000 bytes
-Requests per second:    11998.78 [#/sec] (mean)
-Time per request:       8.334 [ms] (mean)
-Time per request:       0.083 [ms] (mean, across all concurrent requests)
-Transfer rate:          32434.20 [Kbytes/sec] received
+Total transferred:      28420000 bytes
+HTML transferred:       24760000 bytes
+Requests per second:    11668.46 [#/sec] (mean)
+Time per request:       8.570 [ms] (mean)
+Time per request:       0.086 [ms] (mean, across all concurrent requests)
+Transfer rate:          32384.54 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
 Connect:        0    0   0.2      0       3
-Processing:     2    8   0.6      8      11
-Waiting:        1    8   0.6      8      11
-Total:          4    8   0.5      8      12
+Processing:     2    8   0.8      8      12
+Waiting:        1    8   0.8      8      12
+Total:          4    8   0.7      8      12
 
 Percentage of the requests served within a certain time (ms)
   50%      8
   66%      8
-  75%      8
-  80%      8
+  75%      9
+  80%      9
   90%      9
-  95%      9
-  98%     10
-  99%     10
+  95%     10
+  98%     11
+  99%     11
  100%     12 (longest request)
 ```
