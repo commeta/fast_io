@@ -5,7 +5,6 @@
 ![Fast_IO Extension for PHP 8](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/auto_test_profile_mem.png "fast_io")
 
 
-
 ## Overview
 
 Fast_IO is a high-performance PHP 8 extension designed for efficient data file management, focusing on key-value pairs. It offers a suite of functions for reading, writing, and deleting data using low-level sector access and portable file locking to synchronize access across concurrent instances. This extension facilitates the storage and maintenance of arbitrarily large database files, with buffered functions reading files in chunks of 4096 bytes (1 OS kernel-cached page), ensuring high efficiency and performance.
@@ -83,7 +82,28 @@ Fast_IO is a high-performance PHP 8 extension designed for efficient data file m
 
 ---
 
-### FAST_IO - Implementation Highlights 
+### Fast CMS (file-based на fast_io)
+
+A fully-fledged minimalistic CMS skeleton that works without MySQL/PostgreSQL — the entire database is stored in two files (data/pages.dat + data/pages.dat.index and data/users.dat).
+
+![FastSite Admin Dashboard](https://raw.githubusercontent.com/commeta/fast_io/refs/heads/main/test/FastSite/img/Admin-Dashboard.png "FastSite Admin Dashboard")
+
+- **Core** - pure PHP 8.1+ + **fast_io** extension (C-extension for ultra-fast file handling as a database).
+- **Page storage** - key `alias` → JSON object (all TV fields inside).
+- **Templates** - like in MODx Revolution (main / wide + TV fields).
+- **Admin** - built-in, with CRUD pages, defragmentation, and statistics.
+- **Security** - CSRF, sessions, bcrypt, file-locks from fast_io.
+- **Performance** - tens of thousands of pages are read in milliseconds.
+
+
+[Fast CMS (file-based на fast_io)](/test/FastSite/README.md) 
+
+
+---
+
+## Manual FAST_IO
+
+### Implementation Highlights 
 
 - All functions utilize UNIX portable file locking on write operations to ensure data integrity during concurrent access [an algorithm for implementing a transaction using file locking](test/transaction/README.EN.md).
 - Concurrent function instances wait in queue for file release, ensuring orderly access and operation.
@@ -870,4 +890,5 @@ Some filesystem mount options can also affect the behavior of locks and I/O oper
 
 **Details**:
 - [Linux Kernel Tuning](test/Linux-Kernel-Tuning.md) - 🚀 Linux Kernel Tuning for fast_io — User Manual
+- [Linux File System Recommendations](/test/filesystem-recommendations.md) - **Practical recommendations** for selecting and configuring Linux file systems
 
